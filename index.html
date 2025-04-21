@@ -1,3 +1,6 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Route and Cost Calculator with Log</title>
@@ -260,38 +263,39 @@
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-    
-
+    </head>
+<body>
     <div class="container">
         <h1>Route and Cost Calculator</h1>
 
         <label for="start-address">Start Address</label>
-        <input type="text" id="start-address" placeholder="Enter start address" required="">
+        <input type="text" id="start-address" placeholder="Enter start address" required>
 
         <div id="destinations-container">
             <div class="destination">
                 <label for="destination-1">Destination 1</label>
-                <input type="text" id="destination-1" placeholder="Enter destination address" required="">
+                <input type="text" id="destination-1" placeholder="Enter destination address" required>
                 <label for="earnings-1">Earnings for Destination 1</label>
-                <input type="number" id="earnings-1" placeholder="Enter earnings for destination" required="">
+                <input type="number" id="earnings-1" placeholder="Enter earnings for destination" required>
                 <div class="destination-actions">
                     <button class="delete-btn" onclick="deleteDestination(this)">Delete</button>
                     <button class="move-btn" onclick="moveDestinationUp(this)">Move Up</button>
                     <button class="move-btn" onclick="moveDestinationDown(this)">Move Down</button>
                 </div>
             </div>
-        </div>
+</div>
 
-        <button onclick="addDestination()">Add Destination</button>
+        <button onclick="addDestination()">Add Destination</button>
+        <button onclick="optimizeRoute()">Optimize Route</button>
 
         <label for="end-address">End Address</label>
-        <input type="text" id="end-address" placeholder="Enter end address" required="">
+        <input type="text" id="end-address" placeholder="Enter end address" required>
 
         <label for="mpg">Miles per Gallon (MPG)</label>
-        <input type="number" id="mpg" placeholder="Enter miles per gallon" required="">
+        <input type="number" id="mpg" placeholder="Enter miles per gallon" required>
 
         <label for="gas-price">Gas Price per Gallon</label>
-        <input type="number" id="gas-price" placeholder="Enter gas price per gallon" required="">
+        <input type="number" id="gas-price" placeholder="Enter gas price per gallon" required>
 
         <label for="hours-worked">Hours Worked (Optional)</label>
         <input type="number" id="hours-worked" placeholder="Enter total hours worked">
@@ -402,7 +406,7 @@
         let logEntries = loadLog();
         let editingIndex = -1;
 
-        function initMap() {
+function initMap() {
             map = new google.maps.Map(document.getElementById("map"), {
                 zoom: 10,
                 center: { lat: 37.7749, lng: -122.4194 },
@@ -430,10 +434,17 @@
 
             const savedMpg = localStorage.getItem('mpg');
             const savedGasPrice = localStorage.getItem('gasPrice');
+            const savedStartAddress = localStorage.getItem('startAddress');
+            const savedEndAddress = localStorage.getItem('endAddress');
+
             if (savedMpg) document.getElementById('mpg').value = savedMpg;
             if (savedGasPrice) document.getElementById('gas-price').value = savedGasPrice;
+            if (savedStartAddress) document.getElementById('start-address').value = savedStartAddress;
+            if (savedEndAddress) document.getElementById('end-address').value = savedEndAddress;
 
-            document.querySelectorAll('input[id^="destination-"]').forEach(initAutocompleteDestination);
+            // Initialize autocomplete for the initial destination
+            document.querySelectorAll('#destinations-container .destination input[type="text"]').forEach(initAutocompleteDestination);
+
             displayLog();
             populateDayOptions();
         }
@@ -451,88 +462,157 @@
             }
         }
 
-        async function calculateRoute() {
-            const startAddress = document.getElementById('start-address').value;
-            const endAddress = document.getElementById('end-address').value;
-            const mpg = parseFloat(document.getElementById('mpg').value);
-            const gasPrice = parseFloat(document.getElementById('gas-price').value);
-            const hoursWorked = parseFloat(document.getElementById('hours-worked').value) || 0;
-            const maintenanceCost = parseFloat(document.getElementById('maintenance-cost').value) || 0;
-            const suppliesCost = parseFloat(document.getElementById('supplies-cost').value) || 0;
+async function calculateRoute() {
+            const startAddress = document.getElementById('start-address').value;
+            const endAddress = document.getElementById('end-address').value;
+            const mpg = parseFloat(document.getElementById('mpg').value);
+            const gasPrice = parseFloat(document.getElementById('gas-price').value);
+            const hoursWorked = parseFloat(document.getElementById('hours-worked').value) || 0; // Get hours worked
+            const maintenanceCost = parseFloat(document.getElementById('maintenance-cost').value) || 0;
+            const suppliesCost = parseFloat(document.getElementById('supplies-cost').value) || 0;
 
-            localStorage.setItem('mpg', mpg);
-            localStorage.setItem('gasPrice', gasPrice);
+            localStorage.setItem('mpg', mpg);
+            localStorage.setItem('gasPrice', gasPrice);
+            localStorage.setItem('startAddress', startAddress);
+            localStorage.setItem('endAddress', endAddress);
 
-            const destInputs = document.querySelectorAll('input[id^="destination-"]');
-            const earningsInputs = document.querySelectorAll('input[id^="earnings-"]');
-            const destinations = Array.from(destInputs).map(input => ({ location: input.value, stopover: true }));
-            const earnings = Array.from(earningsInputs).map(input => parseFloat(input.value));
-            const totalEarnings = earnings.reduce((sum, val) => sum + val, 0);
+            const destInputs = document.querySelectorAll('input[id^="destination-"]');
+            const earningsInputs = document.querySelectorAll('input[id^="earnings-"]');
+            const destinations = Array.from(destInputs).map(input => ({ location: input.value, stopover: true }));
+            const earnings = Array.from(earningsInputs).map(input => parseFloat(input.value));
+            const totalEarnings = earnings.reduce((sum, val) => sum + val, 0);
 
-            const waypoints = destinations;
+            const waypoints = destinations;
 
-            const request = {
-                origin: startAddress,
-                destination: endAddress,
-                waypoints: waypoints,
-                travelMode: 'DRIVING'
-            };
+            const request = {
+                origin: startAddress,
+                destination: endAddress,
+                waypoints: waypoints,
+                travelMode: 'DRIVING'
+            };
 
-            return new Promise((resolve, reject) => {
-                directionsService.route(request, (response, status) => {
-                    if (status === 'OK') {
-                        directionsRenderer.setDirections(response);
-                        document.getElementById('map').classList.remove('hidden');
+        return new Promise((resolve, reject) => {
+            directionsService.route(request, (response, status) => {
+                if (status === 'OK') {
+                    directionsRenderer.setDirections(response);
+                    document.getElementById('map').classList.remove('hidden');
 
-                        let totalMileage = 0;
-                        let totalDuration = 0;
+                    let totalMileage = 0;
+                    let totalDuration = 0;
 
-                        response.routes[0].legs.forEach(leg => {
-                            totalMileage += leg.distance.value / 1609.34;
-                            totalDuration += leg.duration.value;
-                        });
+                    response.routes[0].legs.forEach(leg => {
+                        totalMileage += leg.distance.value / 1609.34;
+                        totalDuration += leg.duration.value;
+                    });
 
-                        const fuelCost = (totalMileage / mpg) * gasPrice;
-                        const netProfitBeforeOptional = totalEarnings - fuelCost;
-                        const netProfit = netProfitBeforeOptional - maintenanceCost - suppliesCost;
-                        const totalHoursSpent = hoursWorked + (totalDuration / 3600);
-                        const profitPerHour = totalHoursSpent > 0 ? netProfit / totalHoursSpent : 0;
+                    const fuelCost = (totalMileage / mpg) * gasPrice;
+                    const netProfitBeforeOptional = totalEarnings - fuelCost;
+                    const netProfit = netProfitBeforeOptional - maintenanceCost - suppliesCost;
+                    const totalHoursSpent = hoursWorked + (totalDuration / 3600);
+                    const profitPerHour = totalHoursSpent > 0 ? netProfit / totalHoursSpent : 0;
 
-                        document.getElementById('total-mileage').textContent = totalMileage.toFixed(2);
-                        document.getElementById('total-time').textContent = formatDuration(totalDuration);
-                        document.getElementById('total-earnings').textContent = totalEarnings.toFixed(2);
-                        document.getElementById('fuel-cost').textContent = fuelCost.toFixed(2);
-                        document.getElementById('maintenance-cost-result').textContent = maintenanceCost.toFixed(2);
-                        document.getElementById('supplies-cost-result').textContent = suppliesCost.toFixed(2);
-                        document.getElementById('net-profit').textContent = netProfit.toFixed(2);
-                        document.getElementById('profit-per-hour').textContent = profitPerHour.toFixed(2);
-                        document.getElementById('results').classList.remove('hidden');
+                    document.getElementById('total-mileage').textContent = totalMileage.toFixed(2);
+                    document.getElementById('total-time').textContent = formatDuration(totalDuration);
+                    document.getElementById('total-earnings').textContent = totalEarnings.toFixed(2);
+                    document.getElementById('fuel-cost').textContent = fuelCost.toFixed(2);
+                    document.getElementById('maintenance-cost-result').textContent = maintenanceCost.toFixed(2);
+                    document.getElementById('supplies-cost-result').textContent = suppliesCost.toFixed(2);
+                    document.getElementById('net-profit').textContent = netProfit.toFixed(2);
+                    document.getElementById('profit-per-hour').textContent = profitPerHour.toFixed(2);
+                    document.getElementById('results').classList.remove('hidden');
 
-                        resolve({
-                            date: new Date().toLocaleDateString(),
-                            startTime: startAddress,
-                            endTime: endAddress,
-                            destinations: destinations.map(d => d.location),
-                            earnings: earnings,
-                            totalMileage: totalMileage.toFixed(2),
-                            totalTime: formatDuration(totalDuration),
-                            totalEarnings: totalEarnings.toFixed(2),
-                            fuelCost: fuelCost.toFixed(2),
-                            maintenanceCost: maintenanceCost.toFixed(2),
-                            suppliesCost: suppliesCost.toFixed(2),
-                            netProfit: netProfit.toFixed(2),
-                            profitPerHour: profitPerHour.toFixed(2)
-                        });
+                    resolve({
+                        date: new Date().toLocaleDateString(),
+                        startTime: startAddress,
+                        endTime: endAddress,
+                        destinations: destinations.map(d => d.location),
+                        earnings: earnings,
+                        totalMileage: totalMileage.toFixed(2),
+                        totalTime: formatDuration(totalDuration),
+                        totalEarnings: totalEarnings.toFixed(2),
+                        fuelCost: fuelCost.toFixed(2),
+                        maintenanceCost: maintenanceCost.toFixed(2),
+                        suppliesCost: suppliesCost.toFixed(2),
+                        netProfit: netProfit.toFixed(2),
+                        profitPerHour: profitPerHour.toFixed(2),
+                        hoursWorked: hoursWorked // Include hoursWorked in the log entry data
+                    });
 
-                    } else {
-                        alert('Directions request failed due to ' + status);
-                        document.getElementById('map').classList.add('hidden');
-                        document.getElementById('results').classList.add('hidden');
-                        resolve(null);
-                    }
-                });
-            });
-        }
+                } else {
+                    alert('Directions request failed due to ' + status);
+                    document.getElementById('map').classList.add('hidden');
+                    document.getElementById('results').classList.add('hidden');
+                    resolve(null);
+                }
+            });
+        });
+    }
+
+    async function optimizeRoute() {
+        const startAddress = document.getElementById('start-address').value;
+        const endAddress = document.getElementById('end-address').value;
+        const destInputs = document.querySelectorAll('#destinations-container .destination input[type="text"]');
+        const currentDestinations = Array.from(destInputs).map(input => input.value);
+
+        if (currentDestinations.length < 2) {
+            alert('Please add at least two destinations to optimize the route.');
+            return;
+        }
+
+        const waypoints = currentDestinations.map(location => ({ location: location, stopover: true }));
+
+        const request = {
+            origin: startAddress,
+            destination: endAddress,
+            waypoints: waypoints,
+            travelMode: 'DRIVING',
+            optimizeWaypoints: true // Key option for optimization
+        };
+
+        directionsService.route(request, (response, status) => {
+            if (status === 'OK' && response.routes[0].waypoint_order) {
+                const optimizedOrder = response.routes[0].waypoint_order;
+                const newDestinationsContainer = document.createElement('div');
+                newDestinationsContainer.id = 'destinations-container';
+
+                optimizedOrder.forEach((index, i) => {
+                    const originalDestinationDiv = destInputs[index].closest('.destination');
+                    const clonedDestinationDiv = originalDestinationDiv.cloneNode(true);
+
+                    // Update the destination and earnings input IDs and labels
+                    const destLabel = clonedDestinationDiv.querySelector('label[for^="destination-"]');
+                    const destInput = clonedDestinationDiv.querySelector('input[id^="destination-"]');
+                    const earningsLabel = clonedDestinationDiv.querySelector('label[for^="earnings-"]');
+                    const earningsInput = clonedDestinationDiv.querySelector('input[id^="earnings-"]');
+
+                    const newIndex = i + 1;
+                    if (destLabel) destLabel.setAttribute('for', `destination-${newIndex}`);
+                    if (destInput) {
+                        destInput.id = `destination-${newIndex}`;
+                    }
+                    if (earningsLabel) earningsLabel.setAttribute('for', `earnings-${newIndex}`);
+                    if (earningsInput) {
+                        earningsInput.id = `earnings-${newIndex}`;
+                    }newDestinationsContainer.appendChild(clonedDestinationDiv);
+                });
+
+                    // Replace the old destinations container with the new optimized one
+                    const oldDestinationsContainer = document.getElementById('destinations-container');
+                    oldDestinationsContainer.parentNode.replaceChild(newDestinationsContainer, oldDestinationsContainer);
+
+                    // Re-initialize autocomplete for the new destination inputs
+                    document.querySelectorAll('#destinations-container .destination input[type="text"]').forEach(initAutocompleteDestination);
+
+                    // Optionally, you can recalculate and display the route on the map
+                    calculateRoute();
+            } else if (status === 'OK') {
+                // If no waypoint_order (only start and end), just recalculate the route
+                calculateRoute();
+            } else {
+                alert('Could not optimize route due to: ' + status);
+            }
+        });
+    }
 
 function formatDuration(seconds) {
             const hours = Math.floor(seconds / 3600);
@@ -556,17 +636,17 @@ function formatDuration(seconds) {
             const container = document.getElementById('destinations-container');
             const newDestinationDiv = document.createElement('div');
             newDestinationDiv.classList.add('destination');
-            newDestinationDiv.innerHTML = `
-                <label for="destination-${newDestinationIndex}">Destination <span class="math-inline">\{newDestinationIndex\}</label\>
-<input type\="text" id\="destination\-</span>{newDestinationIndex}" placeholder="Enter destination address" required>
-                <label for="earnings-${newDestinationIndex}">Earnings for Destination <span class="math-inline">\{newDestinationIndex\}</label\>
-<input type\="number" id\="earnings\-</span>{newDestinationIndex}" placeholder="Enter earnings for destination" required>
-                <div class="destination-actions">
-                    <button class="delete-btn" onclick="deleteDestination(this)">Delete</button>
-                    <button class="move-btn" onclick="moveDestinationUp(this)">Move Up</button>
-                    <button class="move-btn" onclick="moveDestinationDown(this)">Move Down</button>
-                </div>
-            `;
+newDestinationDiv.innerHTML = `
+    <label for="destination-${newDestinationIndex}">Destination ${newDestinationIndex}</label>
+    <input type="text" id="destination-${newDestinationIndex}" placeholder="Enter destination address" required>
+    <label for="earnings-${newDestinationIndex}">Earnings for Destination ${newDestinationIndex}</label>
+    <input type="number" id="earnings-${newDestinationIndex}" placeholder="Enter earnings for destination" required>
+    <div class="destination-actions">
+        <button class="delete-btn" onclick="deleteDestination(this)">Delete</button>
+        <button class="move-btn" onclick="moveDestinationUp(this)">Move Up</button>
+        <button class="move-btn" onclick="moveDestinationDown(this)">Move Down</button>
+    </div>
+`;
             container.appendChild(newDestinationDiv);
             initAutocompleteDestination(newDestinationDiv.querySelector('input[type="text"]'));
         }
@@ -703,45 +783,42 @@ function displayLog(filterDay = 'all') {
         }
 
 function openEditForm(index) {
-    console.log("openEditForm called with index:", index);
-    editingIndex = index;
-    const entry = logEntries[index];
-    console.log("Log entry to edit:", entry);
+            editingIndex = index;
+            const entry = logEntries[index];
+            if (entry) {
+                document.getElementById('edit-date').value = entry.date;
+                document.getElementById('edit-start-address').value = entry.startTime;
+                document.getElementById('edit-end-address').value = entry.endTime;
+                document.getElementById('edit-total-earnings').value = String(entry.totalEarnings);
+                document.getElementById('edit-fuel-cost').value = String(entry.fuelCost);
+                document.getElementById('edit-maintenance-cost').value = String(entry.maintenanceCost);
+                document.getElementById('edit-supplies-cost').value = String(entry.suppliesCost);
+                document.getElementById('edit-total-mileage').value = String(entry.totalMileage);
+                document.getElementById('edit-total-time').value = String(entry.totalTime);
+                document.getElementById('edit-hours-worked').value = entry.hoursWorked || '';
 
-    if (entry) {
-        document.getElementById('edit-index').value = String(index);
-        document.getElementById('edit-date').value = String(entry.date);
-        document.getElementById('edit-start-address').value = String(entry.startTime);
-        document.getElementById('edit-end-address').value = String(entry.endTime);
-        document.getElementById('edit-total-earnings').value = String(entry.totalEarnings);
-        document.getElementById('edit-fuel-cost').value = String(entry.fuelCost);
-        document.getElementById('edit-maintenance-cost').value = String(entry.maintenanceCost);
-        document.getElementById('edit-supplies-cost').value = String(entry.suppliesCost);
-        document.getElementById('edit-total-mileage').value = String(entry.totalMileage);
-        document.getElementById('edit-total-time').value = String(entry.totalTime);
-        document.getElementById('edit-hours-worked').value = entry.hoursWorked || '';
+                const editDestinationsContainer = document.getElementById('edit-destinations-container');
+                editDestinationsContainer.innerHTML = '';
+                entry.destinations.forEach((dest, i) => {
+                    const earningValue = isNaN(entry.earnings[i]) ? '' : String(entry.earnings[i]); // Handle NaN
+                    const destDiv = document.createElement('div');
+                    destDiv.classList.add('destination');
+                    destDiv.innerHTML = `
+                        <label for="edit-destination-${i + 1}">Destination ${i + 1}</label>
+                        <input type="text" id="edit-destination-${i + 1}" value="${String(dest)}">
+                        <label for="edit-earnings-${i + 1}">Earnings ${i + 1}</label>
+                        <input type="number" id="edit-earnings-${i + 1}" value="${earningValue}">
+                        <button type="button" class="delete-btn" onclick="deleteEditDestination(this)">Delete</button>
+                    `;
+                    editDestinationsContainer.appendChild(destDiv);
+                });
 
-        const editDestinationsContainer = document.getElementById('edit-destinations-container');
-        editDestinationsContainer.innerHTML = '';
-        entry.destinations.forEach((dest, i) => {
-            const destDiv = document.createElement('div');
-            destDiv.classList.add('destination');
-            destDiv.innerHTML = `
-                <label for="edit-destination-${i + 1}">Destination ${i + 1}</label>
-                <input type="text" id="edit-destination-${i + 1}" value="${String(dest)}">
-                <label for="edit-earnings-${i + 1}">Earnings ${i + 1}</label>
-                <input type="number" id="edit-earnings-${i + 1}" value="${String(entry.earnings[i] || 0)}">
-                <button type="button" class="delete-btn" onclick="deleteEditDestination(this)">Delete</button>
-            `;
-            editDestinationsContainer.appendChild(destDiv);
-        });
-
-document.getElementById('edit-form-container').style.display = 'block';
-        document.getElementById('overlay').style.display = 'block';
-    } else {
-        console.error("Error: No log entry found at index:", index);
-    }
-}
+                document.getElementById('edit-form-container').style.display = 'block';
+                document.getElementById('overlay').style.display = 'block';
+            } else {
+                console.error("Error: No log entry found at index:", index);
+            }
+        }
 
 function closeEditForm() {
     console.log("closeEditForm function called");
@@ -770,7 +847,8 @@ function closeEditForm() {
         }
 
 function saveEditedLogEntry() {
-    console.log("saveEditedLogEntry function called");
+    console.log("saveEditedLogEntry FUNCTION IS BEING CALLED!");
+
     if (editingIndex === -1) {
         console.log("editingIndex is -1, no entry to save.");
         return;
@@ -786,13 +864,16 @@ function saveEditedLogEntry() {
     entry.suppliesCost = parseFloat(document.getElementById('edit-supplies-cost').value);
     entry.totalMileage = parseFloat(document.getElementById('edit-total-mileage').value);
     entry.totalTime = document.getElementById('edit-total-time').value;
-    entry.hoursWorked = parseFloat(document.getElementById('edit-hours-worked').value) || 0; // Get hours worked
+    const editedHoursWorked = parseFloat(document.getElementById('edit-hours-worked').value) || 0;
+    entry.hoursWorked = editedHoursWorked;
+    console.log("Edited hoursWorked:", entry.hoursWorked);
 
     // Recalculate net profit
     const netProfitBeforeOptional = entry.totalEarnings - entry.fuelCost;
     entry.netProfit = (netProfitBeforeOptional - entry.maintenanceCost - entry.suppliesCost).toFixed(2);
+    console.log("Recalculated netProfit:", entry.netProfit);
 
-    // Calculate total hours spent
+// Calculate total hours spent
     let driveTimeInHours = 0;
     const timeMatch = entry.totalTime.match(/(\d+)\s*hour(s)?\s*(\d+)?\s*minute(s)?/i);
     if (timeMatch) {
@@ -800,12 +881,21 @@ function saveEditedLogEntry() {
         const minutes = parseInt(timeMatch[3]) || 0;
         driveTimeInHours = hours + (minutes / 60);
     } else {
-        driveTimeInHours = parseFloat(entry.totalTime) || 0; // Try to parse as simple hours
+        const minuteMatch = entry.totalTime.match(/(\d+)\s*minute(s)?/i);
+        if (minuteMatch) {
+            driveTimeInHours = parseInt(minuteMatch[1]) / 60 || 0;
+        } else {
+            driveTimeInHours = parseFloat(entry.totalTime) || 0; // Try to parse as simple hours (as a fallback)
+        }
     }
+    console.log("Parsed driveTimeInHours:", driveTimeInHours);
 
     const totalHoursSpent = entry.hoursWorked + driveTimeInHours;
+    console.log("Total hours spent:", totalHoursSpent);
 
-    entry.profitPerHour = totalHoursSpent > 0 ? (parseFloat(entry.netProfit) / totalHoursSpent).toFixed(2) : '0.00';
+    const newProfitPerHour = totalHoursSpent > 0 ? (parseFloat(entry.netProfit) / totalHoursSpent).toFixed(2) : '0.00';
+    entry.profitPerHour = newProfitPerHour; // Directly update the entry
+    console.log("Calculated profitPerHour:", entry.profitPerHour);
 
     saveLog();
     displayLog(document.getElementById('organize-by-day').value);
@@ -815,16 +905,14 @@ function saveEditedLogEntry() {
 function exportToCSV() {
     const header = "Date,Start Address,Destinations,End Address,Total Earnings,Fuel Cost,Maintenance Cost,Supplies Cost,Net Profit,Total Mileage,Total Drive Time,Earnings per Stop,Profit per Hour\n";
     const csvRows = logEntries.map(entry => {
-        // Explicitly format the date toYYYY-MM-DD
-        const dateParts = entry.date.split('/'); // Adjust if your browser's default is different
-        const formattedDate = `<span class="math-inline">\{dateParts\[2\]\}\-</span>{dateParts[0].padStart(2, '0')}-${dateParts[1].padStart(2, '0')}`;
+        const formattedDate = entry.date; // Keep the original date format for CSV
 
         const destinationsString = `"${entry.destinations.map(d => d.replace(/"/g, '""')).join(';')}"`;
         const earningsString = `"${entry.earnings.join(';')}"`;
         const totalTimeString = `"${entry.totalTime.replace(/"/g, '""')}"`;
         const startAddressString = `"${entry.startTime.replace(/"/g, '""')}"`;
         const endAddressString = `"${entry.endTime.replace(/"/g, '""')}"`;
-        const profitPerHourString = entry.profitPerHour ? `"${entry.profitPerHour}"` : ""; // Handle potential undefined
+        const profitPerHourString = entry.profitPerHour ? `"${entry.profitPerHour}"` : "";
 
         return [
             formattedDate,
@@ -971,4 +1059,5 @@ function importLog() {
     }
 }
     </script>
-
+</body>
+</html>
