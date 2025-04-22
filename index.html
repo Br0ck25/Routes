@@ -819,44 +819,6 @@ function displayLog(filterDay = 'all') {
             organizeByDaySelect.value = currentFilter; // Restore the previous filter
         }
 
-function openEditForm(index) {
-            editingIndex = index;
-            const entry = logEntries[index];
-            if (entry) {
-                document.getElementById('edit-date').value = entry.date;
-                document.getElementById('edit-start-address').value = entry.startTime;
-                document.getElementById('edit-end-address').value = entry.endTime;
-                document.getElementById('edit-total-earnings').value = String(entry.totalEarnings);
-                document.getElementById('edit-fuel-cost').value = String(entry.fuelCost);
-                document.getElementById('edit-maintenance-cost').value = String(entry.maintenanceCost);
-                document.getElementById('edit-supplies-cost').value = String(entry.suppliesCost);
-                document.getElementById('edit-total-mileage').value = String(entry.totalMileage);
-                document.getElementById('edit-total-time').value = String(entry.totalTime);
-                document.getElementById('edit-hours-worked').value = entry.hoursWorked || '';
-
-                const editDestinationsContainer = document.getElementById('edit-destinations-container');
-                editDestinationsContainer.innerHTML = '';
-                entry.destinations.forEach((dest, i) => {
-                    const earningValue = isNaN(entry.earnings[i]) ? '' : String(entry.earnings[i]); // Handle NaN
-                    const destDiv = document.createElement('div');
-                    destDiv.classList.add('destination');
-                    destDiv.innerHTML = `
-                        <label for="edit-destination-${i + 1}">Destination ${i + 1}</label>
-                        <input type="text" id="edit-destination-${i + 1}" value="${String(dest)}">
-                        <label for="edit-earnings-${i + 1}">Earnings ${i + 1}</label>
-                        <input type="number" id="edit-earnings-${i + 1}" value="${earningValue}">
-                        <button type="button" class="delete-btn" onclick="deleteEditDestination(this)">Delete</button>
-                    `;
-                    editDestinationsContainer.appendChild(destDiv);
-                });
-
-                document.getElementById('edit-form-container').style.display = 'block';
-                document.getElementById('overlay').style.display = 'block';
-            } else {
-                console.error("Error: No log entry found at index:", index);
-            }
-        }
-
 function closeEditForm() {
     console.log("closeEditForm function called");
     document.getElementById('edit-form-container').style.display = 'none';
@@ -864,28 +826,129 @@ function closeEditForm() {
     editingIndex = -1;
 }
 
-        function addEditDestination() {
-            const container = document.getElementById('edit-destinations-container');
-            const newIndex = container.querySelectorAll('.destination').length + 1;
-            const newDestDiv = document.createElement('div');
-            newDestDiv.classList.add('destination');
-            newDestDiv.innerHTML = `
-                <label for="edit-destination-${newIndex}">Destination <span class="math-inline">\{newIndex\}</label\>
-<input type\="text" id\="edit\-destination\-</span>{newIndex}">
-                <label for="edit-earnings-${newIndex}">Earnings <span class="math-inline">\{newIndex\}</label\>
-<input type\="number" id\="edit\-earnings\-</span>{newIndex}" value="0">
+function updateEditTotalEarnings() {
+    let total = 0;
+    const editEarningsInputs = document.querySelectorAll('#edit-destinations-container input[id^="edit-earnings-"]');
+    editEarningsInputs.forEach(input => {
+        total += parseFloat(input.value) || 0;
+    });
+    document.getElementById('edit-total-earnings').value = total.toFixed(2);
+}
+
+function updateEditFuelCost() {
+    const mileage = parseFloat(document.getElementById('edit-total-mileage').value) || 0;
+    const mpg = parseFloat(document.getElementById('edit-mpg').value) || 1; // Prevent division by zero
+    const gasPrice = parseFloat(document.getElementById('edit-gas-price').value) || 0;
+    const fuelCost = (mileage / mpg) * gasPrice;
+    document.getElementById('edit-fuel-cost').value = fuelCost.toFixed(2);
+}
+
+function openEditForm(index) {
+    editingIndex = index;
+    const entry = logEntries[index];
+    if (entry) {
+        const editFormContainer = document.getElementById('edit-form-container');
+        editFormContainer.innerHTML = ''; // Clear previous content
+
+        // Create and append the basic structure
+        editFormContainer.innerHTML = `
+            <h3>Edit Log Entry</h3>
+            <label for="edit-date">Date</label>
+            <input type="date" id="edit-date">
+
+            <label for="edit-start-address">Start Address</label>
+            <input type="text" id="edit-start-address">
+
+            <div id="edit-destinations-container"></div>
+            <button type="button" onclick="addEditDestination()">Add Destination</button>
+
+            <label for="edit-end-address">End Address</label>
+            <input type="text" id="edit-end-address">
+
+            <label for="edit-total-earnings">Total Earnings</label>
+            <input type="number" id="edit-total-earnings">
+
+            <label for="edit-fuel-cost">Fuel Cost</label>
+            <input type="number" id="edit-fuel-cost">
+
+            <label for="edit-maintenance-cost">Maintenance Cost</label>
+            <input type="number" id="edit-maintenance-cost">
+
+            <label for="edit-supplies-cost">Supplies Cost</label>
+            <input type="number" id="edit-supplies-cost">
+
+            <label for="edit-total-mileage">Total Mileage</label>
+            <input type="number" id="edit-total-mileage">
+
+            <label for="edit-total-time">Total Drive Time</label>
+            <input type="text" id="edit-total-time" placeholder="e.g., 1 hour 30 minutes">
+
+            <label for="edit-hours-worked">Hours Worked (Optional)</label>
+            <input type="number" id="edit-hours-worked">
+
+            <label for="edit-mpg">Miles per Gallon (MPG)</label>
+            <input type="number" id="edit-mpg">
+
+            <label for="edit-gas-price">Gas Price per Gallon</label>
+            <input type="number" id="edit-gas-price">
+
+            <button type="button" class="save-btn" onclick="saveEditedLogEntry()">Save</button>
+            <button type="button" class="cancel-btn" onclick="closeEditForm()">Cancel</button>
+            <input type="hidden" id="edit-index">
+        `;
+
+        // Populate the fields
+        document.getElementById('edit-date').value = entry.date;
+        document.getElementById('edit-start-address').value = entry.startTime;
+        document.getElementById('edit-end-address').value = entry.endTime;
+        document.getElementById('edit-total-earnings').value = String(entry.totalEarnings);
+        document.getElementById('edit-fuel-cost').value = String(entry.fuelCost);
+        document.getElementById('edit-maintenance-cost').value = String(entry.maintenanceCost);
+        document.getElementById('edit-supplies-cost').value = String(entry.suppliesCost);
+        document.getElementById('edit-total-mileage').value = String(entry.totalMileage);
+        document.getElementById('edit-total-time').value = entry.totalTime;
+        document.getElementById('edit-hours-worked').value = entry.hoursWorked || '';
+        document.getElementById('edit-mpg').value = String(entry.mpg || localStorage.getItem('mpg') || 0);
+        document.getElementById('edit-gas-price').value = String(entry.gasPrice || localStorage.getItem('gasPrice') || 0);
+
+        // Populate destinations
+        const editDestinationsContainer = document.getElementById('edit-destinations-container');
+        editDestinationsContainer.innerHTML = '';
+        entry.destinations.forEach((dest, i) => {
+            const earningValue = isNaN(entry.earnings[i]) ? '' : String(entry.earnings[i]);
+            const destDiv = document.createElement('div');
+            destDiv.classList.add('destination');
+            destDiv.innerHTML = `
+                <label for="edit-destination-${i + 1}">Destination ${i + 1}</label>
+                <input type="text" id="edit-destination-${i + 1}" value="${String(dest)}">
+                <label for="edit-earnings-${i + 1}">Earnings ${i + 1}</label>
+                <input type="number" id="edit-earnings-${i + 1}" value="${earningValue}">
                 <button type="button" class="delete-btn" onclick="deleteEditDestination(this)">Delete</button>
             `;
-            container.appendChild(newDestDiv);
-        }
+            editDestinationsContainer.appendChild(destDiv);
 
-        function deleteEditDestination(button) {
-            button.closest('.destination').remove();
-        }
+            const editEarningsInput = destDiv.querySelector(`#edit-earnings-${i + 1}`);
+            editEarningsInput.addEventListener('change', updateEditTotalEarnings);
+        });
+
+        // Add event listeners for mpg, gas price, and mileage changes
+        document.getElementById('edit-mpg').addEventListener('change', updateEditFuelCost);
+        document.getElementById('edit-gas-price').addEventListener('change', updateEditFuelCost);
+        document.getElementById('edit-total-mileage').addEventListener('change', updateEditFuelCost);
+
+        updateEditFuelCost();
+        updateEditTotalEarnings();
+
+        document.getElementById('edit-form-container').style.display = 'block';
+        document.getElementById('overlay').style.display = 'block';
+
+    } else {
+        console.error("Error: No log entry found at index:", index);
+    }
+}
 
 function saveEditedLogEntry() {
     console.log("saveEditedLogEntry FUNCTION IS BEING CALLED!");
-
     if (editingIndex === -1) {
         console.log("editingIndex is -1, no entry to save.");
         return;
@@ -901,16 +964,22 @@ function saveEditedLogEntry() {
     entry.suppliesCost = parseFloat(document.getElementById('edit-supplies-cost').value);
     entry.totalMileage = parseFloat(document.getElementById('edit-total-mileage').value);
     entry.totalTime = document.getElementById('edit-total-time').value;
-    const editedHoursWorked = parseFloat(document.getElementById('edit-hours-worked').value) || 0;
-    entry.hoursWorked = editedHoursWorked;
-    console.log("Edited hoursWorked:", entry.hoursWorked);
+    entry.hoursWorked = parseFloat(document.getElementById('edit-hours-worked').value) || 0;
+    // Save MPG and Gas Price
+    entry.mpg = parseFloat(document.getElementById('edit-mpg').value);
+    entry.gasPrice = parseFloat(document.getElementById('edit-gas-price').value);
+    entry.earnings = [];
+    const editEarningsInputs = document.querySelectorAll('#edit-destinations-container input[id^="edit-earnings-"]');
+    editEarningsInputs.forEach(input => {
+        entry.earnings.push(parseFloat(input.value));
+    });
+
 
     // Recalculate net profit
     const netProfitBeforeOptional = entry.totalEarnings - entry.fuelCost;
     entry.netProfit = (netProfitBeforeOptional - entry.maintenanceCost - entry.suppliesCost).toFixed(2);
-    console.log("Recalculated netProfit:", entry.netProfit);
 
-// Calculate total hours spent
+    // Calculate total hours spent
     let driveTimeInHours = 0;
     const timeMatch = entry.totalTime.match(/(\d+)\s*hour(s)?\s*(\d+)?\s*minute(s)?/i);
     if (timeMatch) {
@@ -922,22 +991,18 @@ function saveEditedLogEntry() {
         if (minuteMatch) {
             driveTimeInHours = parseInt(minuteMatch[1]) / 60 || 0;
         } else {
-            driveTimeInHours = parseFloat(entry.totalTime) || 0; // Try to parse as simple hours (as a fallback)
+            driveTimeInHours = parseFloat(entry.totalTime) || 0;
         }
     }
-    console.log("Parsed driveTimeInHours:", driveTimeInHours);
-
     const totalHoursSpent = entry.hoursWorked + driveTimeInHours;
-    console.log("Total hours spent:", totalHoursSpent);
-
-    const newProfitPerHour = totalHoursSpent > 0 ? (parseFloat(entry.netProfit) / totalHoursSpent).toFixed(2) : '0.00';
-    entry.profitPerHour = newProfitPerHour; // Directly update the entry
-    console.log("Calculated profitPerHour:", entry.profitPerHour);
+    entry.profitPerHour = totalHoursSpent > 0 ? (parseFloat(entry.netProfit) / totalHoursSpent).toFixed(2) : '0.00';
 
     saveLog();
     displayLog(document.getElementById('organize-by-day').value);
     closeEditForm();
 }
+
+
 
 function exportToCSV() {
     const header = "Date,Start Address,Destinations,End Address,Total Earnings,Fuel Cost,Maintenance Cost,Supplies Cost,Net Profit,Total Mileage,Total Drive Time,Earnings per Stop,Profit per Hour\n";
