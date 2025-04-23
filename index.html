@@ -268,6 +268,10 @@
     <div class="container">
         <h1>Route and Cost Calculator</h1>
 
+	<label for="log-date">Date</label>
+	<input type="date" id="log-date" required>
+
+
         <label for="start-address">Start Address</label>
         <input type="text" id="start-address" placeholder="Enter start address" required>
 
@@ -398,6 +402,15 @@
     </div>
 
     <script>
+// Auto-fill the date input with today's date
+document.addEventListener('DOMContentLoaded', () => {
+    const dateInput = document.getElementById('log-date');
+    if (dateInput) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+    }
+});
+
         // Replace with your actual Google Maps API key
         const GOOGLE_MAPS_API_KEY = 'YOUR_GOOGLE_MAPS_API_KEY';
         document.querySelector('script[src*="maps.googleapis.com"]').src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&callback=initMap`;
@@ -408,6 +421,7 @@
         let autocompleteStart, autocompleteEnd;
         let logEntries = loadLog();
         let editingIndex = -1;
+	let originalMileage = null;
 
 function initMap() {
             map = new google.maps.Map(document.getElementById("map"), {
@@ -425,6 +439,9 @@ function initMap() {
 
             autocompleteStart = new google.maps.places.Autocomplete(document.getElementById("start-address"), { types: ['geocode'] });
             autocompleteEnd = new google.maps.places.Autocomplete(document.getElementById("end-address"), { types: ['geocode'] });
+document.getElementById("start-address").addEventListener("change", resetOriginalMileageDisplay);
+document.getElementById("end-address").addEventListener("change", resetOriginalMileageDisplay);
+
 
             autocompleteStart.addListener("place_changed", function () {
                 const place = autocompleteStart.getPlace();
@@ -524,7 +541,7 @@ async function calculateRoute() {
     const profitPerHour = totalHoursSpent > 0 ? netProfit / totalHoursSpent : 0;
 
                         resolve({
-                            date: new Date().toLocaleDateString(),
+                            date: document.getElementById('log-date').value || new Date().toLocaleDateString(),
                             startTime: startAddress,
                             endTime: endAddress,
                             destinations: destinations.map(d => d.location),
@@ -550,21 +567,37 @@ async function calculateRoute() {
         }
 
 function updateUI(data) {
-        if (data) {
-            document.getElementById('total-mileage').textContent = data.totalMileage;
-            document.getElementById('total-time').textContent = data.totalTime;
-            document.getElementById('total-earnings').textContent = data.totalEarnings;
-            document.getElementById('fuel-cost').textContent = data.fuelCost;
-            document.getElementById('maintenance-cost-result').textContent = data.maintenanceCost;
-            document.getElementById('supplies-cost-result').textContent = data.suppliesCost;
-            document.getElementById('net-profit').textContent = data.netProfit;
-            document.getElementById('profit-per-hour').textContent = data.profitPerHour;
-            document.getElementById('results').classList.remove('hidden');
+    if (data) {
+        document.getElementById('total-mileage').textContent = data.totalMileage;
+        document.getElementById('total-time').textContent = data.totalTime;
+        document.getElementById('total-earnings').textContent = data.totalEarnings;
+        document.getElementById('fuel-cost').textContent = data.fuelCost;
+        document.getElementById('maintenance-cost-result').textContent = data.maintenanceCost;
+        document.getElementById('supplies-cost-result').textContent = data.suppliesCost;
+        document.getElementById('net-profit').textContent = data.netProfit;
+        document.getElementById('profit-per-hour').textContent = data.profitPerHour;
+        document.getElementById('results').classList.remove('hidden');
 
-            // Display mileage below the map
-            document.getElementById('mileage-display').textContent = "Input Mileage: " + data.totalMileage + " miles";
-        }
+if (originalMileage === null) {
+    originalMileage = data.totalMileage;
+    document.getElementById('mileage-display').textContent = "Original Route: " + originalMileage + " miles";
+} else {
+    // Do not overwrite originalMileage!
+    document.getElementById('mileage-display').textContent = "Original Route: " + originalMileage + " miles";
+}
+
     }
+}
+
+function resetOriginalMileageDisplay() {
+    originalMileage = null;
+    document.getElementById('mileage-display').textContent = "";
+    document.getElementById('optimized-mileage-display').textContent = "";
+}
+
+
+
+
 
 async function logResults() {
     const calculationResult = await calculateRouteData(); // Wait for the promise to resolve
@@ -577,6 +610,10 @@ async function logResults() {
 }
 
 async function optimizeRoute() {
+    if (originalMileage === null) {
+        await calculateRoute(); // This ensures we log original mileage before optimizing
+    }
+
     const startAddress = document.getElementById('start-address').value;
     const endAddress = document.getElementById('end-address').value;
     const destInputs = document.querySelectorAll('#destinations-container .destination input[type="text"]');
@@ -587,13 +624,14 @@ async function optimizeRoute() {
         return;
     }
 
+
     const waypoints = currentDestinations.map(location => ({ location: location, stopover: true }));
     const request = {
         origin: startAddress,
         destination: endAddress,
         waypoints: waypoints,
         travelMode: 'DRIVING',
-        optimizeWaypoints: true // Key option for optimization
+        optimizeWaypoints: true
     };
 
     directionsService.route(request, (response, status) => {
@@ -606,45 +644,47 @@ async function optimizeRoute() {
                 const originalDestinationDiv = destInputs[index].closest('.destination');
                 const clonedDestinationDiv = originalDestinationDiv.cloneNode(true);
 
-                // Update the destination and earnings input IDs and labels
                 const destLabel = clonedDestinationDiv.querySelector('label[for^="destination-"]');
                 const destInput = clonedDestinationDiv.querySelector('input[id^="destination-"]');
                 const earningsLabel = clonedDestinationDiv.querySelector('label[for^="earnings-"]');
                 const earningsInput = clonedDestinationDiv.querySelector('input[id^="earnings-"]');
                 const newIndex = i + 1;
+
                 if (destLabel) destLabel.setAttribute('for', `destination-${newIndex}`);
-                if (destInput) {
-                    destInput.id = `destination-${newIndex}`;
-                }
+                if (destInput) destInput.id = `destination-${newIndex}`;
                 if (earningsLabel) earningsLabel.setAttribute('for', `earnings-${newIndex}`);
-                if (earningsInput) {
-                    earningsInput.id = `earnings-${newIndex}`;
-                } newDestinationsContainer.appendChild(clonedDestinationDiv);
+                if (earningsInput) earningsInput.id = `earnings-${newIndex}`;
+
+                newDestinationsContainer.appendChild(clonedDestinationDiv);
             });
-            // Replace the old destinations container with the new optimized one
+
             const oldDestinationsContainer = document.getElementById('destinations-container');
             oldDestinationsContainer.parentNode.replaceChild(newDestinationsContainer, oldDestinationsContainer);
 
-            // Re-initialize autocomplete for the new destination inputs
             document.querySelectorAll('#destinations-container .destination input[type="text"]').forEach(initAutocompleteDestination);
 
-            // Calculate and display the optimized route mileage
+            // ✅ Update map and show optimized results (WITHOUT overwriting original)
+            directionsRenderer.setDirections(response);
+
             let optimizedMileage = 0;
+            let totalDuration = 0;
             response.routes[0].legs.forEach(leg => {
                 optimizedMileage += leg.distance.value / 1609.34;
+                totalDuration += leg.duration.value;
             });
-            document.getElementById('optimized-mileage-display').textContent = "Optimized Mileage: " + optimizedMileage.toFixed(2) + " miles";
 
-            // Optionally, you can recalculate and display the route on the map
-            calculateRoute();
+            document.getElementById('optimized-mileage-display').textContent = "Optimized Route: " + optimizedMileage.toFixed(2) + " miles";
+            document.getElementById('total-time').textContent = formatDuration(totalDuration);
+
         } else if (status === 'OK') {
-            // If no waypoint_order (only start and end), just recalculate the route
-            calculateRoute();
+            // fallback if optimization fails
+            directionsRenderer.setDirections(response);
         } else {
             alert('Could not optimize route due to: ' + status);
         }
     });
 }
+
 
 function formatDuration(seconds) {
             const hours = Math.floor(seconds / 3600);
@@ -668,7 +708,7 @@ function formatDuration(seconds) {
             const container = document.getElementById('destinations-container');
             const newDestinationDiv = document.createElement('div');
             newDestinationDiv.classList.add('destination');
-newDestinationDiv.innerHTML = `
+	    newDestinationDiv.innerHTML = `
     <label for="destination-${newDestinationIndex}">Destination ${newDestinationIndex}</label>
     <input type="text" id="destination-${newDestinationIndex}" placeholder="Enter destination address" required>
     <label for="earnings-${newDestinationIndex}">Earnings for Destination ${newDestinationIndex}</label>
@@ -680,28 +720,35 @@ newDestinationDiv.innerHTML = `
     </div>
 `;
             container.appendChild(newDestinationDiv);
-            initAutocompleteDestination(newDestinationDiv.querySelector('input[type="text"]'));
-        }
+    initAutocompleteDestination(newDestinationDiv.querySelector('input[type="text"]'));
+    resetOriginalMileageDisplay();
+}
 
-        function deleteDestination(button) {
-            button.closest('.destination').remove();
-        }
+function deleteDestination(button) {
+    button.closest('.destination').remove();
+    resetOriginalMileageDisplay(); // <- Add this line
+}
 
-        function moveDestinationUp(button) {
-            const destinationDiv = button.closest('.destination');
-            const prevDiv = destinationDiv.previousElementSibling;
-            if (prevDiv) {
-                destinationDiv.parentNode.insertBefore(destinationDiv, prevDiv);
-            }
-        }
 
-        function moveDestinationDown(button) {
-            const destinationDiv = button.closest('.destination');
-            const nextDiv = destinationDiv.nextElementSibling;
-            if (nextDiv) {
-                destinationDiv.parentNode.insertBefore(nextDiv, destinationDiv.nextSibling);
-            }
-        }
+function moveDestinationUp(button) {
+    const destinationDiv = button.closest('.destination');
+    const prevDiv = destinationDiv.previousElementSibling;
+    if (prevDiv) {
+        destinationDiv.parentNode.insertBefore(destinationDiv, prevDiv);
+        resetOriginalMileageDisplay();
+    }
+}
+
+
+function moveDestinationDown(button) {
+    const destinationDiv = button.closest('.destination');
+    const nextDiv = destinationDiv.nextElementSibling;
+    if (nextDiv) {
+        destinationDiv.parentNode.insertBefore(nextDiv, destinationDiv.nextSibling);
+        resetOriginalMileageDisplay();
+    }
+}
+
 
         function logEntry(data) {
             logEntries.unshift(data);
