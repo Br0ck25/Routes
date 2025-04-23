@@ -291,8 +291,6 @@ input[type="text"], input[type="number"], input[type="date"], button, select {
 </div>
 
         <button onclick="addDestination()">Add Destination</button>
-        <button onclick="optimizeRoute()">Optimize Route</button>
-
         <label for="end-address">End Address</label>
         <input type="text" id="end-address" placeholder="Enter end address" required>
 
@@ -313,7 +311,7 @@ input[type="text"], input[type="number"], input[type="date"], button, select {
             <label for="supplies-cost">Supplies Cost (Optional)</label>
             <input type="number" id="supplies-cost" placeholder="Enter supplies cost for the day" value="0">
         </div>
-
+        <button onclick="optimizeRoute()">Optimize Route</button>
         <button onclick="calculateRoute()">Calculate</button>
         <button onclick="logResults()">Log</button>
 
@@ -375,6 +373,8 @@ input[type="text"], input[type="number"], input[type="date"], button, select {
 
         <label for="edit-end-address">End Address</label>
         <input type="text" id="edit-end-address">
+<button type="button" onclick="recalculateEditMileageAndCosts()">Recalculate Mileage</button>
+
 
         <label for="edit-total-earnings">Total Earnings</label>
         <input type="number" id="edit-total-earnings">
@@ -745,10 +745,11 @@ function moveDestinationDown(button) {
     const destinationDiv = button.closest('.destination');
     const nextDiv = destinationDiv.nextElementSibling;
     if (nextDiv) {
-        destinationDiv.parentNode.insertBefore(nextDiv, destinationDiv.nextSibling);
+        destinationDiv.parentNode.insertBefore(nextDiv, destinationDiv);
         resetOriginalMileageDisplay();
     }
 }
+
 
 
         function logEntry(data) {
@@ -893,15 +894,19 @@ function updateEditFuelCost() {
 }
 
 function recalculateEditMileageAndCosts() {
-    // Combine all edit destinations for a test route calculation
-    const start = document.getElementById('edit-start-address').value;
-    const end = document.getElementById('edit-end-address').value;
+    const start = document.getElementById('edit-start-address').value.trim();
+    const end = document.getElementById('edit-end-address').value.trim();
     const destInputs = document.querySelectorAll('#edit-destinations-container input[id^="edit-destination-"]');
 
-    const destinations = Array.from(destInputs).map(input => ({
-        location: input.value,
+    const destinations = Array.from(destInputs).filter(input => input.value.trim()).map(input => ({
+        location: input.value.trim(),
         stopover: true
     }));
+
+    if (!start || !end || destinations.length !== destInputs.length) {
+        console.warn("Missing start/end or destination, skipping route calc");
+        return;
+    }
 
     const request = {
         origin: start,
@@ -919,14 +924,29 @@ function recalculateEditMileageAndCosts() {
                 totalDuration += leg.duration.value;
             });
 
-            document.getElementById('edit-total-mileage').value = totalMileage.toFixed(2);
-            document.getElementById('edit-total-time').value = formatDuration(totalDuration);
-            updateEditFuelCost(); // Recalculate based on new mileage
+            const mileageInput = document.getElementById('edit-total-mileage');
+            const timeInput = document.getElementById('edit-total-time');
+
+            console.log("Updating:", {
+                mileageInput,
+                timeInput,
+                totalMileage: totalMileage.toFixed(2),
+                formattedTime: formatDuration(totalDuration)
+            });
+
+            if (mileageInput) mileageInput.value = totalMileage.toFixed(2);
+            if (timeInput) timeInput.value = formatDuration(totalDuration);
+
+            updateEditFuelCost();
         } else {
-            alert("Error recalculating mileage: " + status);
+            console.error("Mileage error:", status);
         }
     });
 }
+
+
+
+
 
 
 function moveEditDestinationUp(button) {
@@ -935,7 +955,13 @@ function moveEditDestinationUp(button) {
     if (prevDiv) {
         destinationDiv.parentNode.insertBefore(destinationDiv, prevDiv);
         resetOriginalMileageDisplay();
-        recalculateEditMileageAndCosts(); // ← Add this
+// Delay mileage recalculation until the user selects or finishes editing the address
+addressInput.addEventListener('blur', recalculateEditMileageAndCosts);
+
+// If using Google Autocomplete, also respond to a place selection
+const autocomplete = new google.maps.places.Autocomplete(addressInput, { types: ['geocode'] });
+autocomplete.addListener('place_changed', recalculateEditMileageAndCosts);
+
     }
 }
 
@@ -944,11 +970,89 @@ function moveEditDestinationDown(button) {
     const destinationDiv = button.closest('.destination');
     const nextDiv = destinationDiv.nextElementSibling;
     if (nextDiv) {
-        destinationDiv.parentNode.insertBefore(nextDiv, destinationDiv.nextSibling);
+        destinationDiv.parentNode.insertBefore(nextDiv, destinationDiv);
         resetOriginalMileageDisplay();
-        recalculateEditMileageAndCosts(); // ← Add this
+        recalculateEditMileageAndCosts();
     }
 }
+
+function addEditDestination() {
+    const container = document.getElementById('edit-destinations-container');
+    const newIndex = container.querySelectorAll('.destination').length + 1;
+
+    const destDiv = document.createElement('div');
+    destDiv.classList.add('destination');
+    destDiv.innerHTML = `
+        <label for="edit-destination-${newIndex}">Destination ${newIndex}</label>
+        <input type="text" id="edit-destination-${newIndex}" placeholder="Enter destination address">
+        <label for="edit-earnings-${newIndex}">Earnings ${newIndex}</label>
+        <input type="number" id="edit-earnings-${newIndex}" placeholder="Enter earnings">
+        <div class="destination-actions">
+            <button type="button" class="delete-btn" onclick="deleteEditDestination(this)">Delete</button>
+            <button type="button" class="move-btn" onclick="moveEditDestinationUp(this)">Move Up</button>
+            <button type="button" class="move-btn" onclick="moveEditDestinationDown(this)">Move Down</button>
+        </div>
+    `;
+
+    container.appendChild(destDiv);
+
+    const addressInput = destDiv.querySelector(`#edit-destination-${newIndex}`);
+    const autocomplete = new google.maps.places.Autocomplete(addressInput, { types: ['geocode'] });
+
+    // ✅ Only trigger recalculation when a valid place is selected
+    autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace();
+        if (place && place.geometry) {
+            recalculateEditMileageAndCosts();
+        } else {
+            console.warn("Invalid place selected, skipping mileage recalculation.");
+        }
+    });
+
+    initAutocompleteDestination(addressInput); // optional, if used elsewhere
+    const earningsInput = destDiv.querySelector(`#edit-earnings-${newIndex}`);
+    earningsInput.addEventListener('change', updateEditTotalEarnings);
+
+    resetOriginalMileageDisplay();
+}
+
+
+
+function deleteEditDestination(button) {
+    const destinationDiv = button.closest('.destination');
+    destinationDiv.remove();
+
+    // Reindex the remaining destinations
+    const container = document.getElementById('edit-destinations-container');
+    const destinationDivs = container.querySelectorAll('.destination');
+    destinationDivs.forEach((div, index) => {
+        const newIndex = index + 1;
+
+        // Update labels and IDs for destination
+        const destLabel = div.querySelector('label[for^="edit-destination-"]');
+        const destInput = div.querySelector('input[id^="edit-destination-"]');
+        const earningsLabel = div.querySelector('label[for^="edit-earnings-"]');
+        const earningsInput = div.querySelector('input[id^="edit-earnings-"]');
+
+        if (destLabel) destLabel.setAttribute('for', `edit-destination-${newIndex}`);
+        if (destInput) {
+            destInput.id = `edit-destination-${newIndex}`;
+            destInput.placeholder = `Enter destination address`;
+        }
+
+        if (earningsLabel) earningsLabel.setAttribute('for', `edit-earnings-${newIndex}`);
+        if (earningsInput) {
+            earningsInput.id = `edit-earnings-${newIndex}`;
+            earningsInput.placeholder = `Enter earnings`;
+        }
+    });
+
+    updateEditTotalEarnings(); // Recalculate earnings after deletion
+    resetOriginalMileageDisplay();
+    recalculateEditMileageAndCosts(); // Recalculate mileage and costs
+}
+
+
 
 
 function openEditForm(index) {
@@ -972,6 +1076,8 @@ function openEditForm(index) {
 
             <label for="edit-end-address">End Address</label>
             <input type="text" id="edit-end-address">
+<button type="button" onclick="recalculateEditMileageAndCosts()">Recalculate Mileage</button>
+
 
             <label for="edit-total-earnings">Total Earnings</label>
             <input type="number" id="edit-total-earnings">
@@ -1052,6 +1158,27 @@ destDiv.innerHTML = `
         updateEditFuelCost();
         updateEditTotalEarnings();
 
+
+setTimeout(() => {
+    document.querySelectorAll('#edit-destinations-container input[id^="edit-destination-"]').forEach(input => {
+        const autocomplete = new google.maps.places.Autocomplete(input, { types: ['geocode'] });
+
+        // Optional, safe to keep
+        initAutocompleteDestination(input);
+
+        autocomplete.addListener('place_changed', () => {
+            const place = autocomplete.getPlace();
+            console.log("PLACE CHANGED FIRED:", place);
+            if (place && place.geometry) {
+                recalculateEditMileageAndCosts();
+            } else {
+                console.warn("Invalid place selected for destination.");
+            }
+        });
+    });
+}, 0);
+
+
         document.getElementById('edit-form-container').style.display = 'block';
         document.getElementById('overlay').style.display = 'block';
 
@@ -1061,9 +1188,8 @@ destDiv.innerHTML = `
 }
 
 function saveEditedLogEntry() {
-    console.log("saveEditedLogEntry FUNCTION IS BEING CALLED!");
     if (editingIndex === -1) {
-        console.log("editingIndex is -1, no entry to save.");
+        console.warn("No entry selected for editing.");
         return;
     }
 
@@ -1071,28 +1197,40 @@ function saveEditedLogEntry() {
     entry.date = document.getElementById('edit-date').value;
     entry.startTime = document.getElementById('edit-start-address').value;
     entry.endTime = document.getElementById('edit-end-address').value;
-    entry.totalEarnings = parseFloat(document.getElementById('edit-total-earnings').value);
+
+    // ✅ Grab destinations and earnings
+    entry.destinations = [];
+    entry.earnings = [];
+
+    const destInputs = document.querySelectorAll('#edit-destinations-container input[id^="edit-destination-"]');
+    const earningsInputs = document.querySelectorAll('#edit-destinations-container input[id^="edit-earnings-"]');
+
+    destInputs.forEach(input => {
+        entry.destinations.push(input.value.trim());
+    });
+
+    earningsInputs.forEach(input => {
+        const value = parseFloat(input.value.trim()) || 0;
+        entry.earnings.push(value);
+    });
+
+    // ✅ Recalculate total earnings
+    entry.totalEarnings = entry.earnings.reduce((sum, val) => sum + val, 0).toFixed(2);
+
     entry.fuelCost = parseFloat(document.getElementById('edit-fuel-cost').value);
     entry.maintenanceCost = parseFloat(document.getElementById('edit-maintenance-cost').value);
     entry.suppliesCost = parseFloat(document.getElementById('edit-supplies-cost').value);
     entry.totalMileage = parseFloat(document.getElementById('edit-total-mileage').value);
     entry.totalTime = document.getElementById('edit-total-time').value;
     entry.hoursWorked = parseFloat(document.getElementById('edit-hours-worked').value) || 0;
-    // Save MPG and Gas Price
+
     entry.mpg = parseFloat(document.getElementById('edit-mpg').value);
     entry.gasPrice = parseFloat(document.getElementById('edit-gas-price').value);
-    entry.earnings = [];
-    const editEarningsInputs = document.querySelectorAll('#edit-destinations-container input[id^="edit-earnings-"]');
-    editEarningsInputs.forEach(input => {
-        entry.earnings.push(parseFloat(input.value));
-    });
 
-
-    // Recalculate net profit
     const netProfitBeforeOptional = entry.totalEarnings - entry.fuelCost;
     entry.netProfit = (netProfitBeforeOptional - entry.maintenanceCost - entry.suppliesCost).toFixed(2);
 
-    // Calculate total hours spent
+    // Calculate profit per hour
     let driveTimeInHours = 0;
     const timeMatch = entry.totalTime.match(/(\d+)\s*hour(s)?\s*(\d+)?\s*minute(s)?/i);
     if (timeMatch) {
@@ -1102,18 +1240,18 @@ function saveEditedLogEntry() {
     } else {
         const minuteMatch = entry.totalTime.match(/(\d+)\s*minute(s)?/i);
         if (minuteMatch) {
-            driveTimeInHours = parseInt(minuteMatch[1]) / 60 || 0;
-        } else {
-            driveTimeInHours = parseFloat(entry.totalTime) || 0;
+            driveTimeInHours = parseInt(minuteMatch[1]) / 60;
         }
     }
+
     const totalHoursSpent = entry.hoursWorked + driveTimeInHours;
-    entry.profitPerHour = totalHoursSpent > 0 ? (parseFloat(entry.netProfit) / totalHoursSpent).toFixed(2) : '0.00';
+    entry.profitPerHour = totalHoursSpent > 0 ? (entry.netProfit / totalHoursSpent).toFixed(2) : '0.00';
 
     saveLog();
     displayLog(document.getElementById('organize-by-day').value);
     closeEditForm();
 }
+
 
 
 
