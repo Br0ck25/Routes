@@ -54,7 +54,8 @@
             color: #555;
         }
 
-        input[type="text"], input[type="number"], button, select {
+input[type="text"], input[type="number"], input[type="date"], button, select {
+
             width: 100%;
             padding: 10px;
             margin: 8px 0;
@@ -891,6 +892,65 @@ function updateEditFuelCost() {
     document.getElementById('edit-fuel-cost').value = fuelCost.toFixed(2);
 }
 
+function recalculateEditMileageAndCosts() {
+    // Combine all edit destinations for a test route calculation
+    const start = document.getElementById('edit-start-address').value;
+    const end = document.getElementById('edit-end-address').value;
+    const destInputs = document.querySelectorAll('#edit-destinations-container input[id^="edit-destination-"]');
+
+    const destinations = Array.from(destInputs).map(input => ({
+        location: input.value,
+        stopover: true
+    }));
+
+    const request = {
+        origin: start,
+        destination: end,
+        waypoints: destinations,
+        travelMode: 'DRIVING'
+    };
+
+    directionsService.route(request, (response, status) => {
+        if (status === 'OK') {
+            let totalMileage = 0;
+            let totalDuration = 0;
+            response.routes[0].legs.forEach(leg => {
+                totalMileage += leg.distance.value / 1609.34;
+                totalDuration += leg.duration.value;
+            });
+
+            document.getElementById('edit-total-mileage').value = totalMileage.toFixed(2);
+            document.getElementById('edit-total-time').value = formatDuration(totalDuration);
+            updateEditFuelCost(); // Recalculate based on new mileage
+        } else {
+            alert("Error recalculating mileage: " + status);
+        }
+    });
+}
+
+
+function moveEditDestinationUp(button) {
+    const destinationDiv = button.closest('.destination');
+    const prevDiv = destinationDiv.previousElementSibling;
+    if (prevDiv) {
+        destinationDiv.parentNode.insertBefore(destinationDiv, prevDiv);
+        resetOriginalMileageDisplay();
+        recalculateEditMileageAndCosts(); // ← Add this
+    }
+}
+
+
+function moveEditDestinationDown(button) {
+    const destinationDiv = button.closest('.destination');
+    const nextDiv = destinationDiv.nextElementSibling;
+    if (nextDiv) {
+        destinationDiv.parentNode.insertBefore(nextDiv, destinationDiv.nextSibling);
+        resetOriginalMileageDisplay();
+        recalculateEditMileageAndCosts(); // ← Add this
+    }
+}
+
+
 function openEditForm(index) {
     editingIndex = index;
     const entry = logEntries[index];
@@ -966,13 +1026,18 @@ function openEditForm(index) {
             const earningValue = isNaN(entry.earnings[i]) ? '' : String(entry.earnings[i]);
             const destDiv = document.createElement('div');
             destDiv.classList.add('destination');
-            destDiv.innerHTML = `
-                <label for="edit-destination-${i + 1}">Destination ${i + 1}</label>
-                <input type="text" id="edit-destination-${i + 1}" value="${String(dest)}">
-                <label for="edit-earnings-${i + 1}">Earnings ${i + 1}</label>
-                <input type="number" id="edit-earnings-${i + 1}" value="${earningValue}">
-                <button type="button" class="delete-btn" onclick="deleteEditDestination(this)">Delete</button>
-            `;
+destDiv.innerHTML = `
+    <label for="edit-destination-${i + 1}">Destination ${i + 1}</label>
+    <input type="text" id="edit-destination-${i + 1}" value="${String(dest)}">
+    <label for="edit-earnings-${i + 1}">Earnings ${i + 1}</label>
+    <input type="number" id="edit-earnings-${i + 1}" value="${earningValue}">
+    <div class="destination-actions">
+        <button type="button" class="delete-btn" onclick="deleteEditDestination(this)">Delete</button>
+        <button type="button" class="move-btn" onclick="moveEditDestinationUp(this)">Move Up</button>
+        <button type="button" class="move-btn" onclick="moveEditDestinationDown(this)">Move Down</button>
+    </div>
+`;
+
             editDestinationsContainer.appendChild(destDiv);
 
             const editEarningsInput = destDiv.querySelector(`#edit-earnings-${i + 1}`);
