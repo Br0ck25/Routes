@@ -2,33 +2,33 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Route and Cost Calculator with Log</title>
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCHrNRHP9LNGVHi9Srk1Gfcrv-4ee_gUHQ&amp;libraries=places&amp;callback=initMap" async="" defer=""></script>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f4f9;
-            margin: 0;
-            padding: 20px 0;
-            display: flex;
-            justify-content: center; /* Center horizontally */
-            align-items: flex-start; /* Align items to the top for better flow */
-            min-height: 100vh;
-            flex-direction: column;
-        }
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f4f9;
+    margin: 0;
+    padding: 40px 0;
+    display: flex;
+    justify-content: center;      /* center horizontally */
+    flex-direction: column;       /* stack sections vertically */
+    align-items: center;          /* center horizontally */
+}
 
-        .container, #log-container, #import-container, #export-options, .edit-form-container {
-            background-color: white;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            border-radius: 8px;
-            width: 100%;
-            max-width: 700px;
-            margin-bottom: 20px;
-            box-sizing: border-box;
-            overflow: auto;
-        }
+
+.container, #log-container, #import-container, #export-options, .edit-form-container {
+    background-color: white;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 900px;
+    margin: 20px auto;             /* center and space */
+    box-sizing: border-box;
+    overflow: auto;
+}
 
         #export-options, #import-container {
             text-align: center;
@@ -261,6 +261,59 @@ input[type="text"], input[type="number"], input[type="date"], button, select {
             background-color: rgba(0, 0, 0, 0.5);
             z-index: 999;
         }
+
+.custom-view-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.custom-view-modal {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    max-width: 700px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
+    font-size: 16px;
+    color: #333;
+}
+
+.custom-view-modal h3 {
+    margin-top: 0;
+    font-size: 22px;
+    text-align: center;
+}
+
+.custom-view-modal p {
+    margin: 10px 0;
+}
+
+.custom-view-modal button {
+    background-color: #dc3545;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    display: block;
+    margin: 20px auto 0;
+}
+
+.custom-view-modal button:hover {
+    background-color: #c82333;
+}
+
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
@@ -817,24 +870,56 @@ function displayLog(filterDay = 'all') {
     }
 }
 
-        function viewLogEntry(index) {
-            const entry = logEntries[index];
-            alert(`
-                Date: ${entry.date}
-                Start Address: ${entry.startTime}
-                Destinations: ${entry.destinations.join('\n - ')}
-                End Address: ${entry.endTime}
-                Earnings per Stop: $${entry.earnings.join(', $')}
-                Total Mileage: ${entry.totalMileage} miles
-                Total Drive Time: ${entry.totalTime}
-                Total Earnings: $${entry.totalEarnings}
-                Fuel Consumption Cost: $${entry.fuelCost}
-                Maintenance Cost: $${entry.maintenanceCost}
-                Supplies Cost: $${entry.suppliesCost}
-                Net Profit: $${entry.netProfit}
-                Profit per Hour: $${entry.profitPerHour}
-            `);
-        }
+function viewLogEntry(index) {
+    const entry = logEntries[index];
+    if (!entry) {
+        console.warn("Invalid log entry index:", index);
+        return;
+    }
+
+    // 🔁 Remove any existing modal first
+    const existingOverlay = document.querySelector('.custom-view-overlay');
+    if (existingOverlay) existingOverlay.remove();
+
+    // ✅ Create overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'custom-view-overlay';
+
+    // ✅ Create modal
+    const modal = document.createElement('div');
+    modal.className = 'custom-view-modal';
+
+    // 🔧 Sanitize and format content
+    const destinations = entry.destinations?.length
+        ? entry.destinations.map(d => `- ${d}`).join('<br>')
+        : 'None';
+
+    const earnings = Array.isArray(entry.earnings)
+        ? entry.earnings.map(e => `$${parseFloat(e).toFixed(2)}`).join(', ')
+        : '$0.00';
+
+    modal.innerHTML = `
+        <h3>Log Entry Details</h3>
+        <p><strong>Date:</strong> ${entry.date}</p>
+        <p><strong>Start Address:</strong> ${entry.startTime}</p>
+        <p><strong>Destinations:</strong><br>${destinations}</p>
+        <p><strong>End Address:</strong> ${entry.endTime}</p>
+        <p><strong>Earnings per Stop:</strong> ${earnings}</p>
+        <p><strong>Total Mileage:</strong> ${entry.totalMileage} miles</p>
+        <p><strong>Total Drive Time:</strong> ${entry.totalTime}</p>
+        <p><strong>Total Earnings:</strong> $${entry.totalEarnings}</p>
+        <p><strong>Fuel Cost:</strong> $${entry.fuelCost}</p>
+        <p><strong>Maintenance:</strong> $${entry.maintenanceCost}</p>
+        <p><strong>Supplies:</strong> $${entry.suppliesCost}</p>
+        <p><strong>Net Profit:</strong> $${entry.netProfit}</p>
+        <p><strong>Profit per Hour:</strong> $${entry.profitPerHour}</p>
+        <button onclick="this.closest('.custom-view-overlay').remove()">Close</button>
+    `;
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+}
+
 
         function deleteLogEntry(index) {
             if (confirm('Are you sure you want to delete this log entry?')) {
