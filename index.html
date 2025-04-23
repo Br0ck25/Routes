@@ -294,8 +294,8 @@
         <label for="mpg">Miles per Gallon (MPG)</label>
         <input type="number" id="mpg" placeholder="Enter miles per gallon" required>
 
-        <label for="gas-price">Gas Price per Gallon</label>
-        <input type="number" id="gas-price" placeholder="Enter gas price per gallon" required>
+        <label for="gas-price">Fuel Price per Gallon</label>
+        <input type="number" id="gas-price" placeholder="Enter fuel price per gallon" required>
 
         <label for="hours-worked">Hours Worked (Optional)</label>
         <input type="number" id="hours-worked" placeholder="Enter total hours worked">
@@ -316,7 +316,7 @@
             <p>Total Mileage: <span id="total-mileage"></span> miles</p>
             <p>Total Drive Time: <span id="total-time"></span></p>
             <p>Total Earnings: $<span id="total-earnings"></span></p>
-            <p>Fuel Cost: $<span id="fuel-cost"></span></p>
+            <p>Fuel Consumption Cost: $<span id="fuel-cost"></span></p>
             <p>Maintenance Cost: $<span id="maintenance-cost-result"></span></p>
             <p>Supplies Cost: $<span id="supplies-cost-result"></span></p>
             <p>Net Profit: $<span id="net-profit"></span></p>
@@ -374,7 +374,7 @@
         <label for="edit-total-earnings">Total Earnings</label>
         <input type="number" id="edit-total-earnings">
 
-        <label for="edit-fuel-cost">Fuel Cost</label>
+        <label for="edit-fuel-cost">Fuel Consumption Cost</label>
         <input type="number" id="edit-fuel-cost">
 
         <label for="edit-maintenance-cost">Maintenance Cost</label>
@@ -492,8 +492,8 @@ async function calculateRoute() {
                 location: input.value,
                 stopover: true
             }));
-            const earnings = Array.from(earningsInputs).map(input => parseFloat(input.value));
-            const totalEarnings = earnings.reduce((sum, val) => sum + val, 0);
+    const earnings = Array.from(earningsInputs).map(input => parseFloat(input.value) || 0);
+    const totalEarnings = earnings.reduce((sum, val) => sum + val, 0);
 
             const waypoints = destinations;
             const request = {
@@ -517,11 +517,11 @@ async function calculateRoute() {
                             totalDuration += leg.duration.value;
                         });
 
-                        const fuelCost = (totalMileage / mpg) * gasPrice;
-                        const netProfitBeforeOptional = totalEarnings - fuelCost;
-                        const netProfit = netProfitBeforeOptional - maintenanceCost - suppliesCost;
-                        const totalHoursSpent = hoursWorked + (totalDuration / 3600);
-                        const profitPerHour = totalHoursSpent > 0 ? netProfit / totalHoursSpent : 0;
+    const fuelCost = (totalMileage / mpg) * gasPrice;
+    const netProfitBeforeOptional = totalEarnings - fuelCost;
+    const netProfit = netProfitBeforeOptional - maintenanceCost - suppliesCost;
+    const totalHoursSpent = hoursWorked + (totalDuration / 3600);
+    const profitPerHour = totalHoursSpent > 0 ? netProfit / totalHoursSpent : 0;
 
                         resolve({
                             date: new Date().toLocaleDateString(),
@@ -531,11 +531,11 @@ async function calculateRoute() {
                             earnings: earnings,
                             totalMileage: totalMileage.toFixed(2),
                             totalTime: formatDuration(totalDuration),
-                            totalEarnings: totalEarnings.toFixed(2),
-                            fuelCost: fuelCost.toFixed(2),
+        totalEarnings: totalEarnings.toFixed(2),
+        fuelCost: fuelCost.toFixed(2),
                             maintenanceCost: maintenanceCost.toFixed(2),
                             suppliesCost: suppliesCost.toFixed(2),
-                            netProfit: netProfit.toFixed(2),
+        netProfit: netProfit.toFixed(2),
                             profitPerHour: profitPerHour.toFixed(2),
                             hoursWorked: hoursWorked
                         });
@@ -572,6 +572,7 @@ async function logResults() {
         logEntry(calculationResult);
         displayLog();
         populateDayOptions();
+	updateUI(calculationResult);
     }
 }
 
@@ -703,7 +704,7 @@ newDestinationDiv.innerHTML = `
         }
 
         function logEntry(data) {
-            logEntries.push(data);
+            logEntries.unshift(data);
             saveLog();
         }
 
@@ -736,24 +737,24 @@ function displayLog(filterDay = 'all') {
                     // Safely access entry.destinations and use an empty string as a fallback
                     const destinations = Array.isArray(entry.destinations) ? entry.destinations.join(', ') : '';
 
-                    listItem.innerHTML = `
-                        <div class="log-item-details">
-                            <strong>Date:</strong> ${entry.date}<br>
-                            <strong>Start:</strong> ${entry.startTime}<br>
-                            <strong>Destinations:</strong> ${destinations}<br>
-                            <strong>End:</strong> ${entry.endTime}<br>
-                            <strong>Earnings:</strong> $${entry.totalEarnings}<br>
-                            <strong>Fuel Cost:</strong> $${entry.fuelCost}<br>
-                            <strong>Maintenance:</strong> $${entry.maintenanceCost}<br>
-                            <strong>Supplies:</strong> $${entry.suppliesCost}<br>
-                            <strong>Net Profit:</strong> $${entry.netProfit}
-                        </div>
-                        <div class="log-actions">
-                            <button class="edit-btn" onclick="openEditForm(${index})">Edit</button>
-                            <button onclick="viewLogEntry(${index})">View Details</button>
-                            <button onclick="deleteLogEntry(${index})">Delete</button>
-                        </div>
-                    `;
+    listItem.innerHTML = `
+        <div class="log-item-details">
+            <strong>Date:</strong> ${entry.date}<br>
+            <strong>Start:</strong> ${entry.startTime}<br>
+            <strong>Destinations:</strong> ${destinations}<br>
+            <strong>End:</strong> ${entry.endTime}<br>
+            <strong>Earnings:</strong> $${entry.totalEarnings || 0}<br>
+            <strong>Fuel Consumption Cost:</strong> $${entry.fuelCost}<br>
+            <strong>Maintenance:</strong> $${entry.maintenanceCost}<br>
+            <strong>Supplies:</strong> $${entry.suppliesCost}<br>
+            <strong>Net Profit:</strong> $${entry.netProfit || 0}
+        </div>
+        <div class="log-actions">
+            <button class="edit-btn" onclick="openEditForm(${index})">Edit</button>
+            <button onclick="viewLogEntry(${index})">View Details</button>
+            <button onclick="deleteLogEntry(${index})">Delete</button>
+        </div>
+    `;
                     logList.appendChild(listItem);
                 }
             }
@@ -778,7 +779,7 @@ function displayLog(filterDay = 'all') {
                 Total Mileage: ${entry.totalMileage} miles
                 Total Drive Time: ${entry.totalTime}
                 Total Earnings: $${entry.totalEarnings}
-                Fuel Cost: $${entry.fuelCost}
+                Fuel Consumption Cost: $${entry.fuelCost}
                 Maintenance Cost: $${entry.maintenanceCost}
                 Supplies Cost: $${entry.suppliesCost}
                 Net Profit: $${entry.netProfit}
@@ -848,7 +849,7 @@ function openEditForm(index) {
     const entry = logEntries[index];
     if (entry) {
         const editFormContainer = document.getElementById('edit-form-container');
-        editFormContainer.innerHTML = ''; // Clear previous content
+        editFormContainer.innerHTML = '';
 
         // Create and append the basic structure
         editFormContainer.innerHTML = `
@@ -868,9 +869,6 @@ function openEditForm(index) {
             <label for="edit-total-earnings">Total Earnings</label>
             <input type="number" id="edit-total-earnings">
 
-            <label for="edit-fuel-cost">Fuel Cost</label>
-            <input type="number" id="edit-fuel-cost">
-
             <label for="edit-maintenance-cost">Maintenance Cost</label>
             <input type="number" id="edit-maintenance-cost">
 
@@ -889,8 +887,11 @@ function openEditForm(index) {
             <label for="edit-mpg">Miles per Gallon (MPG)</label>
             <input type="number" id="edit-mpg">
 
-            <label for="edit-gas-price">Gas Price per Gallon</label>
+            <label for="edit-gas-price">Fuel Price per Gallon</label>
             <input type="number" id="edit-gas-price">
+
+            <label for="edit-fuel-cost">Fuel Consumption Cost</label>
+            <input type="number" id="edit-fuel-cost">
 
             <button type="button" class="save-btn" onclick="saveEditedLogEntry()">Save</button>
             <button type="button" class="cancel-btn" onclick="closeEditForm()">Cancel</button>
@@ -901,7 +902,7 @@ function openEditForm(index) {
         document.getElementById('edit-date').value = entry.date;
         document.getElementById('edit-start-address').value = entry.startTime;
         document.getElementById('edit-end-address').value = entry.endTime;
-        document.getElementById('edit-total-earnings').value = String(entry.totalEarnings);
+        document.getElementById('edit-total-earnings').value = String(entry.totalEarnings || 0);
         document.getElementById('edit-fuel-cost').value = String(entry.fuelCost);
         document.getElementById('edit-maintenance-cost').value = String(entry.maintenanceCost);
         document.getElementById('edit-supplies-cost').value = String(entry.suppliesCost);
@@ -1005,7 +1006,7 @@ function saveEditedLogEntry() {
 
 
 function exportToCSV() {
-    const header = "Date,Start Address,Destinations,End Address,Total Earnings,Fuel Cost,Maintenance Cost,Supplies Cost,Net Profit,Total Mileage,Total Drive Time,Earnings per Stop,Profit per Hour\n";
+    const header = "Date,Start Address,Destinations,End Address,Total Earnings,Fuel Consumption Cost,Maintenance Cost,Supplies Cost,Net Profit,Total Mileage,Total Drive Time,Earnings per Stop,Profit per Hour\n";
     const csvRows = logEntries.map(entry => {
         const formattedDate = entry.date; // Keep the original date format for CSV
 
