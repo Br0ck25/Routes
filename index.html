@@ -518,17 +518,18 @@ input[type="text"], input[type="number"], input[type="date"], button, select {
         </ul>
     </div>
 
-    <div id="export-options">
-        <h3>Export Log</h3>
-        <button onclick="exportToCSV()">Export to CSV</button>
-        <button onclick="exportToPDF()">Export to PDF</button>
-    </div>
+    <div id="manage-log-container" style="text-align: center; margin-top: 20px; position: relative;">
+  <button onclick="toggleManageLogMenu()" style="padding: 10px 15px; font-size: 16px;">Manage Log ▼</button>
+  <div id="manage-log-menu" style="display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); background: white; border: 1px solid #ccc; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); z-index: 9999; min-width: 160px; margin-top: 5px;">
+    <button onclick="triggerImportFile()" style="width: 100%; padding: 10px; background: none; border: none; text-align: left; color: black;">Import CSV</button>
+    <button onclick="exportToCSV()" style="width: 100%; padding: 10px; background: none; border: none; text-align: left; color: black;">Export CSV</button>
+  </div>
+</div>
 
-    <div id="import-container">
-        <h3>Import Log</h3>
-        <input type="file" id="import-file" accept=".csv">
-        <button onclick="importLog()">Import Log</button>
-    </div>
+<input type="file" id="import-file" accept=".csv" style="display: none;" onchange="importLog()">
+
+
+
 
     <div id="overlay" class="hidden"></div>
 
@@ -2016,6 +2017,27 @@ function filterByDate() {
     const matchesMonth = !month || mm === month;
     return matchesYear && matchesMonth;
   });
+}
+
+function toggleManageLogMenu() {
+  const menu = document.getElementById('manage-log-menu');
+  menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+}
+
+// Hide Manage Log menu when clicking outside
+document.addEventListener('click', function(event) {
+  const menu = document.getElementById('manage-log-menu');
+  const button = event.target.closest('button');
+  if (!button || button.textContent !== 'Manage Log ▼') {
+    if (menu) menu.style.display = 'none';
+  }
+});
+
+function triggerImportFile() {
+  const fileInput = document.getElementById('import-file');
+  if (fileInput) {
+    fileInput.click(); // Simulate a click to open file picker
+  }
 }
 
 
