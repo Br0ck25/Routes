@@ -6,6 +6,15 @@
     <title></title>
 
 <style>
+
+.modal-box {
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  width: 300px;
+  box-sizing: border-box;
+}
+
   @media (max-width: 600px) {
     #account-menu {
       right: 10px;
@@ -65,11 +74,6 @@ body {
             text-align: center;
         }
 
-        #export-options button, #import-container button, #import-container input[type="file"] {
-            margin: 5px 10px;
-            padding: 10px 15px;
-            font-size: 16px;
-        }
 
         h1 {
             text-align: center;
@@ -377,19 +381,8 @@ input[type="text"], input[type="number"], input[type="date"], button, select {
   <div style="display: flex; justify-content: center; position: relative; margin-top: 10px;">
     <button onclick="toggleMenu()" style="font-size: 24px; padding: 8px 12px;">☰</button>
 
-    <div id="account-menu" class="" style="
-      display: none;
-      position: absolute;
-      top: 100%;
-      right: 0;
-      background: white;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-      z-index: 9999;
-      min-width: 180px;
-      padding: 5px 0;
-    ">
+    <div id="account-menu">
+  
       <button onclick="closeMenu(); logout()" style="width: 100%; padding: 10px; background: none; border: none; color: black; text-align: left;">Log Out</button>
       <button onclick="closeMenu(); showPasswordModal()" style="width: 100%; padding: 10px; background: none; border: none; color: black; text-align: left;">Change Password</button>
       <button onclick="closeMenu(); showDeleteModal()" style="width: 100%; padding: 10px; background: none; border: none; color: red; text-align: left;">Delete Account</button>
@@ -557,7 +550,7 @@ input[type="text"], input[type="number"], input[type="date"], button, select {
         <input type="text" id="edit-total-time" placeholder="e.g., 1 hour 30 minutes">
 
         <label for="edit-hours-worked">Hours Worked (Optional)</label>
-        <input type="number" id="edit-hours-worked">f
+        <input type="number" id="edit-hours-worked">
 
         <button type="button" class="save-btn" onclick="saveEditedLogEntry()">Save</button>
         <button type="button" class="cancel-btn" onclick="closeEditForm()">Cancel</button>
@@ -566,15 +559,25 @@ input[type="text"], input[type="number"], input[type="date"], button, select {
 
 <script>
 
+function saveUserInputsToLocalStorage({ mpg, gasPrice, startAddress, endAddress }) {
+  localStorage.setItem('mpg', mpg);
+  localStorage.setItem('gasPrice', gasPrice);
+  localStorage.setItem('startAddress', startAddress);
+  localStorage.setItem('endAddress', endAddress);
+}
+
+
 document.addEventListener('click', function(event) {
   const menu = document.getElementById('account-menu');
   const button = event.target.closest('button');
-  const isToggle = button && button.innerText === '☰';
 
-  if (menu && !menu.contains(event.target) && !isToggle) {
+  const isToggleButton = button && (button.innerText === '☰' || button.onclick === toggleMenu);
+
+  if (menu && !menu.contains(event.target) && !isToggleButton) {
     closeMenu();
   }
 });
+
 
 
 function closeMenu() {
@@ -586,35 +589,35 @@ function closeMenu() {
 }
 
 
-// Optional: Close menu if user clicks outside it
-document.addEventListener('click', function (event) {
-  const menu = document.getElementById('account-menu');
-  const button = event.target.closest('button');
-  if (!menu.contains(event.target) && (!button || button.onclick !== toggleMenu)) {
-    menu.style.display = 'none';
-  }
-});
-
-
 function closeAuthModal() {
   document.getElementById('auth-modal').style.display = 'none';
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  // Set today's date
   const dateInput = document.getElementById('log-date');
   if (dateInput) {
     const today = new Date().toISOString().split('T')[0];
     dateInput.value = today;
   }
 
-  updateAuthUI(); // ✅ this ensures login/logout UI updates when the page loads
+  // Update login/logout button visibility
+  updateAuthUI();
+
+  // Load and display logs
+  logEntries = await loadLog();
+  displayLog();
+  populateYearOptions();
+
+  // Inject Google Maps script
+  const script = document.createElement('script');
+  script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyCHrNRHP9LNGVHi9Srk1Gfcrv-4ee_gUHQ&libraries=places&callback=initMap`;
+  script.async = true;
+  script.defer = true;
+  document.head.appendChild(script);
 });
 
 
-const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
-if (existingScript) {
-    existingScript.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&callback=initMap`;
-}
 
 
         let map;
@@ -625,11 +628,6 @@ if (existingScript) {
 	let originalMileage = null;
 let logEntries = [];
 
-document.addEventListener('DOMContentLoaded', async () => {
-  logEntries = await loadLog();
-  displayLog();         // ✅ Show the logs on page
-  populateYearOptions();  // ✅ Populate the year dropdown too
-});
 
 function showConfirmationMessage(message) {
     const confirmation = document.getElementById('confirmation-message');
@@ -694,14 +692,6 @@ window.initMap = initMap;
             const autocomplete = new google.maps.places.Autocomplete(inputElement, { types:['geocode'] });
         }
 
-        async function calculateAndLog() {
-            const calculationResult = await calculateRoute();
-            if (calculationResult) {
-                logEntry(calculationResult);
-                displayLog();
-                
-            }
-        }
 
 async function calculateRoute() {
             const calculationResult = await calculateRouteData(); // Call the data calculation function
@@ -720,10 +710,7 @@ async function calculateRoute() {
             const maintenanceCost = parseFloat(document.getElementById('maintenance-cost').value) || 0;
             const suppliesCost = parseFloat(document.getElementById('supplies-cost').value) || 0;
 
-            localStorage.setItem('mpg', mpg);
-            localStorage.setItem('gasPrice', gasPrice);
-            localStorage.setItem('startAddress', startAddress);
-            localStorage.setItem('endAddress', endAddress);
+            saveUserInputsToLocalStorage({ mpg, gasPrice, startAddress, endAddress });
 
             const destInputs = document.querySelectorAll('input[id^="destination-"]');
             const earningsInputs = document.querySelectorAll('input[id^="earnings-"]');
@@ -801,11 +788,10 @@ function updateUI(data) {
         document.getElementById('results').classList.remove('hidden');
 
         if (originalMileage === null) {
-            originalMileage = data.totalMileage;
-            document.getElementById('mileage-display').textContent = "Original Route: " + originalMileage + " miles";
-        } else {
-            document.getElementById('mileage-display').textContent = "Original Route: " + originalMileage + " miles";
-        }
+  originalMileage = data.totalMileage;
+}
+document.getElementById('mileage-display').textContent = "Original Route: " + originalMileage + " miles";
+
 
         // ✅ Add the new detailed display below the map
         const detailedResultsHTML = `
@@ -832,13 +818,12 @@ function updateUI(data) {
 
 
 function resetOriginalMileageDisplay() {
-    originalMileage = null;
-    document.getElementById('mileage-display').textContent = "";
-    document.getElementById('optimized-mileage-display').textContent = "";
+  if (originalMileage === null) return; // Already reset — no need to do anything
+
+  originalMileage = null;
+  document.getElementById('mileage-display').textContent = "";
+  document.getElementById('optimized-mileage-display').textContent = "";
 }
-
-
-
 
 
 async function logResults() {
@@ -1054,7 +1039,7 @@ async function saveLog() {
   console.log("⏳ Saving to KV…", logEntries);
 
   try {
-    const response = await fetch("https://betaroutes.jamesbrock25.workers.dev/logs", {
+    const response = await fetch("https://logs.gorouteyourself.com/logs", {
   method: "POST",
   headers: { "Content-Type": "application/json", "Authorization": token },
   body: JSON.stringify(logEntries)
@@ -1075,7 +1060,7 @@ async function saveLog() {
 
 
 async function loadLog() {
-  const response = await fetch("https://betaroutes.jamesbrock25.workers.dev/logs", {
+  const response = await fetch("https://logs.gorouteyourself.com/logs", {
     headers: {
       Authorization: localStorage.getItem("token") || ""
     }
@@ -1215,7 +1200,6 @@ function viewLogEntry(index) {
 
 function populateYearOptions() {
   const yearSelect = document.getElementById('filter-year');
-  console.log("✅ logEntries seen by populateYearOptions:", logEntries.map(e => e.date));
   const years = Array.from(new Set(logEntries.map(e => e.date.split('-')[0])));
 console.log("✅ Extracted years:", years);
   yearSelect.innerHTML = '<option value="">All</option>';
@@ -1364,7 +1348,6 @@ function addEditDestination() {
         if (place && place.geometry) {
             recalculateEditMileageAndCosts();
         } else {
-            console.warn("Invalid place selected, skipping mileage recalculation.");
         }
     });
 
@@ -1527,7 +1510,6 @@ setTimeout(() => {
 
         autocomplete.addListener('place_changed', () => {
             const place = autocomplete.getPlace();
-            console.log("PLACE CHANGED FIRED:", place);
             if (place && place.geometry) {
                 recalculateEditMileageAndCosts();
             } else {
@@ -1779,13 +1761,6 @@ function importLog() {
     }
 }
 
-  document.addEventListener('DOMContentLoaded', () => {
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyCHrNRHP9LNGVHi9Srk1Gfcrv-4ee_gUHQ&libraries=places&callback=initMap`;
-      script.async = true;
-      script.defer = true;
-      document.head.appendChild(script);
-  });
 
 let isSignup = false;
 
@@ -1823,8 +1798,8 @@ async function submitAuth() {
   }
 
 const endpoint = isSignup
-  ? "https://betaroutes.jamesbrock25.workers.dev/api/signup"
-  : "https://betaroutes.jamesbrock25.workers.dev/api/login";
+  ? "https://logs.gorouteyourself.com/api/signup"
+  : "https://logs.gorouteyourself.com/api/login";
 
 
   const res = await fetch(endpoint, {
@@ -1897,7 +1872,7 @@ async function submitPasswordChange() {
 
   if (!token || !username) return alert("You must be signed in.");
 
-  const res = await fetch("https://betaroutes.jamesbrock25.workers.dev/api/change-password", {
+  const res = await fetch("https://logs.gorouteyourself.com/api/change-password", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: token },
     body: JSON.stringify({ username, currentPassword: current, newPassword: next })
@@ -1930,7 +1905,7 @@ async function submitResetPassword() {
     return;
   }
 
-  const res = await fetch("https://betaroutes.jamesbrock25.workers.dev/api/reset-password", {
+  const res = await fetch("https://logs.gorouteyourself.com/api/reset-password", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username, resetKey, newPassword })
@@ -1963,7 +1938,7 @@ async function submitDeleteAccount() {
     return;
   }
 
-  const res = await fetch("https://betaroutes.jamesbrock25.workers.dev/api/delete-account", {
+  const res = await fetch("https://logs.gorouteyourself.com/api/delete-account", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -2008,7 +1983,7 @@ function filterByDate() {
     </script>
 
 <div id="auth-modal" onclick="closeAuthModal()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 2000;">
-  <div onclick="event.stopPropagation()" style="background: white; padding: 30px; border-radius: 10px; width: 300px;">
+<div onclick="event.stopPropagation()" class="modal-box">
     <h3 id="auth-title">Sign In</h3>
 <input
   type="text"
@@ -2035,7 +2010,7 @@ function filterByDate() {
 </div>
 
 <div id="change-password-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 2000;">
-  <div onclick="event.stopPropagation()" style="background: white; padding: 30px; border-radius: 10px; width: 300px;">
+<div onclick="event.stopPropagation()" class="modal-box">
     <h3>Change Password</h3>
 
     <input type="password" id="current-password" placeholder="Current password"
@@ -2053,7 +2028,7 @@ function filterByDate() {
 </div>
 
 <div id="reset-password-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 2000;">
-  <div onclick="event.stopPropagation()" style="background: white; padding: 30px; border-radius: 10px; width: 300px;">
+<div onclick="event.stopPropagation()" class="modal-box">
     <h3>Reset Password</h3>
     <input type="text" id="reset-username" placeholder="Username" style="width: 100%; margin-bottom: 10px; padding: 10px;" />
     <input type="text" id="reset-key" placeholder="Reset Key (shown at signup)" style="width: 100%; margin-bottom: 10px; padding: 10px;" />
@@ -2064,7 +2039,7 @@ function filterByDate() {
 </div>
 
 <div id="delete-account-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 2000;">
-  <div onclick="event.stopPropagation()" style="background: white; padding: 30px; border-radius: 10px; width: 300px;">
+<div onclick="event.stopPropagation()" class="modal-box">
     <h3>Delete Account</h3>
     <p style="font-size: 14px; color: red;">⚠️ This action is permanent.</p>
     <input type="password" id="delete-password" placeholder="Confirm password" style="width: 100%; margin-bottom: 10px; padding: 10px;" />
