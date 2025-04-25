@@ -106,7 +106,7 @@ body {
             color: #555;
         }
 
-input[type="text"], input[type="number"], input[type="date"], button, select {
+input[type="text"], input[type="number"], input[type="date"], input[type="time"], button, select {
 
             width: 100%;
             padding: 10px;
@@ -450,9 +450,17 @@ input[type="text"], input[type="number"], input[type="date"], button, select {
 
         <label for="gas-price">Fuel Price per Gallon</label>
         <input type="number" id="gas-price" placeholder="Enter fuel price per gallon" required>
+	
+	<label for="start-time">Start Time (Optional)</label>
+	<input type="time" id="start-time" placeholder="Enter start time">
+
+	<label for="end-time">End Time (Optional)</label>
+	<input type="time" id="end-time" placeholder="Enter end time">
+
 
         <label for="hours-worked">Hours Worked (Optional)</label>
-        <input type="number" id="hours-worked" placeholder="Enter total hours worked">
+        <input type="number" id="hours-worked" placeholder="Auto-filled if times are entered">
+
 
         <div class="optional-costs">
             <h3>Optional Daily Costs</h3>
@@ -676,6 +684,9 @@ function initMap() {
             autocompleteEnd = new google.maps.places.Autocomplete(document.getElementById("end-address"), { types: ['geocode'] });
 document.getElementById("start-address").addEventListener("change", resetOriginalMileageDisplay);
 document.getElementById("end-address").addEventListener("change", resetOriginalMileageDisplay);
+document.getElementById('start-time').addEventListener('change', handleTimeChange);
+document.getElementById('end-time').addEventListener('change', handleTimeChange);
+
 
 
             autocompleteStart.addListener("place_changed", function () {
@@ -725,7 +736,36 @@ async function calculateRoute() {
             const endAddress = document.getElementById('end-address').value;
             const mpg = parseFloat(document.getElementById('mpg').value);
             const gasPrice = parseFloat(document.getElementById('gas-price').value);
-            const hoursWorked = parseFloat(document.getElementById('hours-worked').value) || 0;
+            const startTimeInput = document.getElementById('start-time').value;
+const endTimeInput = document.getElementById('end-time').value;
+let hoursWorked = parseFloat(document.getElementById('hours-worked').value) || 0;
+
+if (startTimeInput && endTimeInput) {
+  const [startHours, startMinutes] = startTimeInput.split(':').map(Number);
+  const [endHours, endMinutes] = endTimeInput.split(':').map(Number);
+
+  let startTotalMinutes = startHours * 60 + startMinutes;
+  let endTotalMinutes = endHours * 60 + endMinutes;
+
+  if (endTotalMinutes < startTotalMinutes) {
+    // Handle overnight shift (e.g., 10PM to 2AM next day)
+    endTotalMinutes += 24 * 60;
+  }
+
+  let totalWorkedMinutes = endTotalMinutes - startTotalMinutes;
+  let driveMinutes = 0;
+
+  if (typeof totalDuration === 'number') {
+    driveMinutes = totalDuration / 60;
+  }
+
+  const actualWorkedMinutes = Math.max(totalWorkedMinutes - driveMinutes, 0);
+  hoursWorked = actualWorkedMinutes / 60;
+
+hoursWorked = parseFloat(hoursWorked.toFixed(2));
+  document.getElementById('hours-worked').value = hoursWorked.toFixed(2);
+}
+
             const maintenanceCost = parseFloat(document.getElementById('maintenance-cost').value) || 0;
             const suppliesCost = parseFloat(document.getElementById('supplies-cost').value) || 0;
 
@@ -742,11 +782,12 @@ async function calculateRoute() {
 
             const waypoints = destinations;
             const request = {
-                origin: startAddress,
-                destination: endAddress,
-                waypoints: waypoints,
-                travelMode: 'DRIVING'
-            };
+    origin: startAddress,
+    destination: endAddress || destinations[destinations.length - 1]?.location || startAddress,
+    waypoints: waypoints,
+    travelMode: 'DRIVING'
+};
+
 
             return new Promise((resolve, reject) => {
                 directionsService.route(request, (response, status) => {
@@ -762,7 +803,34 @@ async function calculateRoute() {
                             totalDuration += leg.duration.value;
                         });
 
-    const fuelCost = (totalMileage / mpg) * gasPrice;
+const startTimeInput = document.getElementById('start-time').value;
+const endTimeInput = document.getElementById('end-time').value;
+let hoursWorked = parseFloat(document.getElementById('hours-worked').value) || 0;
+
+if (startTimeInput && endTimeInput) {
+  const [startHours, startMinutes] = startTimeInput.split(':').map(Number);
+  const [endHours, endMinutes] = endTimeInput.split(':').map(Number);
+
+  let startTotalMinutes = startHours * 60 + startMinutes;
+  let endTotalMinutes = endHours * 60 + endMinutes;
+
+  if (endTotalMinutes < startTotalMinutes) {
+    // Overnight shift
+    endTotalMinutes += 24 * 60;
+  }
+
+  let totalWorkedMinutes = endTotalMinutes - startTotalMinutes;
+  let driveMinutes = totalDuration / 60; // NOW we have drive time from Google
+
+  const actualWorkedMinutes = Math.max(totalWorkedMinutes - driveMinutes, 0);
+  hoursWorked = parseFloat((actualWorkedMinutes / 60).toFixed(2));
+
+  // ✅ Also auto-update the Hours Worked input
+  document.getElementById('hours-worked').value = hoursWorked.toFixed(2);
+}
+
+
+    const fuelCost = (mpg && gasPrice) ? (totalMileage / mpg) * gasPrice : 0;
     const netProfitBeforeOptional = totalEarnings - fuelCost;
     const netProfit = netProfitBeforeOptional - maintenanceCost - suppliesCost;
     const totalHoursSpent = hoursWorked + (totalDuration / 3600);
@@ -836,17 +904,19 @@ document.getElementById('mileage-display').textContent = "Original Route: " + or
 
 function openInGoogleMaps() {
   const start = encodeURIComponent(document.getElementById('start-address').value.trim());
-  const end = encodeURIComponent(document.getElementById('end-address').value.trim());
+  const endAddressInput = document.getElementById('end-address').value.trim();
 
   const allDestinations = Array.from(document.querySelectorAll('input[id^="destination-"]'))
     .map(input => input.value.trim())
     .filter(dest => dest.length > 0);
 
+  const end = encodeURIComponent(endAddressInput || allDestinations[allDestinations.length - 1] || start);
+
   // 🛑 Don't duplicate end address inside destinations
-  const destinations = allDestinations.filter(dest => dest !== document.getElementById('end-address').value.trim());
+  const destinations = allDestinations.filter(dest => dest !== endAddressInput);
 
   // ✅ Now build the URL
-  let url = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(start)}&destination=${encodeURIComponent(end)}`;
+  let url = `https://www.google.com/maps/dir/?api=1&origin=${start}&destination=${end}`;
 
   if (destinations.length > 0) {
     url += `&waypoints=${destinations.map(encodeURIComponent).join('|')}`;
@@ -854,6 +924,7 @@ function openInGoogleMaps() {
 
   window.open(url, '_blank');
 }
+
 
 
 
@@ -1193,6 +1264,19 @@ function viewLogEntry(index) {
     const earnings = Array.isArray(entry.earnings)
         ? entry.earnings.map(e => `$${parseFloat(e).toFixed(2)}`).join(', ')
         : '$0.00';
+const formattedHoursWorked = entry.hoursWorked
+  ? `${parseFloat(entry.hoursWorked).toFixed(2)} ${parseFloat(entry.hoursWorked) === 1 ? 'hour' : 'hours'}`
+  : '0.00 hours';
+
+const formattedNetProfit = formatCurrency(entry.netProfit);
+const formattedProfitPerHour = formatCurrency(entry.profitPerHour);
+const formattedTotalEarnings = formatCurrency(entry.totalEarnings);
+const formattedFuelCost = formatCurrency(entry.fuelCost);
+const formattedMaintenanceCost = formatCurrency(entry.maintenanceCost);
+const formattedSuppliesCost = formatCurrency(entry.suppliesCost);
+
+
+
 
 modal.innerHTML = `
   <h3>Log Entry Details</h3>
@@ -1207,9 +1291,10 @@ modal.innerHTML = `
   <p><strong>Fuel Cost:</strong> $${entry.fuelCost}</p>
   <p><strong>Maintenance:</strong> $${entry.maintenanceCost}</p>
   <p><strong>Supplies:</strong> $${entry.suppliesCost}</p>
-  <p><strong>Hours Worked:</strong> ${entry.hoursWorked ?? '0'} hours</p>
-  <p><strong>Net Profit:</strong> $${entry.netProfit}</p>
-  <p><strong>Profit per Hour:</strong> $${entry.profitPerHour}</p>
+  <p><strong>Hours Worked:</strong> ${formattedHoursWorked}</p>
+  <p><strong>Net Profit:</strong> ${formattedNetProfit}</p>
+  <p><strong>Profit per Hour:</strong> ${formattedProfitPerHour}</p>
+
 
   <button onclick="openLogEntryInGoogleMaps(${index})" style="background-color: #0d6efd; margin-top: 10px;">Open in Google Maps</button>
   <button onclick="this.closest('.custom-view-overlay').remove()" style="background-color: #dc3545; margin-top: 10px;">Close</button>
@@ -2064,6 +2149,43 @@ function openLogEntryInGoogleMaps(index) {
 
   window.open(url, '_blank');
 }
+
+function handleTimeChange() {
+  const startTimeInput = document.getElementById('start-time').value;
+  const endTimeInput = document.getElementById('end-time').value;
+  const hoursWorkedInput = document.getElementById('hours-worked');
+
+  if (startTimeInput && endTimeInput) {
+    const [startHours, startMinutes] = startTimeInput.split(':').map(Number);
+    const [endHours, endMinutes] = endTimeInput.split(':').map(Number);
+
+    let startTotalMinutes = startHours * 60 + startMinutes;
+    let endTotalMinutes = endHours * 60 + endMinutes;
+
+    if (endTotalMinutes < startTotalMinutes) {
+      endTotalMinutes += 24 * 60; // Overnight shift
+    }
+
+    let totalWorkedMinutes = endTotalMinutes - startTotalMinutes;
+    let driveMinutes = typeof totalDuration === 'number' ? totalDuration / 60 : 0;
+const actualWorkedMinutes = Math.max(totalWorkedMinutes - driveMinutes, 0);
+const hoursWorked = parseFloat((actualWorkedMinutes / 60).toFixed(2));
+hoursWorkedInput.value = hoursWorked.toFixed(2);
+
+    hoursWorkedInput.readOnly = true; // 🛡️ make it readonly!
+    hoursWorkedInput.style.backgroundColor = "#f0f0f0"; // light gray to indicate readonly
+  } else {
+    hoursWorkedInput.value = '';
+    hoursWorkedInput.readOnly = false; // ✅ make it editable again
+    hoursWorkedInput.style.backgroundColor = ""; // restore original background
+  }
+}
+
+function formatCurrency(value) {
+  if (isNaN(value)) return '$0.00';
+  return `$${parseFloat(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
 
 
     </script>
