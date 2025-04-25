@@ -465,6 +465,7 @@ input[type="text"], input[type="number"], input[type="date"], button, select {
         <button onclick="optimizeRoute()">Optimize Route</button>
         <button onclick="calculateRoute()">Calculate Route</button>
         <button onclick="logResults()">Log Route</button>
+	<button onclick="openInGoogleMaps()">Open Route in Google Maps</button>
 	<div id="confirmation-message" style="display: none; color: green; font-weight: bold; margin-top: 10px;"></div>
 
 
@@ -830,6 +831,27 @@ document.getElementById('mileage-display').textContent = "Original Route: " + or
         `;
         document.getElementById('detailed-results').innerHTML = detailedResultsHTML;
     }
+}
+
+function openInGoogleMaps() {
+  const start = encodeURIComponent(document.getElementById('start-address').value.trim());
+  const end = encodeURIComponent(document.getElementById('end-address').value.trim());
+
+  const allDestinations = Array.from(document.querySelectorAll('input[id^="destination-"]'))
+    .map(input => input.value.trim())
+    .filter(dest => dest.length > 0);
+
+  // 🛑 Don't duplicate end address inside destinations
+  const destinations = allDestinations.filter(dest => dest !== document.getElementById('end-address').value.trim());
+
+  // ✅ Now build the URL
+  let url = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(start)}&destination=${encodeURIComponent(end)}`;
+
+  if (destinations.length > 0) {
+    url += `&waypoints=${destinations.map(encodeURIComponent).join('|')}`;
+  }
+
+  window.open(url, '_blank');
 }
 
 
