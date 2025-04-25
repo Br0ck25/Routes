@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Route and Cost Calculator with Log</title>
+    <title></title>
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCHrNRHP9LNGVHi9Srk1Gfcrv-4ee_gUHQ&amp;libraries=places&amp;callback=initMap" async="" defer=""></script>
     <style>
 body {
@@ -319,8 +319,11 @@ input[type="text"], input[type="number"], input[type="date"], button, select {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     </head>
 <body>
-    <div class="container">
-        <h1>Route and Cost Calculator</h1>
+
+<div class="container">
+  <div style="text-align: center;">
+    <img src="/logo.png" alt="Logo" style="max-width: 250px; margin-bottom: 10px;">
+  </div>
 
 	<label for="log-date">Date</label>
 	<input type="date" id="log-date" required>
@@ -359,10 +362,10 @@ input[type="text"], input[type="number"], input[type="date"], button, select {
         <div class="optional-costs">
             <h3>Optional Daily Costs</h3>
             <label for="maintenance-cost">Vehicle Maintenance Cost (Optional)</label>
-            <input type="number" id="maintenance-cost" placeholder="Enter maintenance cost for the day" value="0">
+            <input type="number" id="maintenance-cost" placeholder="Enter maintenance cost for the day">
 
             <label for="supplies-cost">Supplies Cost (Optional)</label>
-            <input type="number" id="supplies-cost" placeholder="Enter supplies cost for the day" value="0">
+            <input type="number" id="supplies-cost" placeholder="Enter supplies cost for the day">
         </div>
         <button onclick="optimizeRoute()">Optimize Route</button>
         <button onclick="calculateRoute()">Calculate</button>
@@ -386,7 +389,7 @@ input[type="text"], input[type="number"], input[type="date"], button, select {
 
     <div id="log-container">
         <div id="log-header">
-            <h2>Profit Log</h2>
+            <h2>Log</h2>
             <div>
                 <label for="organize-by-day">Organize by Day:</label>
                 <select id="organize-by-day" onchange="displayLog(this.value)">
@@ -473,9 +476,16 @@ document.addEventListener('DOMContentLoaded', () => {
         let directionsService;
         let directionsRenderer;
         let autocompleteStart, autocompleteEnd;
-        let logEntries = loadLog();
         let editingIndex = -1;
 	let originalMileage = null;
+let logEntries = [];
+
+document.addEventListener('DOMContentLoaded', async () => {
+  logEntries = await loadLog();
+  displayLog();         // ✅ Show the logs on page
+  populateDayOptions(); // ✅ Restore the dropdown
+});
+
 
 function initMap() {
             map = new google.maps.Map(document.getElementById("map"), {
@@ -805,33 +815,53 @@ function moveDestinationDown(button) {
 
 
 
-        function logEntry(data) {
+ function logEntry(data) {
             logEntries.unshift(data);
             saveLog();
         }
 
-        function saveLog() {
-            localStorage.setItem('routeLog', JSON.stringify(logEntries));
-        }
+async function saveLog() {
+  console.log("⏳ Saving to KV…", logEntries);
+  try {
+    const response = await fetch("https://betaroutes.jamesbrock25.workers.dev/logs", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(logEntries)
+    });
 
-        function loadLog() {
-            const storedLog = localStorage.getItem('routeLog');
-            return storedLog ? JSON.parse(storedLog) : [];
-        }
+    if (!response.ok) {
+      const text = await response.text();
+      console.error("❌ Failed to save to KV:", response.status, text);
+    } else {
+      console.log("✅ Saved to KV");
+    }
+  } catch (err) {
+    console.error("❌ Error during saveLog:", err);
+  }
+}
+
+
+
+async function loadLog() {
+  const response = await fetch("https://betaroutes.jamesbrock25.workers.dev/logs");
+  return await response.json();
+}
 
 function displayLog(filterDay = 'all') {
     const logList = document.getElementById('log-list');
     const organizedLog = organizeLogByDay();
     logList.innerHTML = '';
 
-    for (const day in organizedLog) {
+const sortedDays = Object.keys(organizedLog).sort((a, b) => new Date(b) - new Date(a));
+for (const day of sortedDays) {
         if (filterDay === 'all' || filterDay === day) {
             const dayHeading = document.createElement('h3');
             dayHeading.textContent = day;
             logList.appendChild(dayHeading);
 
-            for (let i = organizedLog[day].length - 1; i >= 0; i--) {
-                const entry = organizedLog[day][i];
+const entries = organizedLog[day].slice().sort((a, b) => new Date(b.date) - new Date(a.date));
+for (const entry of entries) {
+
                 //  Check if entry is defined
                 if (entry) {
                     const index = logEntries.findIndex(e => JSON.stringify(e) === JSON.stringify(entry));
@@ -1202,11 +1232,11 @@ function openEditForm(index) {
         document.getElementById('edit-end-address').value = entry.endTime;
         document.getElementById('edit-total-earnings').value = String(entry.totalEarnings || 0);
         document.getElementById('edit-fuel-cost').value = String(entry.fuelCost);
-        document.getElementById('edit-maintenance-cost').value = String(entry.maintenanceCost);
-        document.getElementById('edit-supplies-cost').value = String(entry.suppliesCost);
+        document.getElementById('edit-maintenance-cost').value = entry.maintenanceCost ?? '';
+	document.getElementById('edit-supplies-cost').value = entry.suppliesCost ?? '';
         document.getElementById('edit-total-mileage').value = String(entry.totalMileage);
         document.getElementById('edit-total-time').value = entry.totalTime;
-        document.getElementById('edit-hours-worked').value = entry.hoursWorked || '';
+        document.getElementById('edit-hours-worked').value = entry.hoursWorked ?? '';
         document.getElementById('edit-mpg').value = String(entry.mpg || localStorage.getItem('mpg') || 0);
         document.getElementById('edit-gas-price').value = String(entry.gasPrice || localStorage.getItem('gasPrice') || 0);
 
@@ -1499,3 +1529,4 @@ function importLog() {
     </script>
 </body>
 </html>
+
