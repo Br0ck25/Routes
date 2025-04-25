@@ -1194,24 +1194,27 @@ function viewLogEntry(index) {
         ? entry.earnings.map(e => `$${parseFloat(e).toFixed(2)}`).join(', ')
         : '$0.00';
 
-    modal.innerHTML = `
-        <h3>Log Entry Details</h3>
-        <p><strong>Date:</strong> ${entry.date}</p>
-        <p><strong>Start Address:</strong> ${entry.startTime}</p>
-        <p><strong>Destinations:</strong><br>${destinations}</p>
-        <p><strong>End Address:</strong> ${entry.endTime}</p>
-        <p><strong>Earnings per Stop:</strong> ${earnings}</p>
-        <p><strong>Total Mileage:</strong> ${entry.totalMileage} miles</p>
-        <p><strong>Total Drive Time:</strong> ${entry.totalTime}</p>
-        <p><strong>Total Earnings:</strong> $${entry.totalEarnings}</p>
-        <p><strong>Fuel Cost:</strong> $${entry.fuelCost}</p>
-        <p><strong>Maintenance:</strong> $${entry.maintenanceCost}</p>
-        <p><strong>Supplies:</strong> $${entry.suppliesCost}</p>
-	<p><strong>Hours Worked:</strong> ${entry.hoursWorked ?? '0'} hours</p>
-        <p><strong>Net Profit:</strong> $${entry.netProfit}</p>
-        <p><strong>Profit per Hour:</strong> $${entry.profitPerHour}</p>
-        <button onclick="this.closest('.custom-view-overlay').remove()">Close</button>
-    `;
+modal.innerHTML = `
+  <h3>Log Entry Details</h3>
+  <p><strong>Date:</strong> ${entry.date}</p>
+  <p><strong>Start Address:</strong> ${entry.startTime}</p>
+  <p><strong>Destinations:</strong><br>${destinations}</p>
+  <p><strong>End Address:</strong> ${entry.endTime}</p>
+  <p><strong>Earnings per Stop:</strong> ${earnings}</p>
+  <p><strong>Total Mileage:</strong> ${entry.totalMileage} miles</p>
+  <p><strong>Total Drive Time:</strong> ${entry.totalTime}</p>
+  <p><strong>Total Earnings:</strong> $${entry.totalEarnings}</p>
+  <p><strong>Fuel Cost:</strong> $${entry.fuelCost}</p>
+  <p><strong>Maintenance:</strong> $${entry.maintenanceCost}</p>
+  <p><strong>Supplies:</strong> $${entry.suppliesCost}</p>
+  <p><strong>Hours Worked:</strong> ${entry.hoursWorked ?? '0'} hours</p>
+  <p><strong>Net Profit:</strong> $${entry.netProfit}</p>
+  <p><strong>Profit per Hour:</strong> $${entry.profitPerHour}</p>
+
+  <button onclick="openLogEntryInGoogleMaps(${index})" style="background-color: #0d6efd; margin-top: 10px;">Open in Google Maps</button>
+  <button onclick="this.closest('.custom-view-overlay').remove()" style="background-color: #dc3545; margin-top: 10px;">Close</button>
+`;
+
 
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
@@ -2038,6 +2041,28 @@ function triggerImportFile() {
   if (fileInput) {
     fileInput.click(); // Simulate a click to open file picker
   }
+}
+
+
+function openLogEntryInGoogleMaps(index) {
+  const entry = logEntries[index];
+  if (!entry) {
+    console.error('Invalid log entry index');
+    return;
+  }
+
+  const start = encodeURIComponent(entry.startTime.trim());
+  const end = encodeURIComponent(entry.endTime.trim());
+
+  const destinations = Array.isArray(entry.destinations) ? entry.destinations.map(dest => encodeURIComponent(dest.trim())) : [];
+
+  let url = `https://www.google.com/maps/dir/?api=1&origin=${start}&destination=${end}`;
+
+  if (destinations.length > 0) {
+    url += `&waypoints=${destinations.join('|')}`;
+  }
+
+  window.open(url, '_blank');
 }
 
 
