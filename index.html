@@ -4,8 +4,39 @@
     <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title></title>
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCHrNRHP9LNGVHi9Srk1Gfcrv-4ee_gUHQ&amp;libraries=places&amp;callback=initMap" async="" defer=""></script>
-    <style>
+
+<style>
+  @media (max-width: 600px) {
+    #account-menu {
+      right: 10px;
+      min-width: 160px;
+      font-size: 16px;
+    }
+
+    #logout-message button {
+      font-size: 16px !important;
+      padding: 10px;
+    }
+  }
+
+#account-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    z-index: 9999;
+    min-width: 180px;
+    padding: 5px 0;
+  }
+
+  #account-menu.show {
+    display: block !important;
+  }
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #f4f4f9;
@@ -320,6 +351,60 @@ input[type="text"], input[type="number"], input[type="date"], button, select {
     </head>
 <body>
 
+<div id="auth-message" style="
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+  border-radius: 6px;
+  padding: 15px 20px;
+  margin-bottom: 20px;
+  text-align: center;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 16px;
+">
+  🚧 To log your route, you need to 
+  <a href="#" onclick="showLogin()" style="color: #0d6efd; font-weight: bold; text-decoration: none;">Sign in</a> 
+  or 
+  <a href="#" onclick="showSignup()" style="color: #0d6efd; font-weight: bold; text-decoration: none;">Create an account</a>.
+</div>
+
+
+<div id="logout-message" style="display: none; margin: 20px auto; max-width: 100%; text-align: center;">
+  ✅ You’re signed in as <span id="username-display"></span>
+
+  <div style="display: flex; justify-content: center; position: relative; margin-top: 10px;">
+    <button onclick="toggleMenu()" style="font-size: 24px; padding: 8px 12px;">☰</button>
+
+    <div id="account-menu" class="" style="
+      display: none;
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      z-index: 9999;
+      min-width: 180px;
+      padding: 5px 0;
+    ">
+      <button onclick="closeMenu(); logout()" style="width: 100%; padding: 10px; background: none; border: none; color: black; text-align: left;">Log Out</button>
+      <button onclick="closeMenu(); showPasswordModal()" style="width: 100%; padding: 10px; background: none; border: none; color: black; text-align: left;">Change Password</button>
+      <button onclick="closeMenu(); showDeleteModal()" style="width: 100%; padding: 10px; background: none; border: none; color: red; text-align: left;">Delete Account</button>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
 <div class="container">
   <div style="text-align: center;">
     <img src="/logo.png" alt="Logo" style="max-width: 250px; margin-bottom: 10px;">
@@ -368,8 +453,10 @@ input[type="text"], input[type="number"], input[type="date"], button, select {
             <input type="number" id="supplies-cost" placeholder="Enter supplies cost for the day">
         </div>
         <button onclick="optimizeRoute()">Optimize Route</button>
-        <button onclick="calculateRoute()">Calculate</button>
-        <button onclick="logResults()">Log</button>
+        <button onclick="calculateRoute()">Calculate Route</button>
+        <button onclick="logResults()">Log Route</button>
+	<div id="confirmation-message" style="display: none; color: green; font-weight: bold; margin-top: 10px;"></div>
+
 
         <div id="results" class="hidden">
             <p>Total Mileage: <span id="total-mileage"></span> miles</p>
@@ -383,6 +470,7 @@ input[type="text"], input[type="number"], input[type="date"], button, select {
         </div>
 
 <div id="map" class="hidden"></div>
+<div id="detailed-results" style="margin-top: 20px;"></div>
 <div id="mileage-display" style="text-align: center; font-weight: bold; margin-top: 10px;"></div>
 <div id="optimized-mileage-display" style="text-align: center; font-weight: bold; margin-top: 10px;"></div>
     </div>
@@ -391,11 +479,29 @@ input[type="text"], input[type="number"], input[type="date"], button, select {
         <div id="log-header">
             <h2>Log</h2>
             <div>
-                <label for="organize-by-day">Organize by Day:</label>
-                <select id="organize-by-day" onchange="displayLog(this.value)">
-                    <option value="all">All</option>
-                </select>
-            </div>
+  <label for="filter-year">Year:</label>
+  <select id="filter-year" onchange="filterByDate()">
+    <option value="">All</option>
+  </select>
+
+  <label for="filter-month" style="margin-left: 10px;">Month:</label>
+  <select id="filter-month" onchange="filterByDate()">
+    <option value="">All</option>
+    <option value="01">January</option>
+    <option value="02">February</option>
+    <option value="03">March</option>
+    <option value="04">April</option>
+    <option value="05">May</option>
+    <option value="06">June</option>
+    <option value="07">July</option>
+    <option value="08">August</option>
+    <option value="09">September</option>
+    <option value="10">October</option>
+    <option value="11">November</option>
+    <option value="12">December</option>
+  </select>
+</div>
+
         </div>
         <ul id="log-list">
         </ul>
@@ -458,19 +564,58 @@ input[type="text"], input[type="number"], input[type="date"], button, select {
         <input type="hidden" id="edit-index">
     </div>
 
-    <script>
-// Auto-fill the date input with today's date
-document.addEventListener('DOMContentLoaded', () => {
-    const dateInput = document.getElementById('log-date');
-    if (dateInput) {
-        const today = new Date().toISOString().split('T')[0];
-        dateInput.value = today;
-    }
+<script>
+
+document.addEventListener('click', function(event) {
+  const menu = document.getElementById('account-menu');
+  const button = event.target.closest('button');
+  const isToggle = button && button.innerText === '☰';
+
+  if (menu && !menu.contains(event.target) && !isToggle) {
+    closeMenu();
+  }
 });
 
-        // Replace with your actual Google Maps API key
-        const GOOGLE_MAPS_API_KEY = 'YOUR_GOOGLE_MAPS_API_KEY';
-        document.querySelector('script[src*="maps.googleapis.com"]').src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&callback=initMap`;
+
+function closeMenu() {
+  const menu = document.getElementById('account-menu');
+  if (menu) {
+    menu.classList.remove('show');
+    menu.style.display = 'none';
+  }
+}
+
+
+// Optional: Close menu if user clicks outside it
+document.addEventListener('click', function (event) {
+  const menu = document.getElementById('account-menu');
+  const button = event.target.closest('button');
+  if (!menu.contains(event.target) && (!button || button.onclick !== toggleMenu)) {
+    menu.style.display = 'none';
+  }
+});
+
+
+function closeAuthModal() {
+  document.getElementById('auth-modal').style.display = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const dateInput = document.getElementById('log-date');
+  if (dateInput) {
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.value = today;
+  }
+
+  updateAuthUI(); // ✅ this ensures login/logout UI updates when the page loads
+});
+
+
+const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+if (existingScript) {
+    existingScript.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&callback=initMap`;
+}
+
 
         let map;
         let directionsService;
@@ -483,8 +628,17 @@ let logEntries = [];
 document.addEventListener('DOMContentLoaded', async () => {
   logEntries = await loadLog();
   displayLog();         // ✅ Show the logs on page
-  populateDayOptions(); // ✅ Restore the dropdown
+  populateYearOptions();  // ✅ Populate the year dropdown too
 });
+
+function showConfirmationMessage(message) {
+    const confirmation = document.getElementById('confirmation-message');
+    confirmation.textContent = message;
+    confirmation.style.display = 'block';
+    setTimeout(() => {
+        confirmation.style.display = 'none';
+    }, 3000);
+}
 
 
 function initMap() {
@@ -530,8 +684,11 @@ document.getElementById("end-address").addEventListener("change", resetOriginalM
             document.querySelectorAll('#destinations-container .destination input[type="text"]').forEach(initAutocompleteDestination);
 
             displayLog();
-            populateDayOptions();
+            
         }
+
+window.initMap = initMap;
+
 
         function initAutocompleteDestination(inputElement) {
             const autocomplete = new google.maps.places.Autocomplete(inputElement, { types:['geocode'] });
@@ -542,14 +699,15 @@ document.getElementById("end-address").addEventListener("change", resetOriginalM
             if (calculationResult) {
                 logEntry(calculationResult);
                 displayLog();
-                populateDayOptions();
+                
             }
         }
 
 async function calculateRoute() {
             const calculationResult = await calculateRouteData(); // Call the data calculation function
             if (calculationResult) {
-                updateUI(calculationResult); // Update the UI with the results
+                updateUI(calculationResult);
+		showConfirmationMessage('✅ Route calculated successfully!');
             }
         }
 
@@ -605,7 +763,7 @@ async function calculateRoute() {
     const profitPerHour = totalHoursSpent > 0 ? netProfit / totalHoursSpent : 0;
 
                         resolve({
-                            date: document.getElementById('log-date').value || new Date().toLocaleDateString(),
+                            date: document.getElementById('log-date').value || new Date().toISOString().split('T')[0],
                             startTime: startAddress,
                             endTime: endAddress,
                             destinations: destinations.map(d => d.location),
@@ -642,16 +800,36 @@ function updateUI(data) {
         document.getElementById('profit-per-hour').textContent = data.profitPerHour;
         document.getElementById('results').classList.remove('hidden');
 
-if (originalMileage === null) {
-    originalMileage = data.totalMileage;
-    document.getElementById('mileage-display').textContent = "Original Route: " + originalMileage + " miles";
-} else {
-    // Do not overwrite originalMileage!
-    document.getElementById('mileage-display').textContent = "Original Route: " + originalMileage + " miles";
-}
+        if (originalMileage === null) {
+            originalMileage = data.totalMileage;
+            document.getElementById('mileage-display').textContent = "Original Route: " + originalMileage + " miles";
+        } else {
+            document.getElementById('mileage-display').textContent = "Original Route: " + originalMileage + " miles";
+        }
 
+        // ✅ Add the new detailed display below the map
+        const detailedResultsHTML = `
+            <h3>Route Details</h3>
+            <p><strong>Date:</strong> ${data.date}</p>
+            <p><strong>Start Address:</strong> ${data.startTime}</p>
+            <p><strong>Destinations:</strong><br>${data.destinations.map(d => `- ${d}`).join('<br>')}</p>
+            <p><strong>End Address:</strong> ${data.endTime}</p>
+            <p><strong>Earnings per Stop:</strong> ${data.earnings.map(e => `$${parseFloat(e).toFixed(2)}`).join(', ')}</p>
+            <p><strong>Total Mileage:</strong> ${data.totalMileage} miles</p>
+            <p><strong>Total Drive Time:</strong> ${data.totalTime}</p>
+            <p><strong>Total Earnings:</strong> $${data.totalEarnings}</p>
+            <p><strong>Fuel Cost:</strong> $${data.fuelCost}</p>
+            <p><strong>Maintenance:</strong> $${data.maintenanceCost}</p>
+            <p><strong>Supplies:</strong> $${data.suppliesCost}</p>
+            <p><strong>Hours Worked:</strong> ${data.hoursWorked ?? '0'} hours</p>
+            <p><strong>Net Profit:</strong> $${data.netProfit}</p>
+            <p><strong>Profit per Hour:</strong> $${data.profitPerHour}</p>
+        `;
+        document.getElementById('detailed-results').innerHTML = detailedResultsHTML;
     }
 }
+
+
 
 function resetOriginalMileageDisplay() {
     originalMileage = null;
@@ -664,14 +842,28 @@ function resetOriginalMileageDisplay() {
 
 
 async function logResults() {
-    const calculationResult = await calculateRouteData(); // Wait for the promise to resolve
-    if (calculationResult) {
-        logEntry(calculationResult);
-        displayLog();
-        populateDayOptions();
-	updateUI(calculationResult);
-    }
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    alert("❌ You must sign in to log your route.");
+    showLogin(); // show sign-in modal
+    return;
+  }
+
+  const calculationResult = await calculateRouteData();
+  if (calculationResult) {
+    logEntry(calculationResult);
+displayLog();
+populateYearOptions(); // ✅ add this
+updateUI(calculationResult);
+
+
+    showConfirmationMessage('✅ Route logged successfully!');
+  }
 }
+
+
+
 
 async function optimizeRoute() {
     if (originalMileage === null) {
@@ -739,6 +931,35 @@ async function optimizeRoute() {
 
             document.getElementById('optimized-mileage-display').textContent = "Optimized Route: " + optimizedMileage.toFixed(2) + " miles";
             document.getElementById('total-time').textContent = formatDuration(totalDuration);
+
+const optimizedData = {
+    date: document.getElementById('log-date').value || new Date().toLocaleDateString(),
+    startTime: startAddress,
+    endTime: endAddress,
+    destinations: Array.from(document.querySelectorAll('input[id^="destination-"]')).map(input => input.value),
+    earnings: Array.from(document.querySelectorAll('input[id^="earnings-"]')).map(input => parseFloat(input.value) || 0),
+    totalMileage: optimizedMileage.toFixed(2),
+    totalTime: formatDuration(totalDuration),
+    totalEarnings: (Array.from(document.querySelectorAll('input[id^="earnings-"]')).reduce((sum, i) => sum + (parseFloat(i.value) || 0), 0)).toFixed(2),
+    fuelCost: ((optimizedMileage / parseFloat(document.getElementById('mpg').value || 1)) * parseFloat(document.getElementById('gas-price').value || 0)).toFixed(2),
+    maintenanceCost: parseFloat(document.getElementById('maintenance-cost').value || 0).toFixed(2),
+    suppliesCost: parseFloat(document.getElementById('supplies-cost').value || 0).toFixed(2),
+    hoursWorked: parseFloat(document.getElementById('hours-worked').value || 0),
+    netProfit: '0', // to be calculated next
+    profitPerHour: '0.00'
+};
+
+// Recalculate net profit and profit per hour
+const netProfitBeforeOptional = optimizedData.totalEarnings - optimizedData.fuelCost;
+optimizedData.netProfit = (netProfitBeforeOptional - optimizedData.maintenanceCost - optimizedData.suppliesCost).toFixed(2);
+const totalHoursSpent = optimizedData.hoursWorked + (totalDuration / 3600);
+optimizedData.profitPerHour = totalHoursSpent > 0 ? (optimizedData.netProfit / totalHoursSpent).toFixed(2) : '0.00';
+
+// ✅ Update UI below the map
+updateUI(optimizedData);
+showConfirmationMessage('✅ Route optimized successfully!');
+
+
 
         } else if (status === 'OK') {
             // fallback if optimization fails
@@ -821,13 +1042,23 @@ function moveDestinationDown(button) {
         }
 
 async function saveLog() {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    console.error("❌ No token found. User must be signed in to save.");
+    alert("You must be signed in to save your route logs.");
+    showLogin(); // Optional: open login modal automatically
+    return;
+  }
+
   console.log("⏳ Saving to KV…", logEntries);
+
   try {
     const response = await fetch("https://betaroutes.jamesbrock25.workers.dev/logs", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(logEntries)
-    });
+  method: "POST",
+  headers: { "Content-Type": "application/json", "Authorization": token },
+  body: JSON.stringify(logEntries)
+});
 
     if (!response.ok) {
       const text = await response.text();
@@ -842,63 +1073,73 @@ async function saveLog() {
 
 
 
+
 async function loadLog() {
-  const response = await fetch("https://betaroutes.jamesbrock25.workers.dev/logs");
+  const response = await fetch("https://betaroutes.jamesbrock25.workers.dev/logs", {
+    headers: {
+      Authorization: localStorage.getItem("token") || ""
+    }
+  });
+
+  if (!response.ok) {
+    console.error("❌ Failed to load logs:", await response.text());
+    return [];
+  }
+
   return await response.json();
 }
 
-function displayLog(filterDay = 'all') {
-    const logList = document.getElementById('log-list');
-    const organizedLog = organizeLogByDay();
-    logList.innerHTML = '';
 
-const sortedDays = Object.keys(organizedLog).sort((a, b) => new Date(b) - new Date(a));
-for (const day of sortedDays) {
-        if (filterDay === 'all' || filterDay === day) {
-            const dayHeading = document.createElement('h3');
-            dayHeading.textContent = day;
-            logList.appendChild(dayHeading);
+function displayLog(filterFn = () => true) {
+  const logList = document.getElementById('log-list');
+  const organizedLog = organizeLogByDay();
+  logList.innerHTML = '';
 
-const entries = organizedLog[day].slice().sort((a, b) => new Date(b.date) - new Date(a.date));
-for (const entry of entries) {
+  const sortedDays = Object.keys(organizedLog).sort((a, b) => new Date(b) - new Date(a));
+  for (const day of sortedDays) {
+    if (organizedLog[day].some(entry => filterFn(entry.date))) {
+      const dayHeading = document.createElement('h3');
+      dayHeading.textContent = day;
+      logList.appendChild(dayHeading);
 
-                //  Check if entry is defined
-                if (entry) {
-                    const index = logEntries.findIndex(e => JSON.stringify(e) === JSON.stringify(entry));
-                    const listItem = document.createElement('li');
-                    // Safely access entry.destinations and use an empty string as a fallback
-                    const destinations = Array.isArray(entry.destinations) ? entry.destinations.join(', ') : '';
+      const entries = organizedLog[day].slice().sort((a, b) => new Date(b.date) - new Date(a.date));
+      for (const entry of entries.filter(e => filterFn(e.date))) {
+        if (entry) {
+          const index = logEntries.findIndex(e => JSON.stringify(e) === JSON.stringify(entry));
+          const listItem = document.createElement('li');
+          const destinations = Array.isArray(entry.destinations) ? entry.destinations.join(', ') : '';
 
-    listItem.innerHTML = `
-        <div class="log-item-details">
-            <strong>Date:</strong> ${entry.date}<br>
-            <strong>Start:</strong> ${entry.startTime}<br>
-            <strong>Destinations:</strong> ${destinations}<br>
-            <strong>End:</strong> ${entry.endTime}<br>
-            <strong>Earnings:</strong> $${entry.totalEarnings || 0}<br>
-            <strong>Fuel Consumption Cost:</strong> $${entry.fuelCost}<br>
-            <strong>Maintenance:</strong> $${entry.maintenanceCost}<br>
-            <strong>Supplies:</strong> $${entry.suppliesCost}<br>
-            <strong>Net Profit:</strong> $${entry.netProfit || 0}
-        </div>
-        <div class="log-actions">
-            <button class="edit-btn" onclick="openEditForm(${index})">Edit</button>
-            <button onclick="viewLogEntry(${index})">View Details</button>
-            <button onclick="deleteLogEntry(${index})">Delete</button>
-        </div>
-    `;
-                    logList.appendChild(listItem);
-                }
-            }
+          listItem.innerHTML = `
+            <div class="log-item-details">
+              <strong>Date:</strong> ${entry.date}<br>
+              <strong>Start:</strong> ${entry.startTime}<br>
+              <strong>Destinations:</strong> ${destinations}<br>
+              <strong>End:</strong> ${entry.endTime}<br>
+              <strong>Earnings:</strong> $${entry.totalEarnings || 0}<br>
+              <strong>Fuel Consumption Cost:</strong> $${entry.fuelCost}<br>
+              <strong>Maintenance:</strong> $${entry.maintenanceCost}<br>
+              <strong>Supplies:</strong> $${entry.suppliesCost}<br>
+              <strong>Net Profit:</strong> $${entry.netProfit || 0}
+            </div>
+            <div class="log-actions">
+              <button class="edit-btn" onclick="openEditForm(${index})">Edit</button>
+              <button onclick="viewLogEntry(${index})">View Details</button>
+              <button onclick="deleteLogEntry(${index})">Delete</button>
+            </div>
+          `;
+          logList.appendChild(listItem);
         }
+      }
     }
+  }
 
-    if (logList.innerHTML === '') {
-        const emptyMessage = document.createElement('li');
-        emptyMessage.textContent = filterDay === 'all' ? 'No log entries yet.' : `No entries for ${filterDay}.`;
-        logList.appendChild(emptyMessage);
-    }
+  if (logList.innerHTML === '') {
+    const emptyMessage = document.createElement('li');
+    emptyMessage.textContent = 'No log entries found for selected filter.';
+    logList.appendChild(emptyMessage);
+  }
 }
+
 
 function viewLogEntry(index) {
     const entry = logEntries[index];
@@ -941,6 +1182,7 @@ function viewLogEntry(index) {
         <p><strong>Fuel Cost:</strong> $${entry.fuelCost}</p>
         <p><strong>Maintenance:</strong> $${entry.maintenanceCost}</p>
         <p><strong>Supplies:</strong> $${entry.suppliesCost}</p>
+	<p><strong>Hours Worked:</strong> ${entry.hoursWorked ?? '0'} hours</p>
         <p><strong>Net Profit:</strong> $${entry.netProfit}</p>
         <p><strong>Profit per Hour:</strong> $${entry.profitPerHour}</p>
         <button onclick="this.closest('.custom-view-overlay').remove()">Close</button>
@@ -955,8 +1197,7 @@ function viewLogEntry(index) {
             if (confirm('Are you sure you want to delete this log entry?')) {
                 logEntries.splice(index, 1);
                 saveLog();
-                displayLog(document.getElementById('organize-by-day').value);
-                populateDayOptions();
+                filterByDate();
             }
         }
 
@@ -970,19 +1211,22 @@ function viewLogEntry(index) {
             }, {});
         }
 
-        function populateDayOptions() {
-            const organizeByDaySelect = document.getElementById('organize-by-day');
-            const currentFilter = organizeByDaySelect.value;
-            const days = Object.keys(organizeLogByDay());
-            organizeByDaySelect.innerHTML = '<option value="all">All</option>';
-            days.forEach(day => {
-                const option = document.createElement('option');
-                option.value = day;
-                option.textContent = day;
-                organizeByDaySelect.appendChild(option);
-            });
-            organizeByDaySelect.value = currentFilter; // Restore the previous filter
-        }
+
+
+function populateYearOptions() {
+  const yearSelect = document.getElementById('filter-year');
+  console.log("✅ logEntries seen by populateYearOptions:", logEntries.map(e => e.date));
+  const years = Array.from(new Set(logEntries.map(e => e.date.split('-')[0])));
+console.log("✅ Extracted years:", years);
+  yearSelect.innerHTML = '<option value="">All</option>';
+  years.sort((a, b) => b - a).forEach(y => {
+    const opt = document.createElement('option');
+    opt.value = y;
+    opt.textContent = y;
+    yearSelect.appendChild(opt);
+  });
+}
+
 
 function closeEditForm() {
     console.log("closeEditForm function called");
@@ -1363,7 +1607,7 @@ function saveEditedLogEntry() {
     entry.profitPerHour = totalHoursSpent > 0 ? (entry.netProfit / totalHoursSpent).toFixed(2) : '0.00';
 
     saveLog();
-    displayLog(document.getElementById('organize-by-day').value);
+    filterByDate();
     closeEditForm();
 }
 
@@ -1452,6 +1696,14 @@ function exportToCSV() {
         }
 
 function importLog() {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+        alert("❌ You must be signed in to import a CSV file.");
+        showLogin(); // Optional: show login modal
+        return;
+    }
+
     const fileInput = document.getElementById('import-file');
     const file = fileInput.files[0];
 
@@ -1512,8 +1764,8 @@ function importLog() {
 
             logEntries = [...logEntries, ...newLogEntries];
             saveLog();
-            displayLog(document.getElementById('organize-by-day').value);
-            populateDayOptions();
+            filterByDate();
+            populateYearOptions();
             alert('Log imported successfully!');
         };
 
@@ -1526,7 +1778,302 @@ function importLog() {
         alert('Please select a CSV file to import.');
     }
 }
-    </script>
-</body>
-</html>
 
+  document.addEventListener('DOMContentLoaded', () => {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyCHrNRHP9LNGVHi9Srk1Gfcrv-4ee_gUHQ&libraries=places&callback=initMap`;
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+  });
+
+let isSignup = false;
+
+function showLogin() {
+  isSignup = false;
+  document.getElementById('auth-title').textContent = 'Sign In';
+  document.getElementById('auth-switch-label').textContent = 'Sign Up';
+  document.getElementById('auth-modal').style.display = 'flex';
+}
+
+function showSignup() {
+  isSignup = true;
+  document.getElementById('auth-title').textContent = 'Create Account';
+  document.getElementById('auth-switch-label').textContent = 'Sign In';
+  document.getElementById('auth-modal').style.display = 'flex';
+}
+
+function toggleAuthMode() {
+  isSignup = !isSignup;
+  if (isSignup) {
+    showSignup();
+  } else {
+    showLogin();
+  }
+}
+
+
+async function submitAuth() {
+  const username = document.getElementById('auth-username').value.trim();
+  const password = document.getElementById('auth-password').value.trim();
+
+  if (!username || !password) {
+    alert("Username and password required.");
+    return;
+  }
+
+const endpoint = isSignup
+  ? "https://betaroutes.jamesbrock25.workers.dev/api/signup"
+  : "https://betaroutes.jamesbrock25.workers.dev/api/login";
+
+
+  const res = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password })
+  });
+
+if (res.ok) {
+  const data = await res.json();
+  localStorage.setItem("username", username);
+  localStorage.setItem("token", data.token);
+  document.getElementById('auth-modal').style.display = 'none';
+  showConfirmationMessage(`✅ ${isSignup ? 'Account created' : 'Signed in'} successfully!`);
+  updateAuthUI();
+
+  // ✅ Show reset key if this was a signup
+  if (isSignup && data.resetKey) {
+    alert(`🔐 Your reset key is:\n\n${data.resetKey}\n\nSave this key somewhere safe. You'll need it to reset your password.`);
+  }
+
+  // ✅ THEN reload the page after user has seen the key
+  location.reload();
+
+loadLog();
+  } else {
+    alert("❌ " + (await res.text()));
+  }
+}
+
+function updateAuthUI() {
+  const token = localStorage.getItem("token");
+  const username = localStorage.getItem("username");
+
+  if (token && username) {
+    document.getElementById("auth-message").style.display = "none";
+    document.getElementById("logout-message").style.display = "block";
+    document.getElementById("username-display").textContent = username;
+  } else {
+    document.getElementById("auth-message").style.display = "block";
+    document.getElementById("logout-message").style.display = "none";
+  }
+}
+
+function logout() {
+  localStorage.removeItem("token");
+  localStorage.removeItem("username");
+  showConfirmationMessage("👋 Logged out successfully.");
+  location.reload(); // ✅ this clears state and reinitializes
+}
+
+function showPasswordModal() {
+  document.getElementById('change-password-modal').style.display = 'flex';
+}
+
+function closePasswordModal() {
+  document.getElementById('change-password-modal').style.display = 'none';
+}
+
+async function submitPasswordChange() {
+  const current = document.getElementById("current-password").value.trim();
+  const next = document.getElementById("new-password").value.trim();
+  const confirm = document.getElementById("confirm-password").value.trim();
+
+  if (!current || !next || !confirm) return alert("Please fill out all fields.");
+  if (next !== confirm) return alert("New passwords do not match.");
+
+  const token = localStorage.getItem("token");
+  const username = localStorage.getItem("username");
+
+  if (!token || !username) return alert("You must be signed in.");
+
+  const res = await fetch("https://betaroutes.jamesbrock25.workers.dev/api/change-password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: token },
+    body: JSON.stringify({ username, currentPassword: current, newPassword: next })
+  });
+
+  if (res.ok) {
+    alert("✅ Password changed successfully.");
+    closePasswordModal();
+  } else {
+    const msg = await res.text();
+    alert("❌ " + msg);
+  }
+}
+
+function showResetModal() {
+  document.getElementById('reset-password-modal').style.display = 'flex';
+}
+
+function closeResetModal() {
+  document.getElementById('reset-password-modal').style.display = 'none';
+}
+
+async function submitResetPassword() {
+  const username = document.getElementById('reset-username').value.trim();
+  const resetKey = document.getElementById('reset-key').value.trim();
+  const newPassword = document.getElementById('reset-new-password').value.trim();
+
+  if (!username || !resetKey || !newPassword) {
+    alert("Please fill out all fields.");
+    return;
+  }
+
+  const res = await fetch("https://betaroutes.jamesbrock25.workers.dev/api/reset-password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, resetKey, newPassword })
+  });
+
+  if (res.ok) {
+    alert("✅ Password reset successfully. You can now sign in.");
+    closeResetModal();
+  } else {
+    const msg = await res.text();
+    alert("❌ " + msg);
+  }
+}
+
+function showDeleteModal() {
+  document.getElementById('delete-account-modal').style.display = 'flex';
+}
+
+function closeDeleteModal() {
+  document.getElementById('delete-account-modal').style.display = 'none';
+}
+
+async function submitDeleteAccount() {
+  const password = document.getElementById('delete-password').value.trim();
+  const username = localStorage.getItem("username");
+  const token = localStorage.getItem("token");
+
+  if (!username || !token || !password) {
+    alert("Missing credentials.");
+    return;
+  }
+
+  const res = await fetch("https://betaroutes.jamesbrock25.workers.dev/api/delete-account", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: token
+    },
+    body: JSON.stringify({ username, password })
+  });
+
+  if (res.ok) {
+    alert("✅ Your account has been deleted.");
+    localStorage.removeItem("username");
+    localStorage.removeItem("token");
+    location.reload();
+  } else {
+    const msg = await res.text();
+    alert("❌ " + msg);
+  }
+}
+
+window.toggleMenu = function () {
+  console.log("toggleMenu() triggered!");
+
+  const menu = document.getElementById('account-menu');
+  if (!menu) return console.warn('Menu not found');
+
+  menu.classList.toggle("show");
+};
+
+function filterByDate() {
+  const year = document.getElementById('filter-year').value;
+  const month = document.getElementById('filter-month').value;
+
+  displayLog((entryDate) => {
+    const [yyyy, mm] = entryDate.split('-');
+    const matchesYear = !year || yyyy === year;
+    const matchesMonth = !month || mm === month;
+    return matchesYear && matchesMonth;
+  });
+}
+
+
+    </script>
+
+<div id="auth-modal" onclick="closeAuthModal()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 2000;">
+  <div onclick="event.stopPropagation()" style="background: white; padding: 30px; border-radius: 10px; width: 300px;">
+    <h3 id="auth-title">Sign In</h3>
+<input
+  type="text"
+  id="auth-username"
+  placeholder="Username"
+  style="width: 100%; margin-bottom: 10px; box-sizing: border-box; padding: 10px; font-size: 16px; line-height: 1.4;"
+/>
+
+<input
+  type="password"
+  id="auth-password"
+  placeholder="Password"
+  style="width: 100%; margin-bottom: 10px; box-sizing: border-box; padding: 10px; font-size: 16px; line-height: 1.4;"
+/>
+
+
+    <button onclick="submitAuth()" style="width: 100%;">Submit</button>
+    <button onclick="closeAuthModal()" style="width: 100%; margin-top: 10px; background-color: #ccc; color: #333;">Cancel</button>
+    <p style="text-align: center; margin-top: 10px;">
+  <a href="#" onclick="toggleAuthMode()">Switch to <span id="auth-switch-label">Sign Up</span></a><br>
+  <a href="#" onclick="showResetModal()" style="font-size: 0.9em; color: #0d6efd;">Forgot Password?</a>
+</p>
+  </div>
+</div>
+
+<div id="change-password-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 2000;">
+  <div onclick="event.stopPropagation()" style="background: white; padding: 30px; border-radius: 10px; width: 300px;">
+    <h3>Change Password</h3>
+
+    <input type="password" id="current-password" placeholder="Current password"
+      style="width: 100%; margin-bottom: 10px; box-sizing: border-box; padding: 10px; font-size: 16px; line-height: 1.4;" />
+
+    <input type="password" id="new-password" placeholder="New password"
+      style="width: 100%; margin-bottom: 10px; box-sizing: border-box; padding: 10px; font-size: 16px; line-height: 1.4;" />
+
+    <input type="password" id="confirm-password" placeholder="Confirm new password"
+      style="width: 100%; margin-bottom: 10px; box-sizing: border-box; padding: 10px; font-size: 16px; line-height: 1.4;" />
+
+    <button onclick="submitPasswordChange()" style="width: 100%; padding: 10px; font-size: 16px;">Submit</button>
+    <button onclick="closePasswordModal()" style="width: 100%; margin-top: 10px; background: #ccc; padding: 10px; font-size: 16px;">Cancel</button>
+  </div>
+</div>
+
+<div id="reset-password-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 2000;">
+  <div onclick="event.stopPropagation()" style="background: white; padding: 30px; border-radius: 10px; width: 300px;">
+    <h3>Reset Password</h3>
+    <input type="text" id="reset-username" placeholder="Username" style="width: 100%; margin-bottom: 10px; padding: 10px;" />
+    <input type="text" id="reset-key" placeholder="Reset Key (shown at signup)" style="width: 100%; margin-bottom: 10px; padding: 10px;" />
+    <input type="password" id="reset-new-password" placeholder="New Password" style="width: 100%; margin-bottom: 10px; padding: 10px;" />
+    <button onclick="submitResetPassword()" style="width: 100%;">Submit</button>
+    <button onclick="closeResetModal()" style="width: 100%; margin-top: 10px; background: #ccc;">Cancel</button>
+  </div>
+</div>
+
+<div id="delete-account-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 2000;">
+  <div onclick="event.stopPropagation()" style="background: white; padding: 30px; border-radius: 10px; width: 300px;">
+    <h3>Delete Account</h3>
+    <p style="font-size: 14px; color: red;">⚠️ This action is permanent.</p>
+    <input type="password" id="delete-password" placeholder="Confirm password" style="width: 100%; margin-bottom: 10px; padding: 10px;" />
+    <button onclick="submitDeleteAccount()" style="width: 100%; background: red; color: white;">Delete My Account</button>
+    <button onclick="closeDeleteModal()" style="width: 100%; margin-top: 10px; background: #ccc;">Cancel</button>
+  </div>
+</div>
+
+
+</body>
+
+</html>
