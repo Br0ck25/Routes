@@ -227,11 +227,13 @@
       }
 
       #log-list li {
-        border-bottom: 1px solid #eee;
+        list-style-type: none;
         padding: 10px 0;
+        margin: 0; /* <--- add this line */
         display: flex;
         justify-content: space-between;
         align-items: center;
+        border-bottom: 1px solid #eee;
       }
 
       #log-list li:last-child {
@@ -669,7 +671,7 @@
           <!-- Net profit and profit per hour will show here -->
         </div>
 
-        <!-- This wrapper keeps Log + Filters side-by-side -->
+        <!-- ✅ Keep the filters next to the Log title -->
         <div
           id="log-title-bar"
           style="
@@ -680,7 +682,6 @@
             margin-bottom: 10px;
           "
         >
-          <!-- ✅ Keep the filters next to the Log title -->
           <h2 style="margin: 0">Log</h2>
 
           <!-- ✅ Replace your old filter div with this -->
@@ -1633,12 +1634,17 @@
           allEntries.push(...organizedLog[day]);
         }
 
-        const filteredEntries = allEntries.filter((entry) =>
+        // ✅ NEW: Sort by date newest first
+        const sortedEntries = allEntries.sort((a, b) => {
+          return new Date(b.date) - new Date(a.date);
+        });
+
+        const filteredEntries = sortedEntries.filter((entry) =>
           filterFn(entry.date)
         );
         const totalPages = Math.ceil(filteredEntries.length / logsPerPage);
 
-        // Get the entries for this page
+        // Get entries for this page
         const start = (currentPage - 1) * logsPerPage;
         const end = start + logsPerPage;
         const pageEntries = filteredEntries.slice(start, end);
@@ -1724,6 +1730,9 @@
         if (currentPage > 1) {
           currentPage--;
           displayLog();
+          document
+            .getElementById("log-container")
+            .scrollIntoView({ behavior: "smooth" });
         }
       }
 
@@ -1732,6 +1741,9 @@
         if (currentPage < totalPages) {
           currentPage++;
           displayLog();
+          document
+            .getElementById("log-container")
+            .scrollIntoView({ behavior: "smooth" });
         }
       }
 
@@ -1742,6 +1754,9 @@
         if (!isNaN(page) && page >= 1 && page <= totalPages) {
           currentPage = page;
           displayLog();
+          document
+            .getElementById("log-container")
+            .scrollIntoView({ behavior: "smooth" });
         } else {
           alert("Invalid page number.");
         }
