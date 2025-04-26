@@ -407,6 +407,23 @@
       .custom-view-modal button:hover {
         background-color: #c82333;
       }
+
+      #log-list .hidden {
+  display: none;
+}
+
+#log-list div[id^="details-"] {
+  transition: all 0.3s ease;
+  padding-top: 5px;
+}
+
+#log-list div[id^="details-"] {
+  margin-left: 20px;
+  padding-top: 5px;
+  transition: all 0.3s ease;
+}
+
+
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
@@ -784,6 +801,7 @@
         >
           Export CSV
         </button>
+      </div>
       </div>
     </div>
 
@@ -1624,73 +1642,70 @@
       }
 
       function displayLog(filterFn = () => true) {
-        const logList = document.getElementById("log-list");
-        const organizedLog = organizeLogByDay();
-        logList.innerHTML = "";
+  const logList = document.getElementById("log-list");
+  const organizedLog = organizeLogByDay();
+  logList.innerHTML = "";
 
-        // Flatten all entries into one array
-        const allEntries = [];
-        for (const day in organizedLog) {
-          allEntries.push(...organizedLog[day]);
-        }
+  const allEntries = [];
+  for (const day in organizedLog) {
+    allEntries.push(...organizedLog[day]);
+  }
 
-        // ✅ NEW: Sort by date newest first
-        const sortedEntries = allEntries.sort((a, b) => {
-          return new Date(b.date) - new Date(a.date);
-        });
+  const sortedEntries = allEntries.sort((a, b) => {
+    return new Date(b.date) - new Date(a.date);
+  });
 
-        const filteredEntries = sortedEntries.filter((entry) =>
-          filterFn(entry.date)
+  const filteredEntries = sortedEntries.filter((entry) =>
+    filterFn(entry.date)
+  );
+  const totalPages = Math.ceil(filteredEntries.length / logsPerPage);
+
+  const start = (currentPage - 1) * logsPerPage;
+  const end = start + logsPerPage;
+  const pageEntries = filteredEntries.slice(start, end);
+
+  if (pageEntries.length === 0) {
+    const emptyMessage = document.createElement("li");
+    emptyMessage.textContent = "No log entries found for selected filter.";
+    logList.appendChild(emptyMessage);
+  } else {
+    pageEntries.forEach((entry, index) => {
+      if (entry) {
+        const realIndex = logEntries.findIndex(
+          (e) => JSON.stringify(e) === JSON.stringify(entry)
         );
-        const totalPages = Math.ceil(filteredEntries.length / logsPerPage);
+        const listItem = document.createElement("li");
+        const destinations = Array.isArray(entry.destinations)
+  ? entry.destinations.map((d) => `- ${d}`).join("<br>")
+  : "";
 
-        // Get entries for this page
-        const start = (currentPage - 1) * logsPerPage;
-        const end = start + logsPerPage;
-        const pageEntries = filteredEntries.slice(start, end);
 
-        if (pageEntries.length === 0) {
-          const emptyMessage = document.createElement("li");
-          emptyMessage.textContent =
-            "No log entries found for selected filter.";
-          logList.appendChild(emptyMessage);
-        } else {
-          pageEntries.forEach((entry, index) => {
-            if (entry) {
-              const realIndex = logEntries.findIndex(
-                (e) => JSON.stringify(e) === JSON.stringify(entry)
-              );
-              const listItem = document.createElement("li");
-              const destinations = Array.isArray(entry.destinations)
-                ? entry.destinations.join(", ")
-                : "";
+  listItem.innerHTML = `
+  <div class="log-item-details" id="log-entry-${realIndex}">
+    <div id="summary-${realIndex}">
+      <strong>Date:</strong> ${entry.date}<br>
+      <div><strong>Destinations:</strong></div>
+      <div style="margin-left: 15px;">${destinations}</div>
+      <strong>Net Profit:</strong> $${parseFloat(entry.netProfit || 0).toFixed(2)}
+    </div>
+    <div id="details-${realIndex}" class="hidden" style="margin-top:10px;"></div>
+  </div>
+  <div class="log-actions">
+    <button onclick="toggleLogEntryDetails(${realIndex})" id="toggle-button-${realIndex}">More Details</button>
+    <button class="edit-btn" onclick="openEditForm(${realIndex})">Edit</button>
+    <button onclick="deleteLogEntry(${realIndex})">Delete</button>
+  </div>
+`;
 
-              listItem.innerHTML = `
-          <div class="log-item-details">
-            <strong>Date:</strong> ${entry.date}<br>
-            <strong>Start:</strong> ${entry.startTime}<br>
-            <strong>Destinations:</strong> ${destinations}<br>
-            <strong>End:</strong> ${entry.endTime}<br>
-            <strong>Earnings:</strong> $${entry.totalEarnings || 0}<br>
-            <strong>Fuel Consumption Cost:</strong> $${entry.fuelCost}<br>
-            <strong>Maintenance:</strong> $${entry.maintenanceCost}<br>
-            <strong>Supplies:</strong> $${entry.suppliesCost}<br>
-            <strong>Net Profit:</strong> $${entry.netProfit || 0}
-          </div>
-          <div class="log-actions">
-            <button class="edit-btn" onclick="openEditForm(${realIndex})">Edit</button>
-            <button onclick="viewLogEntry(${realIndex})">View Details</button>
-            <button onclick="deleteLogEntry(${realIndex})">Delete</button>
-          </div>
-        `;
-              logList.appendChild(listItem);
-            }
-          });
-        }
-
-        renderPaginationButtons(totalPages);
-        updateLogSummary(filterFn);
+        logList.appendChild(listItem);
       }
+    });
+  }
+
+  renderPaginationButtons(totalPages);
+  updateLogSummary(filterFn);
+}
+
 
       function renderPaginationButtons(totalPages) {
         let paginationContainer = document.getElementById(
@@ -1760,74 +1775,6 @@
         } else {
           alert("Invalid page number.");
         }
-      }
-
-      function viewLogEntry(index) {
-        const entry = logEntries[index];
-        if (!entry) {
-          console.warn("Invalid log entry index:", index);
-          return;
-        }
-
-        // 🔁 Remove any existing modal first
-        const existingOverlay = document.querySelector(".custom-view-overlay");
-        if (existingOverlay) existingOverlay.remove();
-
-        // ✅ Create overlay
-        const overlay = document.createElement("div");
-        overlay.className = "custom-view-overlay";
-
-        // ✅ Create modal
-        const modal = document.createElement("div");
-        modal.className = "custom-view-modal";
-
-        // 🔧 Sanitize and format content
-        const destinations = entry.destinations?.length
-          ? entry.destinations.map((d) => `- ${d}`).join("<br>")
-          : "None";
-
-        const earnings = Array.isArray(entry.earnings)
-          ? entry.earnings.map((e) => `$${parseFloat(e).toFixed(2)}`).join(", ")
-          : "$0.00";
-        const formattedHoursWorked = entry.hoursWorked
-          ? `${parseFloat(entry.hoursWorked).toFixed(2)} ${
-              parseFloat(entry.hoursWorked) === 1 ? "hour" : "hours"
-            }`
-          : "0.00 hours";
-
-        const formattedNetProfit = formatCurrency(entry.netProfit);
-        const formattedProfitPerHour = formatCurrency(entry.profitPerHour);
-        const formattedTotalEarnings = formatCurrency(entry.totalEarnings);
-        const formattedFuelCost = formatCurrency(entry.fuelCost);
-        const formattedMaintenanceCost = formatCurrency(entry.maintenanceCost);
-        const formattedSuppliesCost = formatCurrency(entry.suppliesCost);
-
-        modal.innerHTML = `
-  <h3>Log Entry Details</h3>
-<p><strong>Date:</strong> ${entry.date}</p>
-<p><strong>Start Time:</strong> ${formatTimeToAmPm(entry.startClock)}</p>
-<p><strong>End Time:</strong> ${formatTimeToAmPm(entry.endClock)}</p>
-<p><strong>Start Address:</strong> ${entry.startTime}</p>
-  <p><strong>Destinations:</strong><br>${destinations}</p>
-  <p><strong>End Address:</strong> ${entry.endTime}</p>
-  <p><strong>Earnings per Stop:</strong> ${earnings}</p>
-  <p><strong>Total Mileage:</strong> ${entry.totalMileage} miles</p>
-  <p><strong>Total Drive Time:</strong> ${entry.totalTime}</p>
-  <p><strong>Total Earnings:</strong> $${entry.totalEarnings}</p>
-  <p><strong>Fuel Cost:</strong> $${entry.fuelCost}</p>
-  <p><strong>Maintenance:</strong> $${entry.maintenanceCost}</p>
-  <p><strong>Supplies:</strong> $${entry.suppliesCost}</p>
-  <p><strong>Hours Worked:</strong> ${formattedHoursWorked}</p>
-  <p><strong>Net Profit:</strong> ${formattedNetProfit}</p>
-  <p><strong>Profit per Hour:</strong> ${formattedProfitPerHour}</p>
-
-
-  <button onclick="openLogEntryInGoogleMaps(${index})" style="background-color: #0d6efd; margin-top: 10px;">Open in Google Maps</button>
-  <button onclick="this.closest('.custom-view-overlay').remove()" style="background-color: #dc3545; margin-top: 10px;">Close</button>
-`;
-
-        overlay.appendChild(modal);
-        document.body.appendChild(overlay);
       }
 
       function deleteLogEntry(index) {
@@ -3023,6 +2970,65 @@
         const displayHours = hours % 12 || 12; // 0 becomes 12
         return `${displayHours}:${minutes.toString().padStart(2, "0")} ${ampm}`;
       }
+
+      function toggleLogEntryDetails(index) {
+  const entry = logEntries[index];
+  const detailsDiv = document.getElementById(`details-${index}`);
+  const toggleButton = document.getElementById(`toggle-button-${index}`);
+  const summaryDiv = document.getElementById(`summary-${index}`);
+
+  if (!detailsDiv || !entry || !toggleButton || !summaryDiv) return;
+
+  if (detailsDiv.classList.contains("hidden")) {
+    // Expand
+    const destinations = entry.destinations?.length
+      ? entry.destinations.map((d) => `- ${d}`).join("<br>")
+      : "None";
+
+    const earnings = Array.isArray(entry.earnings)
+      ? entry.earnings.map((e) => `$${parseFloat(e).toFixed(2)}`).join(", ")
+      : "$0.00";
+
+    const formattedHoursWorked = entry.hoursWorked
+      ? `${parseFloat(entry.hoursWorked).toFixed(2)} hours`
+      : "0.00 hours";
+
+      detailsDiv.innerHTML = `
+  <div><strong>Date:</strong> ${entry.date}</div>
+  <div><strong>Start Time:</strong> ${formatTimeToAmPm(entry.startClock)}</div>
+  <div><strong>End Time:</strong> ${formatTimeToAmPm(entry.endClock)}</div>
+  <div><strong>Start Address:</strong> ${entry.startTime}</div>
+  
+  <div><strong>Destinations:</strong></div> <!-- first separate div -->
+  <div style="margin-left: 15px;">${destinations}</div> <!-- second div for addresses -->
+
+  <div><strong>End Address:</strong> ${entry.endTime}</div>
+  <div><strong>Earnings per Stop:</strong> ${earnings}</div>
+  <div><strong>Total Mileage:</strong> ${entry.totalMileage} miles</div>
+  <div><strong>Total Drive Time:</strong> ${entry.totalTime}</div>
+  <div><strong>Total Earnings:</strong> $${entry.totalEarnings}</div>
+  <div><strong>Fuel Cost:</strong> $${entry.fuelCost}</div>
+  <div><strong>Maintenance:</strong> $${entry.maintenanceCost}</div>
+  <div><strong>Supplies:</strong> $${entry.suppliesCost}</div>
+  <div><strong>Hours Worked:</strong> ${formattedHoursWorked}</div>
+  <div><strong>Net Profit:</strong> $${entry.netProfit}</div>
+  <div><strong>Profit per Hour:</strong> $${entry.profitPerHour}</div>
+`;
+
+
+    detailsDiv.classList.remove("hidden");
+    summaryDiv.classList.add("hidden"); // 🔥 Hide only the summary
+    toggleButton.textContent = "Less Details";
+  } else {
+    // Collapse
+    detailsDiv.classList.add("hidden");
+    summaryDiv.classList.remove("hidden"); // 🔥 Show the summary
+toggleButton.textContent = "More Details";
+  }
+}
+
+
+
     </script>
 
     <div
