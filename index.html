@@ -35,6 +35,11 @@
     <!-- pick your site background color -->
 
     <style>
+      body,
+      html,
+      #log-container {
+        overflow: visible !important;
+      }
       .modal-box {
         background: white;
         padding: 30px;
@@ -267,11 +272,13 @@
       }
 
       #log-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 15px;
-      }
+  display: flex;
+  flex-direction: column; /* 🆕 STACK vertically */
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
 
       #organize-by-day {
         padding: 8px;
@@ -650,45 +657,77 @@
 
     <div id="log-container">
       <div id="log-header">
-        <h2>Log</h2>
-        <div
-          id="log-summary"
-          style="
-            text-align: center;
-            margin-bottom: 15px;
-            font-weight: bold;
-            font-size: 18px;
-          "
-        >
-          <!-- Net profit and profit per hour will show here -->
+    
+        <div id="log-container">
+          <div id="log-header">
+          
+            <!-- Net Profit / Profit per Hour Summary (always centered at top) -->
+            <div
+              id="log-summary"
+              style="
+                text-align: center;
+                margin-bottom: 15px;
+                font-weight: bold;
+                font-size: 18px;
+              "
+            >
+              <!-- Net profit and profit per hour will show here -->
+            </div>
+        
+            <!-- This wrapper keeps Log + Filters side-by-side -->
+            <div
+              id="log-title-bar"
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                width: 100%;
+                margin-bottom: 10px;
+              "
+            >
+        
+              <!-- ✅ Keep the filters next to the Log title -->
+              <div id="log-title-bar" style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 10px;">
+                <h2 style="margin: 0;">Log</h2>
+              
+                <!-- ✅ Replace your old filter div with this -->
+                <div style="display: flex; gap: 20px; align-items: center;">
+                  <div style="display: flex; flex-direction: column; align-items: center;">
+                    <label for="filter-year">Year:</label>
+                    <select id="filter-year" onchange="filterByDate()">
+                      <option value="">All</option>
+                    </select>
+                  </div>
+              
+                  <div style="display: flex; flex-direction: column; align-items: center;">
+                    <label for="filter-month">Month:</label>
+                    <select id="filter-month" onchange="filterByDate()">
+                      <option value="">All</option>
+                      <option value="01">January</option>
+                      <option value="02">February</option>
+                      <option value="03">March</option>
+                      <option value="04">April</option>
+                      <option value="05">May</option>
+                      <option value="06">June</option>
+                      <option value="07">July</option>
+                      <option value="08">August</option>
+                      <option value="09">September</option>
+                      <option value="10">October</option>
+                      <option value="11">November</option>
+                      <option value="12">December</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              
+        
+          </div>
+        
+          <ul id="log-list"></ul>
         </div>
-        <div>
-          <label for="filter-year">Year:</label>
-          <select id="filter-year" onchange="filterByDate()">
-            <option value="">All</option>
-          </select>
+        
 
-          <label for="filter-month" style="margin-left: 10px">Month:</label>
-          <select id="filter-month" onchange="filterByDate()">
-            <option value="">All</option>
-            <option value="01">January</option>
-            <option value="02">February</option>
-            <option value="03">March</option>
-            <option value="04">April</option>
-            <option value="05">May</option>
-            <option value="06">June</option>
-            <option value="07">July</option>
-            <option value="08">August</option>
-            <option value="09">September</option>
-            <option value="10">October</option>
-            <option value="11">November</option>
-            <option value="12">December</option>
-          </select>
-        </div>
-      </div>
-      <ul id="log-list"></ul>
-    </div>
-
+    <!-- Then AFTER log-container ends, manage-log-container starts -->
     <div
       id="manage-log-container"
       style="text-align: center; margin-top: 20px; position: relative"
@@ -700,50 +739,58 @@
         Manage Log ▼
       </button>
       <div
-        id="manage-log-menu"
+      <div
+      id="manage-log-menu"
+      style="
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: white;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        z-index: 9999;
+        min-width: 160px;
+        margin-top: 5px;
+        text-align: center; /* 🆕 Add this line */
+      "
+    >
+      <button
+        onclick="triggerImportFile()"
         style="
-          display: none;
-          position: absolute;
-          top: 100%;
-          left: 50%;
-          transform: translateX(-50%);
-          background: white;
-          border: 1px solid #ccc;
-          border-radius: 6px;
-          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-          z-index: 9999;
-          min-width: 160px;
-          margin-top: 5px;
+          width: auto; /* 🆕 Change */
+          min-width: 120px; /* 🆕 New */
+          padding: 10px;
+          background: none;
+          border: none;
+          text-align: center; /* 🆕 Change */
+          color: black;
+          display: inline-block; /* 🆕 New */
+          margin: 5px 0; /* 🆕 Add some vertical margin */
         "
       >
-        <button
-          onclick="triggerImportFile()"
-          style="
-            width: 100%;
-            padding: 10px;
-            background: none;
-            border: none;
-            text-align: left;
-            color: black;
-          "
-        >
-          Import CSV
-        </button>
-        <button
-          onclick="exportToCSV()"
-          style="
-            width: 100%;
-            padding: 10px;
-            background: none;
-            border: none;
-            text-align: left;
-            color: black;
-          "
-        >
-          Export CSV
-        </button>
-      </div>
+        Import CSV
+      </button>
+      <button
+        onclick="exportToCSV()"
+        style="
+          width: auto; /* 🆕 Change */
+          min-width: 120px; /* 🆕 New */
+          padding: 10px;
+          background: none;
+          border: none;
+          text-align: center; /* 🆕 Change */
+          color: black;
+          display: inline-block; /* 🆕 New */
+          margin: 5px 0; /* 🆕 Add some vertical margin */
+        "
+      >
+        Export CSV
+      </button>
     </div>
+    
 
     <input
       type="file"
@@ -755,10 +802,38 @@
 
     <div id="overlay" class="hidden"></div>
 
+    <script>
+function toggleManageLogMenu() {
+  const menu = document.getElementById("manage-log-menu");
+  const body = document.body;
+
+  if (!menu) return;
+
+  if (menu.style.display === "none" || menu.style.display === "") {
+    menu.style.display = "block";
+    body.style.paddingBottom = "200px"; // 🆕 Add extra bottom space
+  } else {
+    menu.style.display = "none";
+    body.style.paddingBottom = "0"; // 🆕 Remove extra space
+  }
+}
+
+    </script>
+
     <div id="edit-form-container" class="edit-form-container hidden">
       <h3>Edit Log Entry</h3>
       <label for="edit-date">Date</label>
       <input type="text" id="edit-date" />
+
+      <div class="edit-form-group">
+        <label for="edit-start-time">Start Time</label>
+        <input type="time" id="edit-start-time" />
+      </div>
+
+      <div class="edit-form-group">
+        <label for="edit-end-time">End Time</label>
+        <input type="time" id="edit-end-time" />
+      </div>
 
       <label for="edit-start-address">Start Address</label>
       <input type="text" id="edit-start-address" />
@@ -773,6 +848,12 @@
       <button type="button" onclick="recalculateEditMileageAndCosts()">
         Recalculate Mileage
       </button>
+
+      <label for="edit-mpg">Miles Per Gallon (MPG)</label>
+      <input type="number" id="edit-mpg" placeholder="Enter MPG" />
+
+      <label for="edit-gas-price">Gas Price Per Gallon</label>
+      <input type="number" id="edit-gas-price" placeholder="Enter Gas Price" />
 
       <label for="edit-total-earnings">Total Earnings</label>
       <input type="number" id="edit-total-earnings" />
@@ -874,6 +955,8 @@
       let editingIndex = -1;
       let originalMileage = null;
       let logEntries = [];
+      let currentPage = 1;
+      const logsPerPage = 10;
 
       function showConfirmationMessage(message) {
         const confirmation = document.getElementById("confirmation-message");
@@ -930,18 +1013,26 @@
           }
         });
 
-        const savedMpg = localStorage.getItem("mpg");
-        const savedGasPrice = localStorage.getItem("gasPrice");
+        const savedMpg = parseFloat(localStorage.getItem("mpg"));
+        const savedGasPrice = parseFloat(localStorage.getItem("gasPrice"));
         const savedStartAddress = localStorage.getItem("startAddress");
         const savedEndAddress = localStorage.getItem("endAddress");
 
-        if (savedMpg) document.getElementById("mpg").value = savedMpg;
-        if (savedGasPrice)
+        if (!isNaN(savedMpg)) {
+          document.getElementById("mpg").value = savedMpg;
+        }
+
+        if (!isNaN(savedGasPrice)) {
           document.getElementById("gas-price").value = savedGasPrice;
-        if (savedStartAddress)
+        }
+
+        if (savedStartAddress && typeof savedStartAddress === "string") {
           document.getElementById("start-address").value = savedStartAddress;
-        if (savedEndAddress)
+        }
+
+        if (savedEndAddress && typeof savedEndAddress === "string") {
           document.getElementById("end-address").value = savedEndAddress;
+        }
 
         // Initialize autocomplete for the initial destination
         document
@@ -1242,6 +1333,7 @@
 
         const calculationResult = await calculateRouteData();
         if (calculationResult) {
+          currentPage = 1;
           logEntry(calculationResult);
           displayLog();
           populateYearOptions(); // ✅ add this
@@ -1479,6 +1571,8 @@
       }
 
       function logEntry(data) {
+        data.startClock = document.getElementById("start-time").value || "";
+        data.endClock = document.getElementById("end-time").value || "";
         logEntries.unshift(data);
         saveLog();
       }
@@ -1539,61 +1633,124 @@
         const organizedLog = organizeLogByDay();
         logList.innerHTML = "";
 
-        const sortedDays = Object.keys(organizedLog).sort(
-          (a, b) => new Date(b) - new Date(a)
-        );
-        for (const day of sortedDays) {
-          if (organizedLog[day].some((entry) => filterFn(entry.date))) {
-            const dayHeading = document.createElement("h3");
-            dayHeading.textContent = day;
-            logList.appendChild(dayHeading);
-
-            const entries = organizedLog[day]
-              .slice()
-              .sort((a, b) => new Date(b.date) - new Date(a.date));
-            for (const entry of entries.filter((e) => filterFn(e.date))) {
-              if (entry) {
-                const index = logEntries.findIndex(
-                  (e) => JSON.stringify(e) === JSON.stringify(entry)
-                );
-                const listItem = document.createElement("li");
-                const destinations = Array.isArray(entry.destinations)
-                  ? entry.destinations.join(", ")
-                  : "";
-
-                listItem.innerHTML = `
-            <div class="log-item-details">
-              <strong>Date:</strong> ${entry.date}<br>
-              <strong>Start:</strong> ${entry.startTime}<br>
-              <strong>Destinations:</strong> ${destinations}<br>
-              <strong>End:</strong> ${entry.endTime}<br>
-              <strong>Earnings:</strong> $${entry.totalEarnings || 0}<br>
-              <strong>Fuel Consumption Cost:</strong> $${entry.fuelCost}<br>
-              <strong>Maintenance:</strong> $${entry.maintenanceCost}<br>
-              <strong>Supplies:</strong> $${entry.suppliesCost}<br>
-              <strong>Net Profit:</strong> $${entry.netProfit || 0}
-            </div>
-            <div class="log-actions">
-              <button class="edit-btn" onclick="openEditForm(${index})">Edit</button>
-              <button onclick="viewLogEntry(${index})">View Details</button>
-              <button onclick="deleteLogEntry(${index})">Delete</button>
-            </div>
-          `;
-                logList.appendChild(listItem);
-              }
-            }
-          }
+        // Flatten all entries into one array
+        const allEntries = [];
+        for (const day in organizedLog) {
+          allEntries.push(...organizedLog[day]);
         }
 
-        // ✅ INSERT THIS CHECK here:
-        if (logList.innerHTML === "") {
+        const filteredEntries = allEntries.filter((entry) =>
+          filterFn(entry.date)
+        );
+        const totalPages = Math.ceil(filteredEntries.length / logsPerPage);
+
+        // Get the entries for this page
+        const start = (currentPage - 1) * logsPerPage;
+        const end = start + logsPerPage;
+        const pageEntries = filteredEntries.slice(start, end);
+
+        if (pageEntries.length === 0) {
           const emptyMessage = document.createElement("li");
           emptyMessage.textContent =
             "No log entries found for selected filter.";
           logList.appendChild(emptyMessage);
+        } else {
+          pageEntries.forEach((entry, index) => {
+            if (entry) {
+              const realIndex = logEntries.findIndex(
+                (e) => JSON.stringify(e) === JSON.stringify(entry)
+              );
+              const listItem = document.createElement("li");
+              const destinations = Array.isArray(entry.destinations)
+                ? entry.destinations.join(", ")
+                : "";
+
+              listItem.innerHTML = `
+          <div class="log-item-details">
+            <strong>Date:</strong> ${entry.date}<br>
+            <strong>Start:</strong> ${entry.startTime}<br>
+            <strong>Destinations:</strong> ${destinations}<br>
+            <strong>End:</strong> ${entry.endTime}<br>
+            <strong>Earnings:</strong> $${entry.totalEarnings || 0}<br>
+            <strong>Fuel Consumption Cost:</strong> $${entry.fuelCost}<br>
+            <strong>Maintenance:</strong> $${entry.maintenanceCost}<br>
+            <strong>Supplies:</strong> $${entry.suppliesCost}<br>
+            <strong>Net Profit:</strong> $${entry.netProfit || 0}
+          </div>
+          <div class="log-actions">
+            <button class="edit-btn" onclick="openEditForm(${realIndex})">Edit</button>
+            <button onclick="viewLogEntry(${realIndex})">View Details</button>
+            <button onclick="deleteLogEntry(${realIndex})">Delete</button>
+          </div>
+        `;
+              logList.appendChild(listItem);
+            }
+          });
         }
 
-        updateLogSummary(filterFn); // ✅ Now finally call the summary update
+        renderPaginationButtons(totalPages);
+        updateLogSummary(filterFn);
+      }
+
+      function renderPaginationButtons(totalPages) {
+        let paginationContainer = document.getElementById(
+          "pagination-controls"
+        );
+        if (!paginationContainer) {
+          paginationContainer = document.createElement("div");
+          paginationContainer.id = "pagination-controls";
+          paginationContainer.style.textAlign = "center";
+          paginationContainer.style.marginTop = "20px";
+          document
+            .getElementById("log-container")
+            .appendChild(paginationContainer);
+        }
+
+        paginationContainer.innerHTML = `
+    <div style="margin-bottom: 10px; font-size: 18px;">
+      Page ${currentPage} of ${totalPages}
+    </div>
+    <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 10px;">
+      <button onclick="prevPage()" ${
+        currentPage === 1 ? "disabled" : ""
+      }>Previous</button>
+      <button onclick="nextPage()" ${
+        currentPage === totalPages ? "disabled" : ""
+      }>Next</button>
+    </div>
+    <div style="margin-top: 10px;">
+      Go to Page: 
+      <input type="number" id="page-input" min="1" max="${totalPages}" value="${currentPage}" style="width: 60px; text-align: center;">
+      <button onclick="goToPage(${totalPages})">Go</button>
+    </div>
+  `;
+      }
+
+      function prevPage() {
+        if (currentPage > 1) {
+          currentPage--;
+          displayLog();
+        }
+      }
+
+      function nextPage() {
+        const totalPages = Math.ceil(logEntries.length / logsPerPage);
+        if (currentPage < totalPages) {
+          currentPage++;
+          displayLog();
+        }
+      }
+
+      function goToPage(totalPages) {
+        const input = document.getElementById("page-input");
+        const page = parseInt(input.value);
+
+        if (!isNaN(page) && page >= 1 && page <= totalPages) {
+          currentPage = page;
+          displayLog();
+        } else {
+          alert("Invalid page number.");
+        }
       }
 
       function viewLogEntry(index) {
@@ -1638,8 +1795,10 @@
 
         modal.innerHTML = `
   <h3>Log Entry Details</h3>
-  <p><strong>Date:</strong> ${entry.date}</p>
-  <p><strong>Start Address:</strong> ${entry.startTime}</p>
+<p><strong>Date:</strong> ${entry.date}</p>
+<p><strong>Start Time:</strong> ${formatTimeToAmPm(entry.startClock)}</p>
+<p><strong>End Time:</strong> ${formatTimeToAmPm(entry.endClock)}</p>
+<p><strong>Start Address:</strong> ${entry.startTime}</p>
   <p><strong>Destinations:</strong><br>${destinations}</p>
   <p><strong>End Address:</strong> ${entry.endTime}</p>
   <p><strong>Earnings per Stop:</strong> ${earnings}</p>
@@ -2026,6 +2185,8 @@
         setInputValue("edit-date", entry.date);
         setInputValue("edit-start-address", entry.startTime);
         setInputValue("edit-end-address", entry.endTime);
+        setInputValue("edit-start-time", entry.startClock ?? "");
+        setInputValue("edit-end-time", entry.endClock ?? "");
         setInputValue("edit-total-earnings", entry.totalEarnings);
         setInputValue("edit-fuel-cost", entry.fuelCost);
         setInputValue("edit-maintenance-cost", entry.maintenanceCost);
@@ -2070,6 +2231,16 @@
         if (editFormContainer && overlay) {
           editFormContainer.style.display = "block";
           overlay.style.display = "block";
+          const startTimeInput = document.getElementById("edit-start-time");
+          const endTimeInput = document.getElementById("edit-end-time");
+
+          if (startTimeInput && endTimeInput) {
+            startTimeInput.addEventListener(
+              "change",
+              recalculateEditHoursWorked
+            );
+            endTimeInput.addEventListener("change", recalculateEditHoursWorked);
+          }
         }
 
         // ✅ Setup Autocomplete after a tiny delay
@@ -2110,6 +2281,10 @@
 
         const entry = logEntries[editingIndex];
         entry.date = document.getElementById("edit-date").value;
+        entry.startClock =
+          document.getElementById("edit-start-time")?.value || "";
+        entry.endClock = document.getElementById("edit-end-time")?.value || "";
+
         entry.startTime = document.getElementById("edit-start-address").value;
         entry.endTime = document.getElementById("edit-end-address").value;
 
@@ -2667,17 +2842,20 @@
         });
       }
 
-      function toggleManageLogMenu() {
-        const menu = document.getElementById("manage-log-menu");
-        menu.style.display = menu.style.display === "block" ? "none" : "block";
-      }
-
       // Hide Manage Log menu when clicking outside
       document.addEventListener("click", function (event) {
-        const menu = document.getElementById("manage-log-menu");
-        const button = event.target.closest("button");
-        if (!button || button.textContent !== "Manage Log ▼") {
-          if (menu) menu.style.display = "none";
+        const manageButton = document.querySelector(
+          "#manage-log-container button"
+        );
+        const manageMenu = document.getElementById("manage-log-menu");
+
+        // If click outside both the menu AND the button
+        if (
+          manageMenu &&
+          !manageMenu.contains(event.target) &&
+          !manageButton.contains(event.target)
+        ) {
+          manageMenu.style.display = "none";
         }
       });
 
@@ -2757,45 +2935,79 @@
       }
 
       function updateLogSummary(filterFn) {
-        const summaryDiv = document.getElementById("log-summary");
+  const summaryDiv = document.getElementById("log-summary");
 
-        // Filter the relevant entries
-        const filteredEntries = logEntries.filter((entry) => {
-          return filterFn(entry.date);
-        });
+  // Filter the relevant entries
+  const filteredEntries = logEntries.filter((entry) => {
+    return filterFn(entry.date);
+  });
 
-        if (filteredEntries.length === 0) {
-          summaryDiv.innerHTML = "No data available for selected filter.";
-          return;
-        }
+  if (filteredEntries.length === 0) {
+    summaryDiv.innerHTML = "No data available for selected filter.";
+    return;
+  }
 
-        // Calculate total Net Profit and Profit Per Hour
-        let totalNetProfit = 0;
-        let totalProfitPerHour = 0;
-        let validProfitPerHourEntries = 0;
+  // Calculate total Net Profit and Profit Per Hour
+  let totalNetProfit = 0;
+  let totalProfitPerHour = 0;
+  let validProfitPerHourEntries = 0;
 
-        filteredEntries.forEach((entry) => {
-          totalNetProfit += parseFloat(entry.netProfit) || 0;
+  filteredEntries.forEach((entry) => {
+    totalNetProfit += parseFloat(entry.netProfit) || 0;
 
-          if (!isNaN(parseFloat(entry.profitPerHour))) {
-            totalProfitPerHour += parseFloat(entry.profitPerHour);
-            validProfitPerHourEntries++;
-          }
-        });
+    if (!isNaN(parseFloat(entry.profitPerHour))) {
+      totalProfitPerHour += parseFloat(entry.profitPerHour);
+      validProfitPerHourEntries++;
+    }
+  });
 
-        const averageProfitPerHour =
-          validProfitPerHourEntries > 0
-            ? totalProfitPerHour / validProfitPerHourEntries
-            : 0;
+  const averageProfitPerHour =
+    validProfitPerHourEntries > 0
+      ? totalProfitPerHour / validProfitPerHourEntries
+      : 0;
 
-        summaryDiv.innerHTML = `
-    Logs Net Profit: <span style="color: green;">$${totalNetProfit.toFixed(
-      2
-    )}</span><br>
-    Logs Average Profit Per Hour: <span style="color: blue;">$${averageProfitPerHour.toFixed(
-      2
-    )}</span>
+  // ✅ Set the Net Profit and Profit Per Hour text ABOVE h2 (inside log-summary div)
+  summaryDiv.innerHTML = `
+    <div style="margin-bottom: 10px;">
+      Logs Net Profit: <span style="color: green;">$${totalNetProfit.toFixed(2)}</span>
+    </div>
+    <div>
+      Logs Average Profit Per Hour: <span style="color: blue;">$${averageProfitPerHour.toFixed(2)}</span>
+    </div>
   `;
+}
+
+
+      function recalculateEditHoursWorked() {
+        const startTime = document.getElementById("edit-start-time")?.value;
+        const endTime = document.getElementById("edit-end-time")?.value;
+        const hoursWorkedInput = document.getElementById("edit-hours-worked");
+
+        if (startTime && endTime && hoursWorkedInput) {
+          const [startHours, startMinutes] = startTime.split(":").map(Number);
+          const [endHours, endMinutes] = endTime.split(":").map(Number);
+
+          let start = startHours * 60 + startMinutes;
+          let end = endHours * 60 + endMinutes;
+
+          if (end < start) {
+            // Assume the work ended next day
+            end += 24 * 60;
+          }
+
+          const workedMinutes = end - start;
+          const workedHours = workedMinutes / 60;
+
+          hoursWorkedInput.value = workedHours.toFixed(2);
+        }
+      }
+
+      function formatTimeToAmPm(timeStr) {
+        if (!timeStr) return "N/A";
+        const [hours, minutes] = timeStr.split(":").map(Number);
+        const ampm = hours >= 12 ? "PM" : "AM";
+        const displayHours = hours % 12 || 12; // 0 becomes 12
+        return `${displayHours}:${minutes.toString().padStart(2, "0")} ${ampm}`;
       }
     </script>
 
