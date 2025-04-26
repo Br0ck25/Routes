@@ -29,7 +29,7 @@
 
     <link rel="icon" href="/logo-512.png" sizes="512x512" type="image/png" />
     <link rel="apple-touch-icon" href="/logo-512.png" />
-    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Route Calculator" />
     <meta name="theme-color" content="#ffffff" />
     <!-- pick your site background color -->
@@ -272,13 +272,12 @@
       }
 
       #log-header {
-  display: flex;
-  flex-direction: column; /* 🆕 STACK vertically */
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 15px;
-}
-
+        display: flex;
+        flex-direction: column; /* 🆕 STACK vertically */
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 15px;
+      }
 
       #organize-by-day {
         padding: 8px;
@@ -657,75 +656,70 @@
 
     <div id="log-container">
       <div id="log-header">
-    
-        <div id="log-container">
-          <div id="log-header">
-          
-            <!-- Net Profit / Profit per Hour Summary (always centered at top) -->
-            <div
-              id="log-summary"
-              style="
-                text-align: center;
-                margin-bottom: 15px;
-                font-weight: bold;
-                font-size: 18px;
-              "
-            >
-              <!-- Net profit and profit per hour will show here -->
-            </div>
-        
-            <!-- This wrapper keeps Log + Filters side-by-side -->
-            <div
-              id="log-title-bar"
-              style="
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                width: 100%;
-                margin-bottom: 10px;
-              "
-            >
-        
-              <!-- ✅ Keep the filters next to the Log title -->
-              <div id="log-title-bar" style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 10px;">
-                <h2 style="margin: 0;">Log</h2>
-              
-                <!-- ✅ Replace your old filter div with this -->
-                <div style="display: flex; gap: 20px; align-items: center;">
-                  <div style="display: flex; flex-direction: column; align-items: center;">
-                    <label for="filter-year">Year:</label>
-                    <select id="filter-year" onchange="filterByDate()">
-                      <option value="">All</option>
-                    </select>
-                  </div>
-              
-                  <div style="display: flex; flex-direction: column; align-items: center;">
-                    <label for="filter-month">Month:</label>
-                    <select id="filter-month" onchange="filterByDate()">
-                      <option value="">All</option>
-                      <option value="01">January</option>
-                      <option value="02">February</option>
-                      <option value="03">March</option>
-                      <option value="04">April</option>
-                      <option value="05">May</option>
-                      <option value="06">June</option>
-                      <option value="07">July</option>
-                      <option value="08">August</option>
-                      <option value="09">September</option>
-                      <option value="10">October</option>
-                      <option value="11">November</option>
-                      <option value="12">December</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-              
-        
-          </div>
-        
-          <ul id="log-list"></ul>
+        <!-- Net Profit / Profit per Hour Summary (always centered at top) -->
+        <div
+          id="log-summary"
+          style="
+            text-align: center;
+            margin-bottom: 15px;
+            font-weight: bold;
+            font-size: 18px;
+          "
+        >
+          <!-- Net profit and profit per hour will show here -->
         </div>
-        
+
+        <!-- This wrapper keeps Log + Filters side-by-side -->
+        <div
+          id="log-title-bar"
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 10px;
+          "
+        >
+          <!-- ✅ Keep the filters next to the Log title -->
+          <h2 style="margin: 0">Log</h2>
+
+          <!-- ✅ Replace your old filter div with this -->
+          <div style="display: flex; gap: 20px; align-items: center">
+            <div
+              style="display: flex; flex-direction: column; align-items: center"
+            >
+              <label for="filter-year">Year:</label>
+              <select id="filter-year" onchange="filterByDate()">
+                <option value="">All</option>
+              </select>
+            </div>
+
+            <div
+              style="display: flex; flex-direction: column; align-items: center"
+            >
+              <label for="filter-month">Month:</label>
+              <select id="filter-month" onchange="filterByDate()">
+                <option value="">All</option>
+                <option value="01">January</option>
+                <option value="02">February</option>
+                <option value="03">March</option>
+                <option value="04">April</option>
+                <option value="05">May</option>
+                <option value="06">June</option>
+                <option value="07">July</option>
+                <option value="08">August</option>
+                <option value="09">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ul id="log-list"></ul>
+    </div>
 
     <!-- Then AFTER log-container ends, manage-log-container starts -->
     <div
@@ -739,58 +733,58 @@
         Manage Log ▼
       </button>
       <div
-      <div
-      id="manage-log-menu"
-      style="
-        display: none;
-        position: absolute;
-        top: 100%;
-        left: 50%;
-        transform: translateX(-50%);
-        background: white;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-        z-index: 9999;
-        min-width: 160px;
-        margin-top: 5px;
-        text-align: center; /* 🆕 Add this line */
-      "
-    >
-      <button
-        onclick="triggerImportFile()"
+        <div
+        id="manage-log-menu"
         style="
-          width: auto; /* 🆕 Change */
-          min-width: 120px; /* 🆕 New */
-          padding: 10px;
-          background: none;
-          border: none;
-          text-align: center; /* 🆕 Change */
-          color: black;
-          display: inline-block; /* 🆕 New */
-          margin: 5px 0; /* 🆕 Add some vertical margin */
+          display: none;
+          position: absolute;
+          top: 100%;
+          left: 50%;
+          transform: translateX(-50%);
+          background: white;
+          border: 1px solid #ccc;
+          border-radius: 6px;
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+          z-index: 9999;
+          min-width: 160px;
+          margin-top: 5px;
+          text-align: center; /* 🆕 Add this line */
         "
       >
-        Import CSV
-      </button>
-      <button
-        onclick="exportToCSV()"
-        style="
-          width: auto; /* 🆕 Change */
-          min-width: 120px; /* 🆕 New */
-          padding: 10px;
-          background: none;
-          border: none;
-          text-align: center; /* 🆕 Change */
-          color: black;
-          display: inline-block; /* 🆕 New */
-          margin: 5px 0; /* 🆕 Add some vertical margin */
-        "
-      >
-        Export CSV
-      </button>
+        <button
+          onclick="triggerImportFile()"
+          style="
+            width: auto; /* 🆕 Change */
+            min-width: 120px; /* 🆕 New */
+            padding: 10px;
+            background: none;
+            border: none;
+            text-align: center; /* 🆕 Change */
+            color: black;
+            display: inline-block; /* 🆕 New */
+            margin: 5px 0; /* 🆕 Add some vertical margin */
+          "
+        >
+          Import CSV
+        </button>
+        <button
+          onclick="exportToCSV()"
+          style="
+            width: auto; /* 🆕 Change */
+            min-width: 120px; /* 🆕 New */
+            padding: 10px;
+            background: none;
+            border: none;
+            text-align: center; /* 🆕 Change */
+            color: black;
+            display: inline-block; /* 🆕 New */
+            margin: 5px 0; /* 🆕 Add some vertical margin */
+          "
+        >
+          Export CSV
+        </button>
+      </div>
     </div>
-    
 
     <input
       type="file"
@@ -803,21 +797,20 @@
     <div id="overlay" class="hidden"></div>
 
     <script>
-function toggleManageLogMenu() {
-  const menu = document.getElementById("manage-log-menu");
-  const body = document.body;
+      function toggleManageLogMenu() {
+        const menu = document.getElementById("manage-log-menu");
+        const body = document.body;
 
-  if (!menu) return;
+        if (!menu) return;
 
-  if (menu.style.display === "none" || menu.style.display === "") {
-    menu.style.display = "block";
-    body.style.paddingBottom = "200px"; // 🆕 Add extra bottom space
-  } else {
-    menu.style.display = "none";
-    body.style.paddingBottom = "0"; // 🆕 Remove extra space
-  }
-}
-
+        if (menu.style.display === "none" || menu.style.display === "") {
+          menu.style.display = "block";
+          body.style.paddingBottom = "200px"; // 🆕 Add extra bottom space
+        } else {
+          menu.style.display = "none";
+          body.style.paddingBottom = "0"; // 🆕 Remove extra space
+        }
+      }
     </script>
 
     <div id="edit-form-container" class="edit-form-container hidden">
@@ -2936,51 +2929,53 @@ function toggleManageLogMenu() {
       }
 
       function updateLogSummary(filterFn) {
-  const summaryDiv = document.getElementById("log-summary");
+        const summaryDiv = document.getElementById("log-summary");
 
-  // Filter the relevant entries
-  const filteredEntries = logEntries.filter((entry) => {
-    return filterFn(entry.date);
-  });
+        // Filter the relevant entries
+        const filteredEntries = logEntries.filter((entry) => {
+          return filterFn(entry.date);
+        });
 
-  if (filteredEntries.length === 0) {
-    summaryDiv.innerHTML = "No data available for selected filter.";
-    return;
-  }
+        if (filteredEntries.length === 0) {
+          summaryDiv.innerHTML = "No data available for selected filter.";
+          return;
+        }
 
-  // Calculate total Net Profit and Profit Per Hour
-  let totalNetProfit = 0;
-  let totalProfitPerHour = 0;
-  let validProfitPerHourEntries = 0;
+        // Calculate total Net Profit and Profit Per Hour
+        let totalNetProfit = 0;
+        let totalProfitPerHour = 0;
+        let validProfitPerHourEntries = 0;
 
-  filteredEntries.forEach((entry) => {
-    totalNetProfit += parseFloat(entry.netProfit) || 0;
+        filteredEntries.forEach((entry) => {
+          totalNetProfit += parseFloat(entry.netProfit) || 0;
 
-    if (!isNaN(parseFloat(entry.profitPerHour))) {
-      totalProfitPerHour += parseFloat(entry.profitPerHour);
-      validProfitPerHourEntries++;
-    }
-  });
+          if (!isNaN(parseFloat(entry.profitPerHour))) {
+            totalProfitPerHour += parseFloat(entry.profitPerHour);
+            validProfitPerHourEntries++;
+          }
+        });
 
-  const averageProfitPerHour =
-    validProfitPerHourEntries > 0
-      ? totalProfitPerHour / validProfitPerHourEntries
-      : 0;
+        const averageProfitPerHour =
+          validProfitPerHourEntries > 0
+            ? totalProfitPerHour / validProfitPerHourEntries
+            : 0;
 
-  // ✅ Set the Net Profit and Profit Per Hour text ABOVE h2 (inside log-summary div)
-  summaryDiv.innerHTML = `
+        // ✅ Set the Net Profit and Profit Per Hour text ABOVE h2 (inside log-summary div)
+        summaryDiv.innerHTML = `
   <div style="display: flex; flex-direction: column; align-items: center;">
     <div style="margin-bottom: 8px;">
-      Net Profit: <span style="color: green;">$${totalNetProfit.toFixed(2)}</span>
+      Net Profit: <span style="color: green;">$${totalNetProfit.toFixed(
+        2
+      )}</span>
     </div>
     <div>
-      Profit Per Hour: <span style="color: blue;">$${averageProfitPerHour.toFixed(2)}</span>
+      Profit Per Hour: <span style="color: blue;">$${averageProfitPerHour.toFixed(
+        2
+      )}</span>
     </div>
   </div>
 `;
-
-}
-
+      }
 
       function recalculateEditHoursWorked() {
         const startTime = document.getElementById("edit-start-time")?.value;
@@ -3255,17 +3250,21 @@ function toggleManageLogMenu() {
     </div>
 
     <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function () {
-          navigator.serviceWorker.register('/service-worker.js')
-            .then(function (registration) {
-              console.log('✅ Service Worker registered with scope:', registration.scope);
-            }, function (err) {
-              console.error('❌ Service Worker registration failed:', err);
-            });
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          navigator.serviceWorker.register("/service-worker.js").then(
+            function (registration) {
+              console.log(
+                "✅ Service Worker registered with scope:",
+                registration.scope
+              );
+            },
+            function (err) {
+              console.error("❌ Service Worker registration failed:", err);
+            }
+          );
         });
       }
     </script>
-    
   </body>
 </html>
