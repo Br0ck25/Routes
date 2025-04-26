@@ -29,7 +29,7 @@
 
     <link rel="icon" href="/logo-512.png" sizes="512x512" type="image/png" />
     <link rel="apple-touch-icon" href="/logo-512.png" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Route Calculator" />
     <meta name="theme-color" content="#ffffff" />
     <!-- pick your site background color -->
@@ -945,6 +945,7 @@ function toggleManageLogMenu() {
         script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyCHrNRHP9LNGVHi9Srk1Gfcrv-4ee_gUHQ&libraries=places&callback=initMap`;
         script.async = true;
         script.defer = true;
+        script.setAttribute("loading", "async");
         document.head.appendChild(script);
       });
 
@@ -2968,13 +2969,16 @@ function toggleManageLogMenu() {
 
   // ✅ Set the Net Profit and Profit Per Hour text ABOVE h2 (inside log-summary div)
   summaryDiv.innerHTML = `
-    <div style="margin-bottom: 10px;">
-      Logs Net Profit: <span style="color: green;">$${totalNetProfit.toFixed(2)}</span>
+  <div style="display: flex; flex-direction: column; align-items: center;">
+    <div style="margin-bottom: 8px;">
+      Net Profit: <span style="color: green;">$${totalNetProfit.toFixed(2)}</span>
     </div>
     <div>
-      Logs Average Profit Per Hour: <span style="color: blue;">$${averageProfitPerHour.toFixed(2)}</span>
+      Profit Per Hour: <span style="color: blue;">$${averageProfitPerHour.toFixed(2)}</span>
     </div>
-  `;
+  </div>
+`;
+
 }
 
 
@@ -3249,5 +3253,19 @@ function toggleManageLogMenu() {
         </button>
       </div>
     </div>
+
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(function (registration) {
+              console.log('✅ Service Worker registered with scope:', registration.scope);
+            }, function (err) {
+              console.error('❌ Service Worker registration failed:', err);
+            });
+        });
+      }
+    </script>
+    
   </body>
 </html>
