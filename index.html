@@ -968,7 +968,7 @@ const logsPerPage = 10;
       }
 
 
-   async function saveLog() {
+      async function saveLog() {
   const token = localStorage.getItem("token");
 
   if (!token) {
@@ -978,7 +978,16 @@ const logsPerPage = 10;
     return;
   }
 
-  console.log("⏳ Saving to KV…", logEntries);
+  console.log("⏳ Saving route...");
+
+  // 🛜 Detect if offline
+  if (!navigator.onLine) {
+    console.warn("🛜 Offline: Saving log locally.");
+    localStorage.setItem("pendingLogs", JSON.stringify(logEntries));
+    localStorage.setItem("cachedLogs", JSON.stringify(logEntries)); // ✅ Update visible logs too
+    alert("⚠️ Offline: Route saved locally. Will sync when back online.");
+    return;
+  }
 
   try {
     const response = await fetch(
@@ -998,14 +1007,16 @@ const logsPerPage = 10;
     }
 
     console.log("✅ Saved to KV");
-    localStorage.setItem("cachedLogs", JSON.stringify(logEntries)); // ✅ Save fresh logs after save
+    localStorage.setItem("cachedLogs", JSON.stringify(logEntries)); // ✅ Save fresh logs locally
     localStorage.removeItem("pendingLogs"); // ✅ Clear pending if successful
   } catch (err) {
     console.error("❌ Save failed. Saving offline:", err);
     localStorage.setItem("pendingLogs", JSON.stringify(logEntries)); // ✅ Save pending
+    localStorage.setItem("cachedLogs", JSON.stringify(logEntries)); // ✅ Update visible logs too
     alert("⚠️ Offline mode: Your changes are saved locally. We'll sync them next time you're online.");
   }
 }
+
 
 async function syncPendingLogs() {
   const pending = localStorage.getItem("pendingLogs");
@@ -3094,28 +3105,45 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       function recalculateEditHoursWorked() {
-        const startTime = document.getElementById("edit-start-time")?.value;
-        const endTime = document.getElementById("edit-end-time")?.value;
-        const hoursWorkedInput = document.getElementById("edit-hours-worked");
+  const startTime = document.getElementById("edit-start-time")?.value;
+  const endTime = document.getElementById("edit-end-time")?.value;
+  const totalTimeStr = document.getElementById("edit-total-time")?.value;
+  const hoursWorkedInput = document.getElementById("edit-hours-worked");
 
-        if (startTime && endTime && hoursWorkedInput) {
-          const [startHours, startMinutes] = startTime.split(":").map(Number);
-          const [endHours, endMinutes] = endTime.split(":").map(Number);
+  if (startTime && endTime && hoursWorkedInput) {
+    const [startHours, startMinutes] = startTime.split(":").map(Number);
+    const [endHours, endMinutes] = endTime.split(":").map(Number);
 
-          let start = startHours * 60 + startMinutes;
-          let end = endHours * 60 + endMinutes;
+    let start = startHours * 60 + startMinutes;
+    let end = endHours * 60 + endMinutes;
 
-          if (end < start) {
-            // Assume the work ended next day
-            end += 24 * 60;
-          }
+    if (end < start) {
+      end += 24 * 60; // overnight shift
+    }
 
-          const workedMinutes = end - start;
-          const workedHours = workedMinutes / 60;
+    const totalWorkedMinutes = end - start; // total minutes logged
+    let driveMinutes = 0;
 
-          hoursWorkedInput.value = workedHours.toFixed(2);
-        }
+    // Parse total drive time from edit-total-time input
+    if (totalTimeStr) {
+      const hoursMatch = totalTimeStr.match(/(\d+)\s*hour/);
+      const minutesMatch = totalTimeStr.match(/(\d+)\s*minute/);
+
+      if (hoursMatch) {
+        driveMinutes += parseInt(hoursMatch[1], 10) * 60;
       }
+      if (minutesMatch) {
+        driveMinutes += parseInt(minutesMatch[1], 10);
+      }
+    }
+
+    const actualWorkedMinutes = Math.max(totalWorkedMinutes - driveMinutes, 0);
+    const actualWorkedHours = actualWorkedMinutes / 60;
+
+    hoursWorkedInput.value = actualWorkedHours.toFixed(2);
+  }
+}
+
 
       function formatTimeToAmPm(timeStr) {
         if (!timeStr) return "N/A";
