@@ -1,62 +1,29 @@
-// service-worker.js
-
-const CACHE_NAME = 'route-calculator-cache-v2';
+const CACHE_NAME = 'route-app-cache-v1';
 const urlsToCache = [
   '/',
   '/index.html',
   '/logo.png',
   '/logo-512.png',
+  '/manifest.json',
+  '/styles.css', // if you have
+  '/script.js',  // if you have
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js'
 ];
 
-// Install: cache essential files
-self.addEventListener('install', (event) => {
+// Install and cache static assets
+self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('✅ Caching app shell');
-        return cache.addAll(urlsToCache);
-      })
+    caches.open(CACHE_NAME).then(cache => {
+      console.log('✅ Caching app shell');
+      return cache.addAll(urlsToCache);
+    })
   );
 });
 
-// Activate: remove old caches
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((cacheNames) =>
-      Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            console.log('🗑️ Deleting old cache:', cache);
-            return caches.delete(cache);
-          }
-        })
-      )
-    )
-  );
-});
-
-// Fetch: serve from cache, fallback to network
-self.addEventListener('fetch', (event) => {
-  // Only GET requests
-  if (event.request.method !== 'GET') return;
-
+// Serve cached content when offline
+self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // Serve cached file if available
-        if (response) {
-          return response;
-        }
-        // Otherwise try fetching from network
-        return fetch(event.request)
-          .catch(() => {
-            // If network fails (completely offline)
-            if (event.request.destination === 'document') {
-              return caches.match('/index.html'); // fallback to home page
-            }
-          });
-      })
+    fetch(event.request).catch(() => caches.match(event.request))
   );
 });
