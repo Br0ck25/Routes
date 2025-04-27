@@ -947,6 +947,8 @@
           dateInput.value = today;
         }
 
+        await syncPendingLogs();
+
         updateAuthUI();
 
         logEntries = await loadLog();
@@ -1592,40 +1594,76 @@
       }
 
       async function saveLog() {
-        const token = localStorage.getItem("token");
+  const token = localStorage.getItem("token");
 
-        if (!token) {
-          console.error("❌ No token found. User must be signed in to save.");
-          alert("You must be signed in to save your route logs.");
-          showLogin(); // Optional: open login modal automatically
-          return;
-        }
+  if (!token) {
+    console.error("❌ No token found. User must be signed in to save.");
+    alert("You must be signed in to save your route logs.");
+    showLogin();
+    return;
+  }
 
-        console.log("⏳ Saving to KV…", logEntries);
+  console.log("⏳ Saving to KV…", logEntries);
 
-        try {
-          const response = await fetch(
-            "https://logs.gorouteyourself.com/logs",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: token,
-              },
-              body: JSON.stringify(logEntries),
-            }
-          );
-
-          if (!response.ok) {
-            const text = await response.text();
-            console.error("❌ Failed to save to KV:", response.status, text);
-          } else {
-            console.log("✅ Saved to KV");
-          }
-        } catch (err) {
-          console.error("❌ Error during saveLog:", err);
-        }
+  try {
+    const response = await fetch(
+      "https://logs.gorouteyourself.com/logs",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token,
+        },
+        body: JSON.stringify(logEntries),
       }
+    );
+
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+
+    console.log("✅ Saved to KV");
+    localStorage.removeItem("pendingLogs"); // ✅ Clear pending if successful
+  } catch (err) {
+    console.error("❌ Save failed. Saving offline:", err);
+    localStorage.setItem("pendingLogs", JSON.stringify(logEntries));
+    alert("⚠️ Offline mode: Your changes are saved locally. We'll sync them next time you're online.");
+  }
+}
+
+async function syncPendingLogs() {
+  const pending = localStorage.getItem("pendingLogs");
+  if (!pending) return;
+
+  const token = localStorage.getItem("token");
+  if (!token) return;
+
+  try {
+    const response = await fetch(
+      "https://logs.gorouteyourself.com/logs",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token,
+        },
+        body: pending,
+      }
+    );
+
+    if (response.ok) {
+      console.log("✅ Pending logs synced successfully!");
+      localStorage.removeItem("pendingLogs");
+      await loadLog(); // ✅ Reload the latest logs
+      displayLog();
+    } else {
+      console.error("❌ Failed to sync pending logs:", await response.text());
+    }
+  } catch (err) {
+    console.error("❌ Error syncing pending logs:", err);
+  }
+}
+
 
       async function loadLog() {
         const response = await fetch("https://logs.gorouteyourself.com/logs", {
