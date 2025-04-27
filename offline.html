@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Offline Mode - Route and Cost Calculator</title>
+  <link rel="icon" href="/logo-512.png" sizes="512x512" type="image/png" />
+  <link rel="apple-touch-icon" href="/logo-512.png" />
+  <meta name="theme-color" content="#ffffff" />
+  <style>
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f4f9;
+      margin: 0;
+      padding: 40px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      padding: 25px 0;
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      box-shadow: none;
+      z-index: 1000;
+    }
+    #offline-banner {
+      background-color: #fffae6;
+      color: #856404;
+      padding: 10px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 5000;
+      margin-top: 80px;
+      width: 100%;
+    }
+    #log-container {
+      background: white;
+      padding: 20px;
+      margin-top: 150px;
+      max-width: 900px;
+      width: 90%;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    #log-list {
+      list-style-type: none;
+      padding: 0;
+    }
+    #log-list li {
+      border-bottom: 1px solid #eee;
+      padding: 10px 0;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="top-bar">
+  <img id="logo-image" src="/logo.png" alt="Logo" style="height: 50px; cursor: pointer;" onclick="scrollToTop()">
+</div>
+
+<div id="offline-banner">
+  🛜 Offline Mode: Showing cached routes.
+</div>
+
+<div id="log-container">
+  <h2>Saved Trips</h2>
+  <ul id="log-list"></ul>
+</div>
+
+<script>
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function loadOfflineLogs() {
+  const logList = document.getElementById("log-list");
+  const cachedLogs = JSON.parse(localStorage.getItem("cachedLogs") || "[]");
+
+  if (cachedLogs.length === 0) {
+    logList.innerHTML = '<li>No saved trips available.</li>';
+    return;
+  }
+
+  cachedLogs.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  cachedLogs.forEach(entry => {
+    const destinations = Array.isArray(entry.destinations)
+      ? entry.destinations.map(dest => `- ${dest}`).join("<br>")
+      : "";
+
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <strong>Date:</strong> ${entry.date}<br>
+      <strong>Start Address:</strong> ${entry.startTime}<br>
+      <strong>Destinations:</strong><br>${destinations}<br>
+      <strong>End Address:</strong> ${entry.endTime}<br>
+      <strong>Net Profit:</strong> $${parseFloat(entry.netProfit || 0).toFixed(2)}
+    `;
+    logList.appendChild(li);
+  });
+}
+
+document.addEventListener("DOMContentLoaded", loadOfflineLogs);
+</script>
+
+</body>
+</html>
