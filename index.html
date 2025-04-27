@@ -1173,6 +1173,13 @@ const logsPerPage = 10;
     console.warn("🛜 Offline: Saving log locally.");
     localStorage.setItem("pendingLogs", JSON.stringify(logEntries));
     localStorage.setItem("cachedLogs", JSON.stringify(logEntries)); // ✅ Update visible logs too
+
+    // 🆕 Immediately update the visible log list
+    logEntries = JSON.parse(localStorage.getItem("cachedLogs") || "[]");
+    displayLog();
+    populateYearOptions();
+    populateMonthOptions();
+
     alert("⚠️ Offline: Route saved locally. Will sync when back online.");
     return;
   }
@@ -1201,9 +1208,9 @@ const logsPerPage = 10;
     console.error("❌ Save failed. Saving offline:", err);
     localStorage.setItem("pendingLogs", JSON.stringify(logEntries)); // ✅ Save pending
     localStorage.setItem("cachedLogs", JSON.stringify(logEntries)); // ✅ Update visible logs too
-    alert("⚠️ Offline mode: Your changes are saved locally. We'll sync them next time you're online.");
   }
 }
+
 
 
 async function syncPendingLogs() {
@@ -1230,10 +1237,14 @@ async function syncPendingLogs() {
       console.log("✅ Pending logs synced successfully!");
       localStorage.removeItem("pendingLogs");
 
-      // 🆕 Important: Update cachedLogs after successful sync
+      // 🆕 Update cached logs and reload UI
       const freshLogs = await loadLog();
       localStorage.setItem("cachedLogs", JSON.stringify(freshLogs));
+
+      logEntries = freshLogs; // 🆕 Very important — update the global variable
       displayLog();
+      populateYearOptions(); // 🆕 Repopulate Year filter
+      populateMonthOptions(); // 🆕 Repopulate Month filter
     } else {
       console.error("❌ Failed to sync pending logs:", await response.text());
     }
@@ -1241,6 +1252,7 @@ async function syncPendingLogs() {
     console.error("❌ Error syncing pending logs:", err);
   }
 }
+
 
 async function loadLog() {
   const token = localStorage.getItem("token");
@@ -1554,6 +1566,45 @@ document.addEventListener("DOMContentLoaded", () => {
           waypoints: waypoints,
           travelMode: "DRIVING",
         };
+
+        // 🛜 If offline, simulate basic route calculation
+if (!navigator.onLine) {
+  alert("⚠️ Offline: Skipping live directions. Using defaults.");
+
+  const totalEarnings = Array.from(document.querySelectorAll('input[id^="earnings-"]'))
+    .map((input) => parseFloat(input.value) || 0)
+    .reduce((sum, val) => sum + val, 0);
+
+  const maintenanceCost = parseFloat(document.getElementById("maintenance-cost").value) || 0;
+  const suppliesCost = parseFloat(document.getElementById("supplies-cost").value) || 0;
+  const mpg = parseFloat(document.getElementById("mpg").value) || 1;
+  const gasPrice = parseFloat(document.getElementById("gas-price").value) || 0;
+
+  const fuelCost = 0; // 🛜 Can't calculate fuel cost without mileage
+
+  const netProfitBeforeOptional = totalEarnings - fuelCost;
+  const netProfit = netProfitBeforeOptional - maintenanceCost - suppliesCost;
+
+  resolve({
+    date: document.getElementById("log-date").value || new Date().toISOString().split("T")[0],
+    startTime: document.getElementById("start-address").value,
+    endTime: document.getElementById("end-address").value,
+    destinations: Array.from(document.querySelectorAll('input[id^="destination-"]')).map(input => input.value),
+    earnings: Array.from(document.querySelectorAll('input[id^="earnings-"]')).map(input => parseFloat(input.value) || 0),
+    totalMileage: "0.00",
+    totalTime: "0 minutes",
+    totalEarnings: totalEarnings.toFixed(2),
+    fuelCost: fuelCost.toFixed(2),
+    maintenanceCost: maintenanceCost.toFixed(2),
+    suppliesCost: suppliesCost.toFixed(2),
+    netProfit: netProfit.toFixed(2),
+    profitPerHour: "0.00",
+    hoursWorked: parseFloat(document.getElementById("hours-worked").value) || 0,
+  });
+  
+  return; // ✅ Exit early — don't call directionsService.route when offline!
+}
+
 
         return new Promise((resolve, reject) => {
           directionsService.route(request, (response, status) => {
