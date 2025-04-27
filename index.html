@@ -35,6 +35,122 @@
     <!-- pick your site background color -->
 
     <style>
+
+@media (max-width: 600px) {
+  #top-bar {
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1); /* 🆕 soft shadow */
+    background: white; /* ✅ ensures shadow shows cleanly */
+    padding: 5px 10px;  /* slight padding around top bar */
+    border-radius: 8px; /* optional: slightly round corners */
+    margin-top: 5px;
+    margin-bottom: 10px;
+    gap: 8px;
+  }
+
+  #hamburger-button {
+    font-size: 24px;
+    padding: 4px 8px;
+  }
+
+  #username-display {
+    font-size: 14px;
+    padding: 4px 8px;
+  }
+
+  #logo-image {
+    height: 40px;
+  }
+}
+
+
+@media (max-width: 600px) {
+  #hamburger-button {
+    font-size: 24px;         /* smaller hamburger icon */
+    padding: 4px 8px;        /* less vertical padding */
+  }
+
+  #username-display {
+    font-size: 14px;         /* slightly smaller username text */
+    padding: 4px 8px;        /* less vertical padding */
+  }
+
+  #top-bar {
+    margin-top: 5px;
+    margin-bottom: 10px;
+    gap: 8px;
+  }
+
+  #logo-image {
+    height: 40px;            /* smaller logo height on mobile */
+  }
+}
+
+
+#account-menu button.close-button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  font-weight: bold;
+  color: black;
+  cursor: pointer;
+  margin: 10px;
+  line-height: 1;
+  transition: transform 0.2s ease;
+}
+
+#account-menu button.close-button:hover {
+  transform: scale(1.2);
+}
+
+
+#hamburger-button:hover {
+  background-color: #f0f0f0;
+}
+
+#username-display:hover {
+  background-color: #f0f0f0;
+}
+
+#hamburger-button:hover, #username-display:hover {
+  background-color: #f0f0f0;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+
+
+
+#hamburger-button {
+  display: none; /* hidden by default */
+}
+
+
+img {
+  display: block;
+  margin: 0 auto;
+}
+
+#account-menu {
+  position: fixed;
+  top: 0;
+  left: -275px;
+  width: 250px;
+  height: 100%;
+  background-color: white;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.5);
+  z-index: 10000;
+  padding: 20px 10px;
+  transition: left 0.3s ease;
+  overflow-y: auto;
+  font-size: 16px; /* 🆕 Smaller text */
+}
+
+#account-menu.show {
+  left: 0;
+}
+
+
+
+
       body,
       html,
       #log-container {
@@ -48,36 +164,23 @@
         box-sizing: border-box;
       }
 
-      @media (max-width: 600px) {
-        #account-menu {
-          right: 10px;
-          min-width: 160px;
-          font-size: 16px;
-        }
 
-        #logout-message button {
-          font-size: 16px !important;
-          padding: 10px;
-        }
-      }
 
-      #account-menu {
-        display: none;
-        position: absolute;
-        top: 100%;
-        right: 0;
-        background: white;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-        z-index: 9999;
-        min-width: 180px;
-        padding: 5px 0;
-      }
+      #logout-message button {
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+#logout-message button:hover {
+  opacity: 0.7;
+}
+#logout-message img {
+  height: 50px;
+  object-fit: contain;
+}
 
-      #account-menu.show {
-        display: block !important;
-      }
 
       body {
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -478,31 +581,122 @@
       >.
     </div>
 
-    <div
-      id="logout-message"
-      style="
-        display: none;
-        margin: 20px auto;
-        max-width: 100%;
-        text-align: center;
-      "
-    >
-      ✅ You’re signed in as <span id="username-display"></span>
+    <div id="top-bar" style="
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: sticky;
+    top: 0px;
+    z-index: 1000;
+    background: white;
+    padding: 10px 0;
+    width: 100%;
+    max-width: 900px;
+    margin-top: 0;
+    margin-bottom: 5px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    transition: box-shadow 0.3s ease;
+  ">
+  
+  
+    <!-- Left Spacer for Hamburger -->
+    <div style="position: absolute; left: 12px; display: flex; align-items: center; height: 100%;">
+      <button id="hamburger-button" onclick="toggleMenu()" style="
+        background: none;
+        border: none;
+        font-size: 28px;
+        cursor: pointer;
+        color: black;
+        padding: 6px 10px;
+        border-radius: 8px;
+        transition: background-color 0.3s;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      ">☰</button>
+    </div>
+  
+    <!-- Centered Logo -->
+    <img id="logo-image" src="/logo.png" alt="Logo" style="height: 50px; max-height: 50px; cursor: pointer;" onclick="scrollToTop()">
+  
+    <!-- Right Spacer for Username -->
+    <div style="position: absolute; right: 22px; display: flex; align-items: center; height: 100%;">
+      <span id="username-display" style="
+        font-size: 16px;
+        font-weight: bold;
+        background: none;
+        padding: 6px 10px;
+        border-radius: 8px;
+        color: black;
+        transition: background-color 0.3s;
+      "></span>
+    </div>
+  
+  </div>
+  
 
-      <div
-        style="
-          display: flex;
-          justify-content: center;
-          position: relative;
-          margin-top: 10px;
-        "
-      >
-        <button
-          onclick="toggleMenu()"
-          style="font-size: 24px; padding: 8px 12px"
-        >
-          ☰
-        </button>
+
+
+
+
+
+<!-- 🔒 Only signed-in specific things -->
+<div id="logout-message" style="display: none; margin: 20px auto; max-width: 100%;">
+  <div id="account-menu">
+
+    <!-- 🆕 Dark overlay -->
+<div id="menu-overlay" style="
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background: rgba(0, 0, 0, 0.4);
+z-index: 9999;
+display: none;
+opacity: 0;
+transition: opacity 0.3s ease;
+"></div>
+
+<!-- ✅ FULL WIDTH X, tight to right -->
+<div style="
+  position: relative;
+  width: 100%;
+  height: 50px;
+">
+  <button onclick="closeMenu()" style="
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    font-weight: bold;
+    color: black;
+    cursor: pointer;
+    line-height: 1;
+    transition: transform 0.2s;
+  " onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">
+    ✕
+  </button>
+</div>
+
+
+
+
+  
+    <!-- 🔻 Then your menu items -->
+    <button onclick="closeMenu(); logout()" style="width: 100%; padding: 10px; background: none; border: none; color: black; text-align: left;">Log Out</button>
+    <button onclick="closeMenu(); showPasswordModal()" style="width: 100%; padding: 10px; background: none; border: none; color: black; text-align: left;">Change Password</button>
+    <button onclick="closeMenu(); showDeleteModal()" style="width: 100%; padding: 10px; background: none; border: none; color: red; text-align: left;">Delete Account</button>
+  </div>
+
+
+
+
 
         <div id="account-menu">
           <button
@@ -549,13 +743,6 @@
     </div>
 
     <div class="container">
-      <div style="text-align: center">
-        <img
-          src="/logo.png"
-          alt="Logo"
-          style="max-width: 250px; margin-bottom: 10px"
-        />
-      </div>
 
       <label for="log-date">Date</label>
       <input type="date" id="log-date" required />
@@ -834,6 +1021,13 @@
 
     <script>
 
+
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+
+
 let map;
 let directionsService;
 let directionsRenderer;
@@ -956,12 +1150,13 @@ const logsPerPage = 10;
       });
 
       function closeMenu() {
-        const menu = document.getElementById("account-menu");
-        if (menu) {
-          menu.classList.remove("show");
-          menu.style.display = "none";
-        }
-      }
+  const menu = document.getElementById("account-menu");
+  if (menu) {
+    menu.classList.remove("show");
+  }
+}
+
+
 
       function closeAuthModal() {
         document.getElementById("auth-modal").style.display = "none";
@@ -2788,18 +2983,22 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       function updateAuthUI() {
-        const token = localStorage.getItem("token");
-        const username = localStorage.getItem("username");
+  const token = localStorage.getItem("token");
+  const username = localStorage.getItem("username");
+  const hamburgerButton = document.getElementById("hamburger-button");
 
-        if (token && username) {
-          document.getElementById("auth-message").style.display = "none";
-          document.getElementById("logout-message").style.display = "block";
-          document.getElementById("username-display").textContent = username;
-        } else {
-          document.getElementById("auth-message").style.display = "block";
-          document.getElementById("logout-message").style.display = "none";
-        }
-      }
+  if (token && username) {
+    document.getElementById("auth-message").style.display = "none";
+    document.getElementById("logout-message").style.display = "block";
+    document.getElementById("username-display").textContent = username;
+    if (hamburgerButton) hamburgerButton.style.display = "inline-block"; // ✅ Show ☰
+  } else {
+    document.getElementById("auth-message").style.display = "block";
+    document.getElementById("logout-message").style.display = "none";
+    if (hamburgerButton) hamburgerButton.style.display = "none"; // ✅ Hide ☰
+  }
+}
+
 
       function logout() {
         localStorage.removeItem("token");
@@ -2941,13 +3140,19 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       window.toggleMenu = function () {
-        console.log("toggleMenu() triggered!");
+  console.log("toggleMenu() triggered!");
 
-        const menu = document.getElementById("account-menu");
-        if (!menu) return console.warn("Menu not found");
+  const menu = document.getElementById("account-menu");
+  if (!menu) return console.warn("Menu not found");
 
-        menu.classList.toggle("show");
-      };
+  if (menu.classList.contains("show")) {
+    menu.classList.remove("show");
+  } else {
+    menu.classList.add("show");
+  }
+};
+
+
 
       function filterByDate() {
         const year = document.getElementById("filter-year").value;
