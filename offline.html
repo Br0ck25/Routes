@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Offline - Route Calculator</title>
+  <title>Offline Mode - Route and Cost Calculator</title>
   <link rel="icon" href="/logo-512.png" sizes="512x512" type="image/png" />
   <link rel="apple-touch-icon" href="/logo-512.png" />
   <meta name="theme-color" content="#ffffff" />
@@ -12,30 +12,49 @@
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
       background-color: #f4f4f9;
       margin: 0;
-      padding: 0;
+      padding: 40px 0;
       display: flex;
       flex-direction: column;
       align-items: center;
+      overflow-x: hidden;
     }
+
+    #auth-message {
+      background-color: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeeba;
+      border-radius: 6px;
+      padding: 15px 20px;
+      text-align: center;
+      font-size: 16px;
+      max-width: 600px;
+      margin: 80px auto 20px auto;
+      position: relative;
+      z-index: 500;
+    }
+
     #offline-banner {
+      display: none;
       background-color: #fffae6;
       color: #856404;
       padding: 10px;
+      margin: 10px auto;
       text-align: center;
       font-weight: bold;
       font-size: 16px;
+      border-bottom: 2px solid #ffd700;
       width: 100%;
-      position: fixed;
-      top: 0;
-      left: 0;
-      z-index: 5001;
+      max-width: 900px;
+      position: relative;
+      z-index: 400;
     }
+
     #top-bar {
       display: flex;
       align-items: center;
       justify-content: center;
       position: fixed;
-      top: 50px;
+      top: 0;
       left: 0;
       right: 0;
       z-index: 1000;
@@ -44,24 +63,17 @@
       width: 100%;
       max-width: 900px;
       margin: 0 auto;
-      border-top-left-radius: 0;
-      border-top-right-radius: 0;
       border-radius: 0;
       box-shadow: none;
-      transition: none;
+      transition: box-shadow 0.3s;
     }
-    @media (max-width: 600px) {
-      #top-bar {
-        margin-top: 5px;
-        margin-bottom: 10px;
-        gap: 8px;
-        background: white;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-        padding: 5px 10px;
-        border-radius: 8px;
-        top: 50px;
-      }
+
+    #top-bar img {
+      height: 50px;
+      max-height: 70px;
+      cursor: pointer;
     }
+
     #log-container {
       background: white;
       padding: 20px;
@@ -69,16 +81,21 @@
       max-width: 900px;
       width: 90%;
       border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
     }
+
     #log-list {
       list-style-type: none;
       padding: 0;
+      margin: 0;
     }
+
     #log-list li {
       border-bottom: 1px solid #eee;
       padding: 10px 0;
+      margin: 0;
     }
+
     h2 {
       text-align: center;
       margin-bottom: 20px;
@@ -87,18 +104,19 @@
 </head>
 <body>
 
-<div id="offline-banner">
-  🛜 Offline Mode: Showing cached routes.
+<div id="auth-message">
+  🚧 To log your route, you need to
+  <a href="#" style="color: #0d6efd; font-weight: bold; text-decoration: none;">Sign in</a>
+  or
+  <a href="#" style="color: #0d6efd; font-weight: bold; text-decoration: none;">Create an account</a>.
 </div>
 
-<div id="top-bar" style="position: relative;">
-  <div style="position: absolute; left: 12px; display: flex; align-items: center; height: 100%;">
-    <button id="hamburger-button" style="display: none; background: none; border: none; font-size: 28px; cursor: pointer; color: black; padding: 6px 10px; border-radius: 8px; transition: background-color 0.3s; width: 50px; height: 50px; align-items: center; justify-content: center;">☰</button>
-  </div>
-  <img id="logo-image" src="/logo.png" alt="Logo" style="height: 50px; max-height: 70px; cursor: pointer;" onclick="scrollToTop()">
-  <div style="position: absolute; right: 22px; display: flex; align-items: center; height: 100%;">
-    <span id="username-display" style="font-size: 16px; font-weight: bold; background: none; padding: 6px 10px; border-radius: 8px; color: black; transition: background-color 0.3s;"></span>
-  </div>
+<div id="offline-banner">
+  🛠️ Offline Mode: Showing cached routes.
+</div>
+
+<div id="top-bar">
+  <img id="logo-image" src="/logo.png" alt="Logo" onclick="scrollToTop()" />
 </div>
 
 <div id="log-container">
@@ -139,7 +157,31 @@ function loadOfflineLogs() {
   });
 }
 
-document.addEventListener("DOMContentLoaded", loadOfflineLogs);
+function updateOfflineBanner() {
+  const banner = document.getElementById("offline-banner");
+  if (navigator.onLine) {
+    banner.style.display = "none";
+  } else {
+    banner.style.display = "block";
+  }
+}
+
+window.addEventListener("online", updateOfflineBanner);
+window.addEventListener("offline", updateOfflineBanner);
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadOfflineLogs();
+  updateOfflineBanner();
+});
+
+window.addEventListener('scroll', function() {
+  const topBar = document.getElementById('top-bar');
+  if (window.scrollY > 10) {
+    topBar.style.boxShadow = '0 2px 6px rgba(0,0,0,0.1)';
+  } else {
+    topBar.style.boxShadow = 'none';
+  }
+});
 </script>
 
 </body>
