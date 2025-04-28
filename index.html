@@ -2584,116 +2584,87 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       async function saveEditedLogEntry() {
-        if (editingIndex === -1) {
-          console.warn("No entry selected for editing.");
-          return;
-        }
+  if (editingIndex === -1) {
+    console.warn("No entry selected for editing.");
+    return;
+  }
 
-        const entry = logEntries[editingIndex];
-        entry.date = document.getElementById("edit-date").value;
-        entry.startClock =
-          document.getElementById("edit-start-time")?.value || "";
-        entry.endClock = document.getElementById("edit-end-time")?.value || "";
+  const entry = logEntries[editingIndex];
 
-        entry.startTime = document.getElementById("edit-start-address").value;
-        entry.endTime = document.getElementById("edit-end-address").value;
+  entry.date = document.getElementById("edit-date").value;
+  entry.startClock = document.getElementById("edit-start-time")?.value || "";
+  entry.endClock = document.getElementById("edit-end-time")?.value || "";
+  entry.startTime = document.getElementById("edit-start-address").value;
+  entry.endTime = document.getElementById("edit-end-address").value;
 
-        // ✅ Grab destinations and earnings
-        entry.destinations = [];
-        entry.earnings = [];
+  entry.destinations = [];
+  entry.earnings = [];
 
-        const destInputs = document.querySelectorAll(
-          '#edit-destinations-container input[id^="edit-destination-"]'
-        );
-        const earningsInputs = document.querySelectorAll(
-          '#edit-destinations-container input[id^="edit-earnings-"]'
-        );
+  const destInputs = document.querySelectorAll(
+    '#edit-destinations-container input[id^="edit-destination-"]'
+  );
+  const earningsInputs = document.querySelectorAll(
+    '#edit-destinations-container input[id^="edit-earnings-"]'
+  );
 
-        destInputs.forEach((input) => {
-          entry.destinations.push(input.value.trim());
-        });
+  destInputs.forEach((input) => {
+    entry.destinations.push(input.value.trim());
+  });
 
-        earningsInputs.forEach((input) => {
-          const value = parseFloat(input.value.trim()) || 0;
-          entry.earnings.push(value);
-        });
+  earningsInputs.forEach((input) => {
+    const value = parseFloat(input.value.trim()) || 0;
+    entry.earnings.push(value);
+  });
 
-        // ✅ Recalculate total earnings
-        entry.totalEarnings = entry.earnings
-          .reduce((sum, val) => sum + val, 0)
-          .toFixed(2);
+  entry.totalEarnings = entry.earnings
+    .reduce((sum, val) => sum + val, 0)
+    .toFixed(2);
 
-        entry.fuelCost = parseFloat(
-          document.getElementById("edit-fuel-cost").value
-        );
-        entry.maintenanceCost = parseFloat(
-          document.getElementById("edit-maintenance-cost").value
-        );
-        entry.suppliesCost = parseFloat(
-          document.getElementById("edit-supplies-cost").value
-        );
-        entry.totalMileage = parseFloat(
-          document.getElementById("edit-total-mileage").value
-        );
-        entry.totalTime = document.getElementById("edit-total-time").value;
-        entry.hoursWorked =
-          parseFloat(document.getElementById("edit-hours-worked").value) || 0;
+  entry.fuelCost = parseFloat(document.getElementById("edit-fuel-cost").value);
+  entry.maintenanceCost = parseFloat(document.getElementById("edit-maintenance-cost").value);
+  entry.suppliesCost = parseFloat(document.getElementById("edit-supplies-cost").value);
+  entry.totalMileage = parseFloat(document.getElementById("edit-total-mileage").value);
+  entry.totalTime = document.getElementById("edit-total-time").value;
+  entry.hoursWorked = parseFloat(document.getElementById("edit-hours-worked").value) || 0;
+  entry.mpg = parseFloat(document.getElementById("edit-mpg").value);
+  entry.gasPrice = parseFloat(document.getElementById("edit-gas-price").value);
 
-        entry.mpg = parseFloat(document.getElementById("edit-mpg").value);
-        entry.gasPrice = parseFloat(
-          document.getElementById("edit-gas-price").value
-        );
+  const netProfitBeforeOptional = entry.totalEarnings - entry.fuelCost;
+  entry.netProfit = (
+    netProfitBeforeOptional -
+    entry.maintenanceCost -
+    entry.suppliesCost
+  ).toFixed(2);
 
-        const netProfitBeforeOptional = entry.totalEarnings - entry.fuelCost;
-        entry.netProfit = (
-          netProfitBeforeOptional -
-          entry.maintenanceCost -
-          entry.suppliesCost
-        ).toFixed(2);
+  let driveTimeInHours = 0;
+  const timeMatch = entry.totalTime.match(
+    /(\d+)\s*hour(s)?\s*(\d+)?\s*minute(s)?/i
+  );
+  if (timeMatch) {
+    const hours = parseInt(timeMatch[1]) || 0;
+    const minutes = parseInt(timeMatch[3]) || 0;
+    driveTimeInHours = hours + minutes / 60;
+  } else {
+    const minuteMatch = entry.totalTime.match(/(\d+)\s*minute(s)?/i);
+    if (minuteMatch) {
+      driveTimeInHours = parseInt(minuteMatch[1]) / 60;
+    }
+  }
 
-        // Calculate profit per hour
-        let driveTimeInHours = 0;
-        const timeMatch = entry.totalTime.match(
-          /(\d+)\s*hour(s)?\s*(\d+)?\s*minute(s)?/i
-        );
-        if (timeMatch) {
-          const hours = parseInt(timeMatch[1]) || 0;
-          const minutes = parseInt(timeMatch[3]) || 0;
-          driveTimeInHours = hours + minutes / 60;
-        } else {
-          const minuteMatch = entry.totalTime.match(/(\d+)\s*minute(s)?/i);
-          if (minuteMatch) {
-            driveTimeInHours = parseInt(minuteMatch[1]) / 60;
-          }
-        }
+  const totalHoursSpent = entry.hoursWorked + driveTimeInHours;
+  entry.profitPerHour =
+    totalHoursSpent > 0
+      ? (entry.netProfit / totalHoursSpent).toFixed(2)
+      : "0.00";
 
-        const totalHoursSpent = entry.hoursWorked + driveTimeInHours;
-        entry.profitPerHour =
-          totalHoursSpent > 0
-            ? (entry.netProfit / totalHoursSpent).toFixed(2)
-            : "0.00";
+  await saveLog(); // ✅ Wait for save
 
-        const selectedYear = document.getElementById("filter-year").value;
-        const selectedMonth = document.getElementById("filter-month").value;
+  // ✅ Force reloading the cached logs freshly
+  logEntries = await loadLog(); // <-- SUPER IMPORTANT! Fetch fresh logs
+  filterByDate(); // ✅ Refresh the view
 
-        await saveLog();  
-showConfirmationMessage("✅ Log entry updated successfully!");
-filterByDate();  
-closeEditForm();
-
-        const yearsAfterSave = Array.from(
-          new Set(logEntries.map((e) => e.date.split("-")[0]))
-        );
-        populateYearOptions(
-          yearsAfterSave.includes(selectedYear) ? selectedYear : ""
-        );
-
-        // 🆕 After populating years, also populate months correctly!
-        populateMonthOptions(selectedYear, selectedMonth);
-
-        filterByDate();
-
-        closeEditForm();
+  closeEditForm(); // ✅ THEN close the edit screen
+  showConfirmationMessage("✅ Log entry updated!");
       }
 
       function exportToCSV() {
