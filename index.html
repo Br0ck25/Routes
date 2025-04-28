@@ -2008,9 +2008,10 @@ document.addEventListener("DOMContentLoaded", () => {
     return new Date(b.date) - new Date(a.date);
   });
 
-  const filteredEntries = sortedEntries.filter((entry) =>
-    filterFn(entry.date)
-  );
+  const filteredEntries = sortedEntries.filter((entry) => 
+  entry?.date && filterFn(entry.date)
+);
+
   const totalPages = Math.ceil(filteredEntries.length / logsPerPage);
 
   const start = (currentPage - 1) * logsPerPage;
@@ -3232,9 +3233,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const summaryDiv = document.getElementById("log-summary");
 
         // Filter the relevant entries
-        const filteredEntries = logEntries.filter((entry) => {
-          return filterFn(entry.date);
-        });
+        const filteredEntries = logEntries.filter((entry) => 
+  entry?.date && filterFn(entry.date)
+);
+
 
         if (filteredEntries.length === 0) {
           summaryDiv.innerHTML = "No data available for selected filter.";
