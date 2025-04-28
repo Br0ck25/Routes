@@ -844,12 +844,14 @@ transition: opacity 0.3s ease;
       ></div>
 
       <div id="results" class="hidden">
-        <p>Total Mileage: <span id="total-mileage"></span> miles</p>
-        <p>Total Drive Time: <span id="total-time"></span></p>
+        <p>Mileage: <span id="total-mileage"></span> miles</p>
+        <p>Drive Time: <span id="total-time"></span></p>
         <p>Total Earnings: $<span id="total-earnings"></span></p>
-        <p>Fuel Consumption Cost: $<span id="fuel-cost"></span></p>
+        <p>Fuel Cost: $<span id="fuel-cost"></span></p>
         <p>Maintenance Cost: $<span id="maintenance-cost-result"></span></p>
         <p>Supplies Cost: $<span id="supplies-cost-result"></span></p>
+        <p>Total Hours: <span id="total-hours"></span></p> 
+
         <p>Net Profit: $<span id="net-profit"></span></p>
         <p>
           Net Profit per Hour (including drive time): $<span
@@ -1080,13 +1082,13 @@ const logsPerPage = 10;
       <label for="edit-mpg">Miles Per Gallon (MPG)</label>
       <input type="number" id="edit-mpg" placeholder="Enter MPG" />
 
-      <label for="edit-gas-price">Gas Price Per Gallon</label>
+      <label for="edit-gas-price">Fuel Price Per Gallon</label>
       <input type="number" id="edit-gas-price" placeholder="Enter Gas Price" />
 
       <label for="edit-total-earnings">Total Earnings</label>
       <input type="number" id="edit-total-earnings" />
 
-      <label for="edit-fuel-cost">Fuel Consumption Cost</label>
+      <label for="edit-fuel-cost">Fuel Cost</label>
       <input type="number" id="edit-fuel-cost" />
 
       <label for="edit-maintenance-cost">Maintenance Cost</label>
@@ -1095,10 +1097,10 @@ const logsPerPage = 10;
       <label for="edit-supplies-cost">Supplies Cost</label>
       <input type="number" id="edit-supplies-cost" />
 
-      <label for="edit-total-mileage">Total Mileage</label>
+      <label for="edit-total-mileage">Mileage</label>
       <input type="number" id="edit-total-mileage" />
 
-      <label for="edit-total-time">Total Drive Time</label>
+      <label for="edit-total-time">Drive Time</label>
       <input
         type="text"
         id="edit-total-time"
@@ -1327,6 +1329,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   updateOfflineBanner();
   window.addEventListener("online", updateOfflineBanner);
   window.addEventListener("offline", updateOfflineBanner);
+
+  document.getElementById("hours-worked").addEventListener("input", () => {
+  const hoursWorked = parseFloat(document.getElementById("hours-worked").value) || 0;
+  const driveTimeInHours = convertTimeToHours(document.getElementById("total-time").textContent);
+  const totalHours = (hoursWorked + driveTimeInHours).toFixed(2);
+  document.getElementById("total-hours").textContent = totalHours;
+});
+
 });
 
 
@@ -1658,6 +1668,9 @@ document.addEventListener("DOMContentLoaded", () => {
           document.getElementById("profit-per-hour").textContent =
             data.profitPerHour;
           document.getElementById("results").classList.remove("hidden");
+          const driveTimeInHours = convertTimeToHours(data.totalTime);
+const totalHours = (parseFloat(data.hoursWorked || 0) + driveTimeInHours).toFixed(2);
+document.getElementById("total-hours").textContent = totalHours;
 
           if (originalMileage === null) {
             originalMileage = data.totalMileage;
@@ -1677,8 +1690,8 @@ document.addEventListener("DOMContentLoaded", () => {
             <p><strong>Earnings per Stop:</strong> ${data.earnings
               .map((e) => `$${parseFloat(e).toFixed(2)}`)
               .join(", ")}</p>
-            <p><strong>Total Mileage:</strong> ${data.totalMileage} miles</p>
-            <p><strong>Total Drive Time:</strong> ${data.totalTime}</p>
+            <p><strong>Mileage:</strong> ${data.totalMileage} miles</p>
+            <p><strong>Drive Time:</strong> ${data.totalTime}</p>
             <p><strong>Total Earnings:</strong> $${data.totalEarnings}</p>
             <p><strong>Fuel Cost:</strong> $${data.fuelCost}</p>
             <p><strong>Maintenance:</strong> $${data.maintenanceCost}</p>
@@ -2670,7 +2683,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       function exportToCSV() {
         const header =
-          "Date,Start Address,Destinations,End Address,Total Earnings,Fuel Consumption Cost,Maintenance Cost,Supplies Cost,Net Profit,Total Mileage,Total Drive Time,Earnings per Stop,Profit per Hour\n";
+          "Date,Start Address,Destinations,End Address,Total Earnings,Fuel Cost,Maintenance Cost,Supplies Cost,Net Profit,Mileage,Drive Time,Earnings per Stop,Profit per Hour\n";
         const csvRows = logEntries.map((entry) => {
           const formattedDate = entry.date; // Keep the original date format for CSV
 
@@ -3361,13 +3374,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   <div><strong>End Address:</strong> ${entry.endTime}</div>
   <div><strong>Earnings per Stop:</strong> ${earnings}</div>
-  <div><strong>Total Mileage:</strong> ${entry.totalMileage} miles</div>
-  <div><strong>Total Drive Time:</strong> ${entry.totalTime}</div>
+  <div><strong>Mileage:</strong> ${entry.totalMileage} miles</div>
+  <div><strong>Drive Time:</strong> ${entry.totalTime}</div>
   <div><strong>Total Earnings:</strong> $${entry.totalEarnings}</div>
   <div><strong>Fuel Cost:</strong> $${entry.fuelCost}</div>
   <div><strong>Maintenance:</strong> $${entry.maintenanceCost}</div>
   <div><strong>Supplies:</strong> $${entry.suppliesCost}</div>
   <div><strong>Hours Worked:</strong> ${formattedHoursWorked}</div>
+  <div><strong>Total Hours:</strong> ${calculateTotalHours(entry)}</div>
   <div><strong>Net Profit:</strong> $${entry.netProfit}</div>
   <div><strong>Profit per Hour:</strong> $${entry.profitPerHour}</div>
 `;
@@ -3382,6 +3396,24 @@ document.addEventListener("DOMContentLoaded", () => {
     summaryDiv.classList.remove("hidden"); // 🔥 Show the summary
 toggleButton.textContent = "More Details";
   }
+}
+
+function convertTimeToHours(durationStr) {
+  if (!durationStr) return 0;
+
+  const hourMatch = durationStr.match(/(\d+)\s*hour/);
+  const minuteMatch = durationStr.match(/(\d+)\s*minute/);
+
+  let hours = hourMatch ? parseInt(hourMatch[1]) : 0;
+  let minutes = minuteMatch ? parseInt(minuteMatch[1]) : 0;
+
+  return hours + minutes / 60;
+}
+
+function calculateTotalHours(entry) {
+  const driveTime = convertTimeToHours(entry.totalTime || "");
+  const workedTime = parseFloat(entry.hoursWorked) || 0;
+  return (driveTime + workedTime).toFixed(2) + " hours";
 }
 
 
