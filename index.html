@@ -2583,7 +2583,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 0);
       }
 
-      function saveEditedLogEntry() {
+      async function saveEditedLogEntry() {
         if (editingIndex === -1) {
           console.warn("No entry selected for editing.");
           return;
@@ -2676,7 +2676,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const selectedYear = document.getElementById("filter-year").value;
         const selectedMonth = document.getElementById("filter-month").value;
 
-        saveLog();
+        await saveLog();  
+showConfirmationMessage("✅ Log entry updated successfully!");
+filterByDate();  
+closeEditForm();
 
         const yearsAfterSave = Array.from(
           new Set(logEntries.map((e) => e.date.split("-")[0]))
