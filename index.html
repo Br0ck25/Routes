@@ -2193,15 +2193,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const monthSelect = document.getElementById("filter-month");
 
         const monthsSet = new Set(
-          logEntries
-            .filter((e) => {
-              if (selectedYear) {
-                return e.date.startsWith(selectedYear); // Only months in selected year
-              }
-              return true; // Otherwise show months from all years
-            })
-            .map((e) => e.date.split("-")[1])
-        );
+  logEntries
+    .filter((e) => e?.date && (!selectedYear || e.date.startsWith(selectedYear))) // ✅ only entries with date, and match year if given
+    .map((e) => e.date.split("-")[1])
+);
+
 
         monthSelect.innerHTML = '<option value="">All</option>'; // Always have "All"
 
