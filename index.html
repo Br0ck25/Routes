@@ -2151,8 +2151,13 @@ document.addEventListener("DOMContentLoaded", () => {
       function populateYearOptions(preselectedYear = "") {
         const yearSelect = document.getElementById("filter-year");
         const years = Array.from(
-          new Set(logEntries.map((e) => e.date.split("-")[0]))
-        );
+  new Set(
+    logEntries
+      .filter(e => e?.date) // only keep entries that have a valid date
+      .map(e => e.date.split("-")[0])
+  )
+);
+
 
         yearSelect.innerHTML = '<option value="">All</option>';
 
