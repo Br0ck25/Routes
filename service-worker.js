@@ -6,40 +6,28 @@ const urlsToCache = [
   '/logo-512.png',
   '/manifest.json',
   '/styles.css',
-  '/script.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js'
+  '/script.js'
+  // 🔥 Do NOT cache external JS via no-cors here!
 ];
 
+// ✅ INSTALL: cache only same-origin assets (no CDN)
 self.addEventListener('install', event => {
   event.waitUntil(
     (async () => {
       const cache = await caches.open(CACHE_NAME);
 
-      const localAssets = urlsToCache.filter(url => !url.startsWith('http'));
-      for (const url of localAssets) {
+      for (const url of urlsToCache) {
         try {
           await cache.add(url);
         } catch (err) {
-          console.warn(`⚠️ Skipping failed local asset: ${url}`, err);
-        }
-      }
-
-      const cdnAssets = urlsToCache.filter(url => url.startsWith('http'));
-      for (const cdnUrl of cdnAssets) {
-        try {
-          const response = await fetch(cdnUrl, { mode: 'no-cors' });
-          await cache.put(cdnUrl, response);
-        } catch (err) {
-          console.warn(`⚠️ Skipping failed CDN asset: ${cdnUrl}`, err);
+          console.warn(`⚠️ Failed to cache ${url}:`, err);
         }
       }
     })()
   );
 });
 
-
-// ✅ Activate - clean up old caches
+// ✅ ACTIVATE: remove old caches
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
@@ -48,7 +36,7 @@ self.addEventListener('activate', event => {
   );
 });
 
-// ✅ Fetch - cache first, then network, then fallback
+// ✅ FETCH: return from cache first, then try network, then fallback
 self.addEventListener('fetch', event => {
   event.respondWith(
     (async () => {
