@@ -3633,11 +3633,20 @@ function clearFilters() {
     <script>
 
 function formatHoursAndMinutes(decimal) {
-  if (isNaN(decimal)) return "0 hours 0 minutes";
+  if (isNaN(decimal)) return "0 minutes";
+
   const hours = Math.floor(decimal);
   const minutes = Math.round((decimal - hours) * 60);
-  return `${hours} hour${hours !== 1 ? 's' : ''} ${minutes} minute${minutes !== 1 ? 's' : ''}`;
+
+  if (hours > 0 && minutes > 0) {
+    return `${hours} hour${hours !== 1 ? 's' : ''} ${minutes} minute${minutes !== 1 ? 's' : ''}`;
+  } else if (hours > 0) {
+    return `${hours} hour${hours !== 1 ? 's' : ''}`;
+  } else {
+    return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
+  }
 }
+
 
 
 function parseHoursAndMinutes(str) {
@@ -3648,12 +3657,6 @@ function parseHoursAndMinutes(str) {
   return hours + minutes / 60;
 }
 
-
-function formatHoursAndMinutes(decimal) {
-  const hours = Math.floor(decimal);
-  const minutes = Math.round((decimal - hours) * 60);
-  return `${hours} hour${hours !== 1 ? 's' : ''} ${minutes} minute${minutes !== 1 ? 's' : ''}`;
-}
 
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", function () {
