@@ -1,55 +1,46 @@
-const CACHE_NAME = 'route-app-cache-v1';
+// service-worker.js
+
+const CACHE_NAME = 'route-calculator-cache-v1';
 const urlsToCache = [
   '/',
   '/index.html',
   '/logo.png',
   '/logo-512.png',
-  '/manifest.json',
-  '/styles.css',
-  '/script.js'
+  'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js'
 ];
 
-// ✅ Install event - only cache what is guaranteed to work
-self.addEventListener('install', event => {
+// Install: cache files
+self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(urlsToCache).catch(err => {
-        console.warn('⚠️ Cache install failed for some items', err);
-      });
+    caches.open(CACHE_NAME)
+      .then((cache) => {
+        return cache.addAll(urlsToCache);
+      })
+  );
+});
+
+// Activate: cleanup old caches (optional but good practice)
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cache) => {
+          if (cache !== CACHE_NAME) {
+            return caches.delete(cache);
+          }
+        })
+      );
     })
   );
 });
 
-// ✅ Activate event - clean old caches
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
-      )
-    )
-  );
-});
-
-// ✅ Fetch event - must ALWAYS return a Response object
-self.addEventListener('fetch', event => {
+// Fetch: serve cached content if offline
+self.addEventListener('fetch', (event) => {
   event.respondWith(
-    (async () => {
-      try {
-        const cachedResponse = await caches.match(event.request);
-        if (cachedResponse) return cachedResponse;
-
-        const networkResponse = await fetch(event.request);
-        return networkResponse;
-      } catch (err) {
-        console.error('❌ Fetch failed:', err);
-        // ✅ Always return a valid fallback Response
-        return new Response('Offline fallback', {
-          status: 503,
-          statusText: 'Service Unavailable',
-          headers: { 'Content-Type': 'text/plain' }
-        });
-      }
-    })()
+    caches.match(event.request)
+      .then((response) => {
+        return response || fetch(event.request);
+      })
   );
 });
