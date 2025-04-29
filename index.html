@@ -1554,8 +1554,10 @@ document.addEventListener("DOMContentLoaded", () => {
           hoursWorked = actualWorkedMinutes / 60;
 
           hoursWorked = parseFloat(hoursWorked.toFixed(2));
-          document.getElementById("hours-worked").value =
-            hoursWorked.toFixed(2);
+          const workedHours = Math.floor(hoursWorked);
+const workedMinutes = Math.round((hoursWorked - workedHours) * 60);
+document.getElementById("hours-worked").value = `${workedHours} hours ${workedMinutes} minutes`;
+
         }
 
         const maintenanceCost =
@@ -1700,8 +1702,11 @@ document.addEventListener("DOMContentLoaded", () => {
             data.profitPerHour;
           document.getElementById("results").classList.remove("hidden");
           const driveTimeInHours = convertTimeToHours(data.totalTime);
-const totalHours = (parseFloat(data.hoursWorked || 0) + driveTimeInHours).toFixed(2);
-document.getElementById("total-hours").textContent = totalHours;
+          const totalHoursFloat = parseFloat(data.hoursWorked || 0) + driveTimeInHours;
+const totalH = Math.floor(totalHoursFloat);
+const totalM = Math.round((totalHoursFloat - totalH) * 60);
+document.getElementById("total-hours").textContent = `${totalH} hours ${totalM} minutes`;
+
 
           if (originalMileage === null) {
             originalMileage = data.totalMileage;
@@ -1782,25 +1787,31 @@ document.getElementById("total-hours").textContent = totalHours;
       }
 
       async function logResults() {
-        const token = localStorage.getItem("token");
+  const token = localStorage.getItem("token");
+  if (!token) {
+    alert("❌ You must sign in to log your route.");
+    showLogin();
+    return;
+  }
 
-        if (!token) {
-          alert("❌ You must sign in to log your route.");
-          showLogin(); // show sign-in modal
-          return;
-        }
+  // 🚨 Check for at least one destination
+  const destinationInputs = document.querySelectorAll('input[id^="destination-"]');
+  const filledDestinations = Array.from(destinationInputs).filter(input => input.value.trim() !== "");
+  if (filledDestinations.length === 0) {
+    alert("🚧 Please enter at least one destination before logging your route.");
+    return;
+  }
 
-        const calculationResult = await calculateRouteData();
-        if (calculationResult) {
-          currentPage = 1;
-          logEntry(calculationResult);
-          displayLog();
-           // ✅ add this
-          updateUI(calculationResult);
+  const calculationResult = await calculateRouteData();
+  if (calculationResult) {
+    currentPage = 1;
+    logEntry(calculationResult);
+    displayLog();
+    updateUI(calculationResult);
+    showConfirmationMessage("✅ Route logged successfully!");
+  }
+}
 
-          showConfirmationMessage("✅ Route logged successfully!");
-        }
-      }
 
       async function optimizeRoute() {
         if (originalMileage === null) {
@@ -2185,7 +2196,7 @@ document.getElementById("total-hours").textContent = totalHours;
         if (confirm("Are you sure you want to delete this log entry?")) {
           logEntries.splice(index, 1);
           saveLog();
-          filterByDate();
+          filterLogs();
         }
       }
 
@@ -2441,7 +2452,10 @@ document.getElementById("total-hours").textContent = totalHours;
         setInputValue("edit-supplies-cost", entry.suppliesCost);
         setInputValue("edit-total-mileage", entry.totalMileage);
         setInputValue("edit-total-time", entry.totalTime);
-        setInputValue("edit-hours-worked", entry.hoursWorked);
+        const hoursWorkedDecimal = parseFloat(entry.hoursWorked) || 0;
+setInputValue("edit-hours-worked", formatHoursAndMinutes(hoursWorkedDecimal));
+
+
         setInputValue("edit-mpg", entry.mpg);
         setInputValue("edit-gas-price", entry.gasPrice);
 
@@ -2563,7 +2577,9 @@ document.getElementById("total-hours").textContent = totalHours;
   entry.suppliesCost = parseFloat(document.getElementById("edit-supplies-cost").value);
   entry.totalMileage = parseFloat(document.getElementById("edit-total-mileage").value);
   entry.totalTime = document.getElementById("edit-total-time").value;
-  entry.hoursWorked = parseFloat(document.getElementById("edit-hours-worked").value) || 0;
+  const hwRaw = document.getElementById("edit-hours-worked").value.trim();
+entry.hoursWorked = hwRaw.includes("hour") ? parseHoursAndMinutes(hwRaw) : parseFloat(hwRaw) || 0;
+
   entry.mpg = parseFloat(document.getElementById("edit-mpg").value);
   entry.gasPrice = parseFloat(document.getElementById("edit-gas-price").value);
 
@@ -2803,7 +2819,8 @@ document.getElementById("total-hours").textContent = totalHours;
 
             logEntries = [...logEntries, ...newLogEntries];
             saveLog();
-            filterByDate();
+            filterLogs(); // ✅ refreshes the filtered log view
+
           
             alert("Log imported successfully!");
           };
@@ -3304,9 +3321,10 @@ function filterLogs() {
       ? entry.earnings.map((e) => `$${parseFloat(e).toFixed(2)}`).join(", ")
       : "$0.00";
 
-    const formattedHoursWorked = entry.hoursWorked
-      ? `${parseFloat(entry.hoursWorked).toFixed(2)} hours`
-      : "0.00 hours";
+      const formattedHoursWorked = entry.hoursWorked
+  ? formatHoursAndMinutes(parseFloat(entry.hoursWorked))
+  : "0 hours 0 minutes";
+
 
       detailsDiv.innerHTML = `
   <div><strong>Date:</strong> ${entry.date}</div>
@@ -3358,7 +3376,8 @@ function convertTimeToHours(durationStr) {
 function calculateTotalHours(entry) {
   const driveTime = convertTimeToHours(entry.totalTime || "");
   const workedTime = parseFloat(entry.hoursWorked) || 0;
-  return (driveTime + workedTime).toFixed(2) + " hours";
+  return formatHoursAndMinutes(driveTime + workedTime);
+
 }
 
 function clearFilters() {
@@ -3611,6 +3630,28 @@ function clearFilters() {
     </div>
 
     <script>
+
+function formatHoursAndMinutes(decimal) {
+  const hours = Math.floor(decimal);
+  const minutes = Math.round((decimal - hours) * 60);
+  return `${hours} hour${hours !== 1 ? 's' : ''} ${minutes} minute${minutes !== 1 ? 's' : ''}`;
+}
+
+function parseHoursAndMinutes(str) {
+  const match = str.match(/(\d+)\s*hour.*?(\d+)\s*minute/i);
+  if (!match) return 0;
+  const hours = parseInt(match[1]) || 0;
+  const minutes = parseInt(match[2]) || 0;
+  return hours + minutes / 60;
+}
+
+
+function formatHoursAndMinutes(decimal) {
+  const hours = Math.floor(decimal);
+  const minutes = Math.round((decimal - hours) * 60);
+  return `${hours} hour${hours !== 1 ? 's' : ''} ${minutes} minute${minutes !== 1 ? 's' : ''}`;
+}
+
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", function () {
           navigator.serviceWorker.register("/service-worker.js").then(
