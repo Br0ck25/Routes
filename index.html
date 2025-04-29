@@ -2452,8 +2452,9 @@ document.getElementById("total-hours").textContent = `${totalH} hours ${totalM} 
         setInputValue("edit-supplies-cost", entry.suppliesCost);
         setInputValue("edit-total-mileage", entry.totalMileage);
         setInputValue("edit-total-time", entry.totalTime);
-        const hoursWorkedDecimal = parseFloat(entry.hoursWorked) || 0;
-setInputValue("edit-hours-worked", formatHoursAndMinutes(hoursWorkedDecimal));
+        setInputValue("edit-hours-worked", entry.hoursWorked ?? 0);
+
+
 
 
         setInputValue("edit-mpg", entry.mpg);
@@ -3632,10 +3633,12 @@ function clearFilters() {
     <script>
 
 function formatHoursAndMinutes(decimal) {
+  if (isNaN(decimal)) return "0 hours 0 minutes";
   const hours = Math.floor(decimal);
   const minutes = Math.round((decimal - hours) * 60);
   return `${hours} hour${hours !== 1 ? 's' : ''} ${minutes} minute${minutes !== 1 ? 's' : ''}`;
 }
+
 
 function parseHoursAndMinutes(str) {
   const match = str.match(/(\d+)\s*hour.*?(\d+)\s*minute/i);
