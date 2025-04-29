@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -146,6 +147,12 @@ img {
 
 #account-menu.show {
   left: 0;
+}
+
+#log-list {
+  margin: 0;
+  padding: 0;
+  width: 100%;
 }
 
 
@@ -330,31 +337,46 @@ img {
       }
 
       #log-list li {
-        list-style-type: none;
-        padding: 10px 0;
-        margin: 0; /* <--- add this line */
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid #eee;
-      }
+  display: flex;
+  justify-content: space-between;
+  align-items: center; /* 🛠 Center vertically with expanded details */
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+  width: 100%;
+}
 
-      #log-list li:last-child {
-        border-bottom: none;
-      }
 
-      .log-item-details {
-        flex-grow: 1;
-        margin-right: 10px;
-      }
+.log-item-details {
+  flex: 1 1 auto;
+  margin-right: 10px;
+}
 
-      .log-actions {
+.log-actions {
         display: flex;
         flex-direction: column; /* 🆕 Stack buttons vertically */
         gap: 5px; /* 🆕 Space between buttons */
         min-width: 100px; /* 🆕 Keep actions a reasonable size */
         align-items: stretch; /* 🆕 Stretch buttons to same width */
       }
+
+
+
+#log-container {
+  padding-left: 10;
+  padding-right: 100;
+}
+
+
+      #log-list li:last-child {
+        border-bottom: none;
+      }
+
+      .log-item-details {
+  flex: 1 1 auto; /* 🆕 */
+  margin-right: 10px;
+  width: auto;    /* 🆕 Remove 100% width */
+}
+
 
       .log-actions button {
         background-color: #007bff;
@@ -516,15 +538,12 @@ img {
 }
 
 #log-list div[id^="details-"] {
+  margin-left: 20px; /* ✅ Small indent for expanded text */
+  padding-top: 10px;
   transition: all 0.3s ease;
-  padding-top: 5px;
 }
 
-#log-list div[id^="details-"] {
-  margin-left: 20px;
-  padding-top: 5px;
-  transition: all 0.3s ease;
-}
+
 
 
     </style>
@@ -778,7 +797,7 @@ transition: opacity 0.3s ease;
         </div>
       </div>
 
-              <button onclick="addDestination()">Add Destination</button>
+              <button onclick="addDestination()">Add Destination</button>
       <label for="end-address">End Address</label>
       <input
         type="text"
@@ -873,67 +892,81 @@ transition: opacity 0.3s ease;
     </div>
 
     <div id="log-container">
-      <div id="log-header">
-        <!-- Net Profit / Profit per Hour Summary (always centered at top) -->
-        <div
-          id="log-summary"
-          style="
-            text-align: center;
-            margin-bottom: 15px;
-            font-weight: bold;
-            font-size: 18px;
-          "
-        >
-          <!-- Net profit and profit per hour will show here -->
+
+      <!-- 🆕 Step 1: Centered Title and Summary -->
+      <div id="log-header" style="
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 10px;
+      ">
+    
+        <!-- Log Title Centered -->
+        <h2 style="margin: 0 0 20px 0; text-align: center;">Log</h2>
+    
+        <!-- Net Profit and Profit Per Hour Centered -->
+        <div id="log-summary" style="
+          text-align: center;
+          font-weight: bold;
+          font-size: 18px;
+          margin-top: 10px;
+          margin-bottom: 20px;
+        ">
+          <!-- Net profit and profit per hour will dynamically go here -->
         </div>
-
-        <!-- ✅ Keep the filters next to the Log title -->
-        <div
-          id="log-title-bar"
-          style="
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            margin-bottom: 10px;
-          "
-        >
-          <h2 style="margin: 0">Log</h2>
-
-          <!-- ✅ Replace your old filter div with this -->
-          <div style="display: flex; gap: 20px; align-items: center">
-            <div
-              style="display: flex; flex-direction: column; align-items: center"
-            >
-              <label for="filter-year">Year:</label>
-              <select id="filter-year" onchange="filterByDate()">
-                <option value="">All</option>
-              </select>
-            </div>
-
-            <div
-              style="display: flex; flex-direction: column; align-items: center"
-            >
-              <label for="filter-month">Month:</label>
-              <select id="filter-month" onchange="filterByDate()">
-                <option value="">All</option>
-                <option value="01">January</option>
-                <option value="02">February</option>
-                <option value="03">March</option>
-                <option value="04">April</option>
-                <option value="05">May</option>
-                <option value="06">June</option>
-                <option value="07">July</option>
-                <option value="08">August</option>
-                <option value="09">September</option>
-                <option value="10">October</option>
-                <option value="11">November</option>
-                <option value="12">December</option>
-              </select>
-            </div>
-          </div>
-        </div>
+    
       </div>
+    
+      <!-- 🆕 Step 2: Centered Filters Row -->
+      <div id="log-title-bar" style="
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 20px;
+        margin-bottom: 20px;
+      ">
+        <div style="display: flex; flex-direction: column; align-items: center;">
+          <label for="filter-start-date">Start Date:</label>
+          <input type="date" id="filter-start-date" onchange="filterLogs()" style="min-width: 120px;">
+        </div>
+    
+        <div style="display: flex; flex-direction: column; align-items: center;">
+          <label for="filter-end-date">End Date:</label>
+          <input type="date" id="filter-end-date" onchange="filterLogs()" style="min-width: 120px;">
+        </div>
+    
+        <div style="display: flex; flex-direction: column; align-items: center;">
+          <label for="filter-search">Search:</label>
+          <input type="text" id="filter-search" placeholder="Search anything..." oninput="filterLogs()" style="min-width: 200px;">
+        </div>
+    
+        <div style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+          <button onclick="clearFilters()" style="
+            padding: 8px 14px;
+            font-size: 16px;
+            height: 40px;
+            line-height: 1;
+            vertical-align: middle;
+            margin-top: 34px; /* 🛠 Lifts it up slightly to match input perfectly */
+          ">
+            Clear
+          </button>
+        </div>
+        
+        
+      </div>
+    
+      <!-- Step 3: Log Entries (list stays exactly as it was) -->
+      <ul id="log-list">
+        <!-- Log entries are dynamically added here -->
+      </ul>
+    
+    </div> <!-- end of #log-container -->
+    
+      
+
+
+
 
       <ul id="log-list"></ul>
     </div>
@@ -1287,10 +1320,10 @@ async function syncAndReloadLogs() {
     console.log("🔄 Online detected: syncing and reloading logs...");
 
     await syncPendingLogs();
-    logEntries = await loadLog();
-    displayLog();
-    populateYearOptions();
-    populateMonthOptions();
+logEntries = await loadLog();
+displayLog();
+
+
 
     console.log("✅ Logs refreshed after reconnecting!");
     showConfirmationMessage("✅ Logs refreshed after reconnecting!");
@@ -1315,8 +1348,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   logEntries = await loadLog();
   displayLog();
-  populateYearOptions();
-  populateMonthOptions();
+
 
   const script = document.createElement("script");
   script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyCHrNRHP9LNGVHi9Srk1Gfcrv-4ee_gUHQ&libraries=places&callback=initMap`;
@@ -1364,8 +1396,7 @@ async function syncAndReloadLogs() {
 
     // Display the updated logs
     displayLog();
-    populateYearOptions();
-    populateMonthOptions();
+
 
     console.log("✅ Logs refreshed after reconnecting!");
   } catch (error) {
@@ -1764,7 +1795,7 @@ document.getElementById("total-hours").textContent = totalHours;
           currentPage = 1;
           logEntry(calculationResult);
           displayLog();
-          populateYearOptions(); // ✅ add this
+           // ✅ add this
           updateUI(calculationResult);
 
           showConfirmationMessage("✅ Route logged successfully!");
@@ -2022,8 +2053,9 @@ document.getElementById("total-hours").textContent = totalHours;
   });
 
   const filteredEntries = sortedEntries.filter((entry) => 
-  entry?.date && filterFn(entry.date)
+  entry?.date && filterFn(entry.date, entry)
 );
+
 
   const totalPages = Math.ceil(filteredEntries.length / logsPerPage);
 
@@ -2051,8 +2083,13 @@ document.getElementById("total-hours").textContent = totalHours;
   <div class="log-item-details" id="log-entry-${realIndex}">
     <div id="summary-${realIndex}">
       <strong>Date:</strong> ${entry.date}<br>
-      <div><strong>Destinations:</strong></div>
-      <div style="margin-left: 15px;">${destinations}</div>
+<div><strong>Destinations:</strong><br>
+  <div style="margin-left: 20px;">
+    ${(entry.destinations || []).map(dest => `- ${dest}`).join('<br>')}
+  </div>
+</div>
+
+
       <strong>Net Profit:</strong> $${parseFloat(entry.netProfit || 0).toFixed(2)}
     </div>
     <div id="details-${realIndex}" class="hidden" style="margin-top:10px;"></div>
@@ -2162,121 +2199,8 @@ document.getElementById("total-hours").textContent = totalHours;
         }, {});
       }
 
-      function populateYearOptions(preselectedYear = "") {
-        const yearSelect = document.getElementById("filter-year");
-        const years = Array.from(
-  new Set(
-    logEntries
-      .filter(e => e?.date) // only keep entries that have a valid date
-      .map(e => e.date.split("-")[0])
-  )
-);
 
 
-        yearSelect.innerHTML = '<option value="">All</option>';
-
-        years
-          .sort((a, b) => b - a)
-          .forEach((y) => {
-            const opt = document.createElement("option");
-            opt.value = y;
-            opt.textContent = y;
-            yearSelect.appendChild(opt);
-          });
-
-        // ✅ Preselect previously selected year if still exists
-        if (preselectedYear && years.includes(preselectedYear)) {
-          yearSelect.value = preselectedYear;
-        } else {
-          yearSelect.value = "";
-        }
-
-        // 🛠 DISABLE or HIDE year dropdown if only one real year
-        if (years.length <= 1) {
-          yearSelect.disabled = true;
-          yearSelect.style.backgroundColor = "#f0f0f0"; // light gray
-          yearSelect.style.cursor = "not-allowed";
-        } else {
-          yearSelect.disabled = false;
-          yearSelect.style.backgroundColor = ""; // normal
-          yearSelect.style.cursor = "";
-        }
-      }
-
-      function populateMonthOptions(selectedYear = "", preselectedMonth = "") {
-        const monthSelect = document.getElementById("filter-month");
-
-        const monthsSet = new Set(
-  logEntries
-    .filter((e) => e?.date && (!selectedYear || e.date.startsWith(selectedYear))) // ✅ only entries with date, and match year if given
-    .map((e) => e.date.split("-")[1])
-);
-
-
-        monthSelect.innerHTML = '<option value="">All</option>'; // Always have "All"
-
-        const monthNames = {
-          "01": "January",
-          "02": "February",
-          "03": "March",
-          "04": "April",
-          "05": "May",
-          "06": "June",
-          "07": "July",
-          "08": "August",
-          "09": "September",
-          10: "October",
-          11: "November",
-          12: "December",
-        };
-
-        const allMonthsInOrder = [
-          "01",
-          "02",
-          "03",
-          "04",
-          "05",
-          "06",
-          "07",
-          "08",
-          "09",
-          "10",
-          "11",
-          "12",
-        ];
-
-        for (const month of allMonthsInOrder) {
-          if (monthsSet.has(month)) {
-            const opt = document.createElement("option");
-            opt.value = month;
-            opt.textContent = monthNames[month];
-            monthSelect.appendChild(opt);
-          }
-        }
-
-        // ✅ Re-select preselected month if still available
-        if (
-          preselectedMonth &&
-          Array.from(monthSelect.options).some(
-            (opt) => opt.value === preselectedMonth
-          )
-        ) {
-          monthSelect.value = preselectedMonth;
-        } else {
-          monthSelect.value = "";
-        }
-
-        // 🛠 DISABLE if no months available (only "All")
-        if (monthSelect.options.length <= 1) {
-          monthSelect.disabled = true;
-          monthSelect.style.backgroundColor = "#f0f0f0"; // light gray
-          monthSelect.style.cursor = "not-allowed";
-        } else {
-          monthSelect.disabled = false;
-          monthSelect.style.backgroundColor = ""; // normal
-          monthSelect.style.cursor = "";
-        }
-      }
 
       function closeEditForm() {
         console.log("closeEditForm function called");
@@ -2675,7 +2599,7 @@ document.getElementById("total-hours").textContent = totalHours;
 
   // ✅ Force reloading the cached logs freshly
   logEntries = await loadLog(); // <-- SUPER IMPORTANT! Fetch fresh logs
-  filterByDate(); // ✅ Refresh the view
+  filterLogs();
 
   closeEditForm(); // ✅ THEN close the edit screen
   showConfirmationMessage("✅ Log entry updated!");
@@ -2880,7 +2804,7 @@ document.getElementById("total-hours").textContent = totalHours;
             logEntries = [...logEntries, ...newLogEntries];
             saveLog();
             filterByDate();
-            populateYearOptions();
+          
             alert("Log imported successfully!");
           };
 
@@ -3136,19 +3060,39 @@ document.getElementById("total-hours").textContent = totalHours;
 
 
 
-      function filterByDate() {
-        const year = document.getElementById("filter-year").value;
-        const month = document.getElementById("filter-month").value;
+function filterLogs() {
+  const startDate = document.getElementById('filter-start-date').value;
+  const endDate = document.getElementById('filter-end-date').value;
+  const searchQuery = document.getElementById('filter-search').value.trim().toLowerCase();
 
-        populateMonthOptions(year, month); // 🆕 Repopulate month dropdown based on selected year!
+  displayLog((entryDate, entry) => {
+    // Date range filter
+    let matchesDate = true;
+    if (startDate && entryDate < startDate) matchesDate = false;
+    if (endDate && entryDate > endDate) matchesDate = false;
 
-        displayLog((entryDate) => {
-          const [yyyy, mm] = entryDate.split("-");
-          const matchesYear = !year || yyyy === year;
-          const matchesMonth = !month || mm === month;
-          return matchesYear && matchesMonth;
-        });
-      }
+    // Text search across all fields
+    const fieldsToSearch = [
+      entry.startTime,
+      entry.endTime,
+      ...(entry.destinations || []),
+      (entry.totalEarnings || '').toString(),
+      (entry.fuelCost || '').toString(),
+      (entry.maintenanceCost || '').toString(),
+      (entry.suppliesCost || '').toString(),
+      (entry.netProfit || '').toString(),
+      (entry.totalMileage || '').toString(),
+      (entry.totalTime || '').toString(),
+      (entry.profitPerHour || '').toString(),
+      (entry.hoursWorked || '').toString()
+    ].join(' ').toLowerCase();
+
+    const matchesSearch = !searchQuery || fieldsToSearch.includes(searchQuery);
+
+    return matchesDate && matchesSearch;
+  });
+}
+
 
       // Hide Manage Log menu when clicking outside
       document.addEventListener("click", function (event) {
@@ -3247,8 +3191,9 @@ document.getElementById("total-hours").textContent = totalHours;
 
         // Filter the relevant entries
         const filteredEntries = logEntries.filter((entry) => 
-  entry?.date && filterFn(entry.date)
+  entry?.date && filterFn(entry.date, entry)
 );
+
 
 
         if (filteredEntries.length === 0) {
@@ -3416,6 +3361,12 @@ function calculateTotalHours(entry) {
   return (driveTime + workedTime).toFixed(2) + " hours";
 }
 
+function clearFilters() {
+  document.getElementById('filter-start-date').value = '';
+  document.getElementById('filter-end-date').value = '';
+  document.getElementById('filter-search').value = '';
+  filterLogs(); // ✅ Refresh the display
+}
 
 
     </script>
