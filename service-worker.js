@@ -11,25 +11,33 @@ const urlsToCache = [
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js'
 ];
 
-// ✅ Install - split local and CDN assets, return full async chain
 self.addEventListener('install', event => {
   event.waitUntil(
     (async () => {
       const cache = await caches.open(CACHE_NAME);
-      const localAssets = urlsToCache.filter(url => !url.startsWith('http'));
-      await cache.addAll(localAssets);
 
-      for (const cdnUrl of urlsToCache.filter(url => url.startsWith('http'))) {
+      const localAssets = urlsToCache.filter(url => !url.startsWith('http'));
+      for (const url of localAssets) {
+        try {
+          await cache.add(url);
+        } catch (err) {
+          console.warn(`⚠️ Skipping failed local asset: ${url}`, err);
+        }
+      }
+
+      const cdnAssets = urlsToCache.filter(url => url.startsWith('http'));
+      for (const cdnUrl of cdnAssets) {
         try {
           const response = await fetch(cdnUrl, { mode: 'no-cors' });
           await cache.put(cdnUrl, response);
         } catch (err) {
-          console.warn('⚠️ Could not cache CDN asset:', cdnUrl, err);
+          console.warn(`⚠️ Skipping failed CDN asset: ${cdnUrl}`, err);
         }
       }
     })()
   );
 });
+
 
 // ✅ Activate - clean up old caches
 self.addEventListener('activate', event => {
