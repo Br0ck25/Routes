@@ -15,12 +15,21 @@ const urlsToCache = [
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
-      .catch(err => {
-        console.error('❌ Error caching during install:', err);
-      })
-  );
-});
+.then(async cache => {
+  const coreAssets = urlsToCache.filter(url => !url.startsWith('http'));
+  await cache.addAll(coreAssets);
+
+  // Try to cache CDN files separately and safely
+  for (const cdnUrl of urlsToCache.filter(url => url.startsWith('http'))) {
+    try {
+      const response = await fetch(cdnUrl, { mode: 'no-cors' });
+      await cache.put(cdnUrl, response);
+    } catch (err) {
+      console.warn('⚠️ Could not cache CDN asset:', cdnUrl, err);
+    }
+  }
+})
+
 
 // ✅ Activate event - cleanup old caches if needed
 self.addEventListener('activate', event => {
