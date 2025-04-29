@@ -11,27 +11,27 @@ const urlsToCache = [
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js'
 ];
 
-// ✅ Install event - cache everything listed
+// ✅ Install event - cache core assets first, then try CDN separately
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-.then(async cache => {
-  const coreAssets = urlsToCache.filter(url => !url.startsWith('http'));
-  await cache.addAll(coreAssets);
+    caches.open(CACHE_NAME).then(async cache => {
+      const coreAssets = urlsToCache.filter(url => !url.startsWith('http'));
+      await cache.addAll(coreAssets);
 
-  // Try to cache CDN files separately and safely
-  for (const cdnUrl of urlsToCache.filter(url => url.startsWith('http'))) {
-    try {
-      const response = await fetch(cdnUrl, { mode: 'no-cors' });
-      await cache.put(cdnUrl, response);
-    } catch (err) {
-      console.warn('⚠️ Could not cache CDN asset:', cdnUrl, err);
-    }
-  }
-})
+      // Try to cache CDN files separately and safely
+      for (const cdnUrl of urlsToCache.filter(url => url.startsWith('http'))) {
+        try {
+          const response = await fetch(cdnUrl, { mode: 'no-cors' });
+          await cache.put(cdnUrl, response);
+        } catch (err) {
+          console.warn('⚠️ Could not cache CDN asset:', cdnUrl, err);
+        }
+      }
+    })
+  );
+});
 
-
-// ✅ Activate event - cleanup old caches if needed
+// ✅ Activate event - cleanup old caches
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
@@ -42,21 +42,23 @@ self.addEventListener('activate', event => {
   );
 });
 
-// ✅ Fetch event - try cache first, fallback to network
+// ✅ Fetch event - try cache first, then network, then fallback
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request).then(response => {
-      if (response) return response;
-      return fetch(event.request).then(networkResponse => {
-        // Optionally cache the new response here
-        return networkResponse;
-      }).catch(err => {
+    (async () => {
+      try {
+        const cached = await caches.match(event.request);
+        if (cached) return cached;
+
+        const network = await fetch(event.request);
+        return network;
+      } catch (err) {
         console.error('❌ Fetch failed:', err);
         return new Response('You are offline.', {
           status: 503,
           headers: { 'Content-Type': 'text/plain' }
         });
-      });
-    })
+      }
+    })()
   );
 });
