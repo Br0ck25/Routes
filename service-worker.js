@@ -21,9 +21,17 @@ self.addEventListener('install', event => {
   );
 });
 
-// Serve cached content when offline
-self.addEventListener('fetch', event => {
+self.addEventListener('fetch', (event) => {
   event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request))
+    caches.match(event.request).then((response) => {
+      if (response) {
+        return response;
+      }
+      return fetch(event.request);
+    }).catch((err) => {
+      console.error('Fetch failed; returning fallback.', err);
+      return new Response("Offline fallback", { status: 503 });
+    })
   );
 });
+
