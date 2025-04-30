@@ -37,6 +37,8 @@
 
     <style>
 
+      
+
 @media (max-width: 600px) {
   #top-bar {
     box-shadow: 0 2px 6px rgba(0,0,0,0.1); /* 🆕 soft shadow */
@@ -1351,10 +1353,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Set today's date
   const dateInput = document.getElementById("log-date");
 if (dateInput) {
-  const today = new Date().toLocaleDateString('en-CA'); // outputs yyyy-mm-dd
-
-  dateInput.value = "";       // force clear
-  dateInput.value = today;    // set today's date
+  const today = new Date().toLocaleDateString("en-CA"); // format: yyyy-mm-dd
+  dateInput.value = today; // ✅ set only the date
 }
 
 
