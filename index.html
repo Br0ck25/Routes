@@ -1337,10 +1337,13 @@ displayLog();
 document.addEventListener("DOMContentLoaded", async () => {
   // Set today's date
   const dateInput = document.getElementById("log-date");
-  if (dateInput) {
-    const today = new Date().toISOString().split("T")[0];
-    dateInput.value = today;
-  }
+if (dateInput) {
+  const today = new Date().toLocaleDateString('en-CA'); // outputs yyyy-mm-dd
+
+  dateInput.value = "";       // force clear
+  dateInput.value = today;    // set today's date
+}
+
 
   await syncPendingLogs();
 
@@ -1598,6 +1601,10 @@ document.getElementById("hours-worked").value = `${workedHours} hours ${workedMi
           travelMode: "DRIVING",
         };
 
+        const logDateInput = document.getElementById("log-date").value;
+const selectedDate = logDateInput || new Date().toISOString().split("T")[0];
+
+
         return new Promise((resolve, reject) => {
           directionsService.route(request, (response, status) => {
             if (status === "OK") {
@@ -1658,9 +1665,9 @@ document.getElementById("hours-worked").value = `${workedHours} hours ${workedMi
                 totalHoursSpent > 0 ? netProfit / totalHoursSpent : 0;
 
               resolve({
-                date:
-                  document.getElementById("log-date").value ||
-                  new Date().toISOString().split("T")[0],
+              
+                 date: selectedDate,
+
                 startTime: startAddress,
                 endTime: endAddress,
                 destinations: destinations.map((d) => d.location),
@@ -1732,10 +1739,10 @@ document.getElementById("total-hours").textContent = `${totalH} hours ${totalM} 
             <p><strong>Fuel Cost:</strong> $${data.fuelCost}</p>
             <p><strong>Maintenance:</strong> $${data.maintenanceCost}</p>
             <p><strong>Supplies:</strong> $${data.suppliesCost}</p>
-            <p><strong>Hours Worked:</strong> ${
-              data.hoursWorked ?? "0"
-            } hours</p>
-            <p><strong>Net Profit:</strong> $${data.netProfit}</p>
+              <p><strong>Hours Worked:</strong> ${formatHoursAndMinutes(data.hoursWorked ?? 0)}</p>
+  <p><strong>Total Hours:</strong> ${formatHoursAndMinutes((data.hoursWorked ?? 0) + convertTimeToHours(data.totalTime))}</p>
+  <p><strong>Net Profit:</strong> $${data.netProfit}</p>
+
             <p><strong>Profit per Hour:</strong> $${data.profitPerHour}</p>
         `;
           document.getElementById("detailed-results").innerHTML =
@@ -3242,16 +3249,22 @@ function filterLogs() {
         summaryDiv.innerHTML = `
   <div style="display: flex; flex-direction: column; align-items: center;">
     <div style="margin-bottom: 8px;">
-      Net Profit: <span style="color: green;">$${totalNetProfit.toFixed(
-        2
-      )}</span>
+      Net Profit: <span style="color: green;">$${totalNetProfit.toFixed(2)}</span>
+    </div>
+    <div style="margin-bottom: 8px;">
+      Profit Per Hour: <span style="color: blue;">$${averageProfitPerHour.toFixed(2)}</span>
     </div>
     <div>
-      Profit Per Hour: <span style="color: blue;">$${averageProfitPerHour.toFixed(
-        2
+      Total Hours: <span style="color: black;">${formatHoursAndMinutes(
+        filteredEntries.reduce((sum, entry) => {
+          const drive = convertTimeToHours(entry.totalTime || "");
+          const worked = parseFloat(entry.hoursWorked) || 0;
+          return sum + drive + worked;
+        }, 0)
       )}</span>
     </div>
   </div>
+
 `;
       }
 
@@ -3634,7 +3647,6 @@ function clearFilters() {
 
 function formatHoursAndMinutes(decimal) {
   if (isNaN(decimal)) return "0 minutes";
-
   const hours = Math.floor(decimal);
   const minutes = Math.round((decimal - hours) * 60);
 
@@ -3646,6 +3658,7 @@ function formatHoursAndMinutes(decimal) {
     return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
   }
 }
+
 
 
 
