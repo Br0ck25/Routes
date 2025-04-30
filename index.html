@@ -927,7 +927,8 @@ transition: opacity 0.3s ease;
       ">
         <div style="display: flex; flex-direction: column; align-items: center;">
           <label for="filter-start-date">Start Date:</label>
-          <input type="date" id="filter-start-date" onchange="filterLogs()" style="min-width: 120px;">
+          <input type="date" id="filter-start-date" onchange="onStartDateChange()" />
+
         </div>
     
         <div style="display: flex; flex-direction: column; align-items: center;">
@@ -1080,6 +1081,18 @@ const logsPerPage = 10;
           body.style.paddingBottom = "0"; // 🆕 Remove extra space
         }
       }
+
+      function onStartDateChange() {
+  filterLogs(); // existing filter logic
+
+  // Automatically open the end date calendar
+  const endDateInput = document.getElementById("filter-end-date");
+  if (endDateInput) {
+    endDateInput.focus();
+    endDateInput.showPicker?.(); // works in most modern browsers
+  }
+}
+
     </script>
 
     <div id="edit-form-container" class="edit-form-container hidden">
