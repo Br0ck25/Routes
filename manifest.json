@@ -1,6 +1,6 @@
 {
   "name": "Go Route Yourself",
-  "short_name": "GoRoute",
+  "short_name": "Go Route Yourself",
   "start_url": "/", 
   "display": "standalone",
   "background_color": "#ffffff",
