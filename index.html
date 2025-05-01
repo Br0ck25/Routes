@@ -2703,12 +2703,13 @@ document.getElementById("total-hours").textContent = `${totalH} hours ${totalM} 
     .reduce((sum, val) => sum + val, 0)
     .toFixed(2);
 
-    entry.fuelCost = getNumberValue("edit-fuel-cost");
+entry.fuelCost = getNumberValue("edit-fuel-cost");
 entry.maintenanceCost = getNumberValue("edit-maintenance-cost");
 entry.suppliesCost = getNumberValue("edit-supplies-cost");
 entry.totalMileage = getNumberValue("edit-total-mileage");
 entry.mpg = getNumberValue("edit-mpg");
 entry.gasPrice = getNumberValue("edit-gas-price");
+entry.hoursWorked = getNumberValue("edit-hours-worked");
 
 
   const netProfitBeforeOptional = entry.totalEarnings - entry.fuelCost;
