@@ -2,11 +2,11 @@
 
 const CACHE_NAME = "route-calculator-cache-v2";
 const urlsToCache = [
-  "/",
-  "/index.html",
-  "/logo.png",
-  "/logo-512.png",
-  // ⚠️ Do NOT hardcode CDN URLs — they'll be handled dynamically below
+  '/',
+  '/index.html',
+  '/offline.html',
+  '/logo.png',
+  '/logo-512.png'
 ];
 
 // Install: cache essential files
@@ -58,9 +58,9 @@ self.addEventListener("fetch", (event) => {
           return networkResponse;
         })
         .catch(() => {
-          if (event.request.destination === "document") {
-            return caches.match("/index.html");
-          }
+          if (event.request.destination === 'document') {
+            return caches.match('/offline.html');
+          }          
         });
     })
   );
