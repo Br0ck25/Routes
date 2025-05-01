@@ -554,25 +554,6 @@ img {
   </head>
   <body>
 
-  
-
-
-<!-- Sticky Offline Banner -->
-<div id="offline-banner" style="
-  display: none;
-  background-color: #fffae6;
-  color: #856404;
-  padding: 10px;
-  text-align: center;
-  font-weight: bold;
-  font-size: 16px;
-  border-bottom: 2px solid #ffd700;
-  position: sticky;
-  top: 0;
-  z-index: 5000;
-">
-  🛜 Offline Mode: Showing cached routes.
-</div>
 
 <!-- Fixed Top Bar -->
 <div id="top-bar" style="
@@ -593,6 +574,7 @@ img {
   box-shadow: none;
   transition: none;
 ">
+
   <!-- Left Spacer (Hamburger) -->
   <div style="position: absolute; left: 12px; display: flex; align-items: center; height: 100%;">
     <button id="hamburger-button" onclick="toggleMenu()" style="
@@ -649,7 +631,23 @@ img {
   <a href="#" onclick="showSignup()" style="color: #0d6efd; font-weight: bold; text-decoration: none;">Create an account</a>.
 </div>
 
-  
+<!-- Offline Mode Banner (same style as sign-in banner) -->
+<div id="offline-banner" style="
+  display: none;
+  background-color: #fffae6;
+  color: #856404;
+  border: 1px solid #ffd700;
+  border-radius: 6px;
+  padding: 15px 20px;
+  text-align: center;
+  font-size: 16px;
+  max-width: 600px;
+  margin: 80 auto 20px auto;
+  position: relative;
+  z-index: 500;
+">
+  🛜 Offline Mode: Showing cached routes.
+</div>
 
 
 
@@ -2061,11 +2059,16 @@ document.getElementById("total-hours").textContent = `${totalH} hours ${totalM} 
       }
 
       function logEntry(data) {
-        data.startClock = document.getElementById("start-time").value || "";
-        data.endClock = document.getElementById("end-time").value || "";
-        logEntries.unshift(data);
-        saveLog();
-      }
+  data.startClock = document.getElementById("start-time").value || "";
+  data.endClock = document.getElementById("end-time").value || "";
+  
+  data.mpg = parseFloat(document.getElementById("mpg").value) || 0;
+  data.gasPrice = parseFloat(document.getElementById("gas-price").value) || 0;
+  
+  logEntries.unshift(data);
+  saveLog();
+}
+
 
 
 
@@ -3180,41 +3183,45 @@ function filterLogs() {
       }
 
       function handleTimeChange() {
-        const startTimeInput = document.getElementById("start-time").value;
-        const endTimeInput = document.getElementById("end-time").value;
-        const hoursWorkedInput = document.getElementById("hours-worked");
+  const startTimeInput = document.getElementById("start-time").value;
+  const endTimeInput = document.getElementById("end-time").value;
+  const hoursWorkedInput = document.getElementById("hours-worked");
 
-        if (startTimeInput && endTimeInput) {
-          const [startHours, startMinutes] = startTimeInput
-            .split(":")
-            .map(Number);
-          const [endHours, endMinutes] = endTimeInput.split(":").map(Number);
+  // 🆕 Auto-open End Time picker after selecting Start Time
+  if (startTimeInput && !endTimeInput) {
+    document.getElementById("end-time")?.showPicker?.();
+  }
 
-          let startTotalMinutes = startHours * 60 + startMinutes;
-          let endTotalMinutes = endHours * 60 + endMinutes;
+  if (startTimeInput && endTimeInput) {
+    const [startHours, startMinutes] = startTimeInput.split(":").map(Number);
+    const [endHours, endMinutes] = endTimeInput.split(":").map(Number);
 
-          if (endTotalMinutes < startTotalMinutes) {
-            endTotalMinutes += 24 * 60; // Overnight shift
-          }
+    let startTotalMinutes = startHours * 60 + startMinutes;
+    let endTotalMinutes = endHours * 60 + endMinutes;
 
-          let totalWorkedMinutes = endTotalMinutes - startTotalMinutes;
-          let driveMinutes =
-            typeof totalDuration === "number" ? totalDuration / 60 : 0;
-          const actualWorkedMinutes = Math.max(
-            totalWorkedMinutes - driveMinutes,
-            0
-          );
-          const hoursWorked = parseFloat((actualWorkedMinutes / 60).toFixed(2));
-          hoursWorkedInput.value = hoursWorked.toFixed(2);
+    if (endTotalMinutes < startTotalMinutes) {
+      endTotalMinutes += 24 * 60; // Overnight shift
+    }
 
-          hoursWorkedInput.readOnly = true; // 🛡️ make it readonly!
-          hoursWorkedInput.style.backgroundColor = "#f0f0f0"; // light gray to indicate readonly
-        } else {
-          hoursWorkedInput.value = "";
-          hoursWorkedInput.readOnly = false; // ✅ make it editable again
-          hoursWorkedInput.style.backgroundColor = ""; // restore original background
-        }
-      }
+    let totalWorkedMinutes = endTotalMinutes - startTotalMinutes;
+    let driveMinutes =
+      typeof totalDuration === "number" ? totalDuration / 60 : 0;
+    const actualWorkedMinutes = Math.max(
+      totalWorkedMinutes - driveMinutes,
+      0
+    );
+    const hoursWorked = parseFloat((actualWorkedMinutes / 60).toFixed(2));
+    hoursWorkedInput.value = hoursWorked.toFixed(2);
+
+    hoursWorkedInput.readOnly = true;
+    hoursWorkedInput.style.backgroundColor = "#f0f0f0";
+  } else {
+    hoursWorkedInput.value = "";
+    hoursWorkedInput.readOnly = false;
+    hoursWorkedInput.style.backgroundColor = "";
+  }
+}
+
 
       function formatCurrency(value) {
         if (isNaN(value)) return "$0.00";
@@ -3660,8 +3667,15 @@ function clearFilters() {
 
 function formatHoursAndMinutes(decimal) {
   if (isNaN(decimal)) return "0 minutes";
-  const hours = Math.floor(decimal);
-  const minutes = Math.round((decimal - hours) * 60);
+
+  let hours = Math.floor(decimal);
+  let minutes = Math.round((decimal - hours) * 60);
+
+  // ✅ Round up if minutes == 60
+  if (minutes >= 60) {
+    hours += 1;
+    minutes = 0;
+  }
 
   if (hours > 0 && minutes > 0) {
     return `${hours} hour${hours !== 1 ? 's' : ''} ${minutes} minute${minutes !== 1 ? 's' : ''}`;
@@ -3671,6 +3685,7 @@ function formatHoursAndMinutes(decimal) {
     return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
   }
 }
+
 
 
 
