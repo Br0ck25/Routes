@@ -1,188 +1,221 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Offline Mode - Route and Cost Calculator</title>
-  <link rel="icon" href="/logo-512.png" sizes="512x512" type="image/png" />
-  <link rel="apple-touch-icon" href="/logo-512.png" />
-  <meta name="theme-color" content="#ffffff" />
-  <style>
-    body {
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f4f4f9;
-      margin: 0;
-      padding: 40px 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      overflow-x: hidden;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Offline Mode - Route and Cost Calculator</title>
+    <link rel="icon" href="/logo-512.png" sizes="512x512" type="image/png" />
+    <link rel="apple-touch-icon" href="/logo-512.png" />
+    <meta name="theme-color" content="#ffffff" />
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f4f4f9;
+        margin: 0;
+        padding: 40px 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        overflow-x: hidden;
+      }
 
-    #auth-message {
-      background-color: #fff3cd;
-      color: #856404;
-      border: 1px solid #ffeeba;
-      border-radius: 6px;
-      padding: 15px 20px;
-      text-align: center;
-      font-size: 16px;
-      max-width: 600px;
-      margin: 80px auto 20px auto;
-      position: relative;
-      z-index: 500;
-    }
+      #top-bar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        background: white;
+        padding: 25px 0;
+        width: 100%;
+        max-width: 900px;
+        margin: 0 auto;
+        border-radius: 0;
+        box-shadow: none;
+        transition: box-shadow 0.3s;
+      }
 
-    #offline-banner {
-      display: none;
-      background-color: #fffae6;
-      color: #856404;
-      padding: 10px;
-      margin: 10px auto;
-      text-align: center;
-      font-weight: bold;
-      font-size: 16px;
-      border-bottom: 2px solid #ffd700;
-      width: 100%;
-      max-width: 900px;
-      position: relative;
-      z-index: 400;
-    }
+      #top-bar img {
+        height: 50px;
+        max-height: 70px;
+        cursor: pointer;
+      }
 
-    #top-bar {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 1000;
-      background: white;
-      padding: 25px 0;
-      width: 100%;
-      max-width: 900px;
-      margin: 0 auto;
-      border-radius: 0;
-      box-shadow: none;
-      transition: box-shadow 0.3s;
-    }
+      #auth-message {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeeba;
+        border-radius: 6px;
+        padding: 15px 15px;
+        text-align: center;
+        font-size: 16px;
+        max-width: 600px;
+        margin: 80px auto 20px auto;
+        position: relative;
+        z-index: 500;
+      }
 
-    #top-bar img {
-      height: 50px;
-      max-height: 70px;
-      cursor: pointer;
-    }
+      #offline-banner {
+        background-color: #fffae6;
+        color: #856404;
+        border: 1px solid #ffd700;
+        border-radius: 6px;
+        padding: 15px 20px;
+        text-align: center;
+        font-size: 16px;
+        max-width: 600px;
+        margin: 10px auto 20px auto;
+        position: relative;
+        z-index: 500;
+        display: none;
+      }
 
-    #log-container {
-      background: white;
-      padding: 20px;
-      margin-top: 180px;
-      max-width: 900px;
-      width: 90%;
-      border-radius: 8px;
-      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-    }
+      #log-container {
+        background: white;
+        padding: 20px;
+        margin-top: 180px;
+        max-width: 900px;
+        width: 90%;
+        border-radius: 8px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+      }
 
-    #log-list {
-      list-style-type: none;
-      padding: 0;
-      margin: 0;
-    }
+      #log-list {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+      }
 
-    #log-list li {
-      border-bottom: 1px solid #eee;
-      padding: 10px 0;
-      margin: 0;
-    }
+      #log-list li {
+        border-bottom: 1px solid #eee;
+        padding: 10px 0;
+        margin: 0;
+      }
 
-    h2 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-  </style>
-</head>
-<body>
+      h2 {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ✅ TOP BAR first -->
+    <!-- ✅ TOP BAR first -->
+    <div id="top-bar">
+      <img id="logo-image" src="/logo.png" alt="Logo" onclick="scrollToTop()" />
+    </div>
 
-<div id="auth-message">
-  🚧 To log your route, you need to
-  <a href="#" style="color: #0d6efd; font-weight: bold; text-decoration: none;">Sign in</a>
-  or
-  <a href="#" style="color: #0d6efd; font-weight: bold; text-decoration: none;">Create an account</a>.
-</div>
+    <!-- ✅ Then auth message -->
+    <div id="auth-message">
+      🚧 To log your route, you need to
+      <a
+        href="#"
+        style="color: #0d6efd; font-weight: bold; text-decoration: none"
+        >Sign in</a
+      >
+      or
+      <a
+        href="#"
+        style="color: #0d6efd; font-weight: bold; text-decoration: none"
+        >Create an account</a
+      >.
+    </div>
 
-<div id="offline-banner">
-  🛠️ Offline Mode: Showing cached routes.
-</div>
+    <!-- ✅ Then offline banner (matching auth message style) -->
+    <div
+      id="offline-banner"
+      style="
+        background-color: #fffae6;
+        color: #856404;
+        border: 1px solid #ffd700;
+        border-radius: 6px;
+        padding: 15px 20px;
+        text-align: center;
+        font-size: 16px;
+        max-width: 600px;
+        margin: 80 auto 20px auto;
+        position: relative;
+        z-index: 500;
+        display: none;
+      "
+    >
+      🛜 Offline Mode: Showing cached routes.
+    </div>
 
-<div id="top-bar">
-  <img id="logo-image" src="/logo.png" alt="Logo" onclick="scrollToTop()" />
-</div>
+    <!-- Main content -->
+    <div id="log-container">
+      <h2>Saved Trips</h2>
+      <ul id="log-list"></ul>
+    </div>
 
-<div id="log-container">
-  <h2>Saved Trips</h2>
-  <ul id="log-list"></ul>
-</div>
+    <script>
+      function scrollToTop() {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
 
-<script>
-function scrollToTop() {
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
+      function loadOfflineLogs() {
+        const logList = document.getElementById("log-list");
+        const cachedLogs = JSON.parse(
+          localStorage.getItem("cachedLogs") || "[]"
+        );
 
-function loadOfflineLogs() {
-  const logList = document.getElementById("log-list");
-  const cachedLogs = JSON.parse(localStorage.getItem("cachedLogs") || "[]");
+        if (cachedLogs.length === 0) {
+          logList.innerHTML = "<li>No saved trips available.</li>";
+          return;
+        }
 
-  if (cachedLogs.length === 0) {
-    logList.innerHTML = '<li>No saved trips available.</li>';
-    return;
-  }
+        cachedLogs.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  cachedLogs.sort((a, b) => new Date(b.date) - new Date(a.date));
+        cachedLogs.forEach((entry) => {
+          const destinations = Array.isArray(entry.destinations)
+            ? entry.destinations.map((dest) => `- ${dest}`).join("<br>")
+            : "";
 
-  cachedLogs.forEach(entry => {
-    const destinations = Array.isArray(entry.destinations)
-      ? entry.destinations.map(dest => `- ${dest}`).join("<br>")
-      : "";
-
-    const li = document.createElement("li");
-    li.innerHTML = `
+          const li = document.createElement("li");
+          li.innerHTML = `
       <strong>Date:</strong> ${entry.date}<br>
       <strong>Start Address:</strong> ${entry.startTime}<br>
       <strong>Destinations:</strong><br>${destinations}<br>
       <strong>End Address:</strong> ${entry.endTime}<br>
-      <strong>Net Profit:</strong> $${parseFloat(entry.netProfit || 0).toFixed(2)}
+      <strong>Net Profit:</strong> $${parseFloat(entry.netProfit || 0).toFixed(
+        2
+      )}
     `;
-    logList.appendChild(li);
-  });
-}
+          logList.appendChild(li);
+        });
+      }
 
-function updateOfflineBanner() {
-  const banner = document.getElementById("offline-banner");
-  if (navigator.onLine) {
-    banner.style.display = "none";
-  } else {
-    banner.style.display = "block";
-  }
-}
+      function updateOfflineBanner() {
+        const banner = document.getElementById("offline-banner");
+        if (navigator.onLine) {
+          banner.style.display = "none";
+        } else {
+          banner.style.display = "block";
+        }
+      }
 
-window.addEventListener("online", updateOfflineBanner);
-window.addEventListener("offline", updateOfflineBanner);
+      window.addEventListener("online", updateOfflineBanner);
+      window.addEventListener("offline", updateOfflineBanner);
 
-document.addEventListener("DOMContentLoaded", () => {
-  loadOfflineLogs();
-  updateOfflineBanner();
-});
+      document.addEventListener("DOMContentLoaded", () => {
+        loadOfflineLogs();
+        updateOfflineBanner();
+      });
 
-window.addEventListener('scroll', function() {
-  const topBar = document.getElementById('top-bar');
-  if (window.scrollY > 10) {
-    topBar.style.boxShadow = '0 2px 6px rgba(0,0,0,0.1)';
-  } else {
-    topBar.style.boxShadow = 'none';
-  }
-});
-</script>
-
-</body>
+      window.addEventListener("scroll", function () {
+        const topBar = document.getElementById("top-bar");
+        if (window.scrollY > 10) {
+          topBar.style.boxShadow = "0 2px 6px rgba(0,0,0,0.1)";
+        } else {
+          topBar.style.boxShadow = "none";
+        }
+      });
+    </script>
+  </body>
 </html>
