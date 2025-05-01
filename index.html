@@ -1383,7 +1383,17 @@ if (dateInput) {
   document.getElementById("total-hours").textContent = totalHours;
 });
 
+  // 🆕 After selecting start time, auto-focus end time after slight delay
+  document.getElementById("start-time").addEventListener("change", () => {
+    setTimeout(() => document.getElementById("end-time")?.focus(), 200);
+  });
+
 });
+
+  // 🆕 After selecting start time, auto-focus end time after slight delay
+  document.getElementById("start-time").addEventListener("change", () => {
+    setTimeout(() => document.getElementById("end-time")?.focus(), 200);
+  });
 
 
 
@@ -2131,7 +2141,10 @@ document.getElementById("total-hours").textContent = `${totalH} hours ${totalM} 
   <div class="log-actions">
     <button onclick="toggleLogEntryDetails(${realIndex})" id="toggle-button-${realIndex}">More Details</button>
     <button class="edit-btn" onclick="openEditForm(${realIndex})">Edit</button>
+    <button onclick="openLogEntryInGoogleMaps(${realIndex})">Map</button>
+
     <button onclick="deleteLogEntry(${realIndex})">Delete</button>
+    
   </div>
 `;
 
@@ -2636,9 +2649,6 @@ entry.hoursWorked = hwRaw.includes("hour") ? parseHoursAndMinutes(hwRaw) : parse
       : "0.00";
 
   await saveLog(); // ✅ Wait for save
-
-  // ✅ Force reloading the cached logs freshly
-  logEntries = await loadLog(); // <-- SUPER IMPORTANT! Fetch fresh logs
   filterLogs();
 
   closeEditForm(); // ✅ THEN close the edit screen
@@ -2749,7 +2759,8 @@ entry.hoursWorked = hwRaw.includes("hour") ? parseHoursAndMinutes(hwRaw) : parse
         pdf.save("profit_log.pdf");
       }
 
-      function importLog() {
+      async function importLog() {
+
         const token = localStorage.getItem("token");
 
         if (!token) {
@@ -2764,7 +2775,8 @@ entry.hoursWorked = hwRaw.includes("hour") ? parseHoursAndMinutes(hwRaw) : parse
         if (file) {
           const reader = new FileReader();
 
-          reader.onload = function (e) {
+          reader.onload = async function (e) {
+
             const csvData = e.target.result;
             const lines = csvData.split("\n").slice(1); // Skip the header row
             const newLogEntries = [];
@@ -2842,12 +2854,11 @@ entry.hoursWorked = hwRaw.includes("hour") ? parseHoursAndMinutes(hwRaw) : parse
             });
 
             logEntries = [...logEntries, ...newLogEntries];
-            saveLog();
-            filterLogs(); // ✅ refreshes the filtered log view
-
-          
-            alert("Log imported successfully!");
+await saveLog();        // ✅ Ensure logs are persisted
+filterLogs();           // ✅ Refresh the UI
+alert("Log imported successfully!");
           };
+          reader.readAsText(file); // trigger reading
 
           reader.onerror = function () {
             alert("Error reading the file.");
@@ -3395,17 +3406,6 @@ toggleButton.textContent = "More Details";
   }
 }
 
-function convertTimeToHours(durationStr) {
-  if (!durationStr) return 0;
-
-  const hourMatch = durationStr.match(/(\d+)\s*hour/);
-  const minuteMatch = durationStr.match(/(\d+)\s*minute/);
-
-  let hours = hourMatch ? parseInt(hourMatch[1]) : 0;
-  let minutes = minuteMatch ? parseInt(minuteMatch[1]) : 0;
-
-  return hours + minutes / 60;
-}
 
 function calculateTotalHours(entry) {
   const driveTime = convertTimeToHours(entry.totalTime || "");
@@ -3665,6 +3665,19 @@ function clearFilters() {
 
     <script>
 
+// 🧮 Time Helpers
+function convertTimeToHours(durationStr) {
+  if (!durationStr) return 0;
+
+  const hourMatch = durationStr.match(/(\d+)\s*hour/);
+  const minuteMatch = durationStr.match(/(\d+)\s*minute/);
+
+  const hours = hourMatch ? parseInt(hourMatch[1]) : 0;
+  const minutes = minuteMatch ? parseInt(minuteMatch[1]) : 0;
+
+  return hours + minutes / 60;
+}
+
 function formatHoursAndMinutes(decimal) {
   if (isNaN(decimal)) return "0 minutes";
 
@@ -3678,17 +3691,13 @@ function formatHoursAndMinutes(decimal) {
   }
 
   if (hours > 0 && minutes > 0) {
-    return `${hours} hour${hours !== 1 ? 's' : ''} ${minutes} minute${minutes !== 1 ? 's' : ''}`;
+    return `${hours} hour${hours !== 1 ? "s" : ""} ${minutes} minute${minutes !== 1 ? "s" : ""}`;
   } else if (hours > 0) {
-    return `${hours} hour${hours !== 1 ? 's' : ''}`;
+    return `${hours} hour${hours !== 1 ? "s" : ""}`;
   } else {
-    return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
+    return `${minutes} minute${minutes !== 1 ? "s" : ""}`;
   }
 }
-
-
-
-
 
 function parseHoursAndMinutes(str) {
   const match = str.match(/(\d+)\s*hour.*?(\d+)\s*minute/i);
@@ -3697,6 +3706,7 @@ function parseHoursAndMinutes(str) {
   const minutes = parseInt(match[2]) || 0;
   return hours + minutes / 60;
 }
+
 
 
       if ("serviceWorker" in navigator) {
