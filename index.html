@@ -38,7 +38,21 @@
 
     <style>
 
-      
+#install-button {
+  display: none;
+  padding: 10px 16px;
+  margin: 20px auto;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  max-width: 300px;
+  width: auto;
+  display: block;
+}
+
 
 @media (max-width: 600px) {
   #top-bar {
@@ -979,21 +993,10 @@ transition: opacity 0.3s ease;
     
     </div> <!-- end of #log-container -->
 
-    <!-- 🆕 Hidden Install Button -->
-<button id="install-button" style="
-display: none;
-padding: 10px 20px;
-margin: 20px auto;
-background-color: #007bff;
-color: white;
-border: none;
-border-radius: 6px;
-cursor: pointer;
-display: block;
-font-size: 16px;
-">
-Install App
-</button>
+<!-- 🆗 Android/Chrome will show this button; iOS won't -->
+<button id="install-button">Install App</button>
+
+
     
       
 
@@ -1123,6 +1126,66 @@ const logsPerPage = 10;
     endDateInput.showPicker?.(); // works in most modern browsers
   }
 }
+
+function isIos() {
+  return /iphone|ipad|ipod/i.test(navigator.userAgent);
+}
+
+function isInStandaloneMode() {
+  return ('standalone' in window.navigator) && window.navigator.standalone;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const installBtn = document.getElementById('install-button');
+
+  if (isIos()) {
+    // ❌ Hide the install button on iOS
+    if (installBtn) installBtn.style.display = 'none';
+
+    // ✅ Only show iOS prompt if not installed
+    if (!isInStandaloneMode()) {
+      const prompt = document.createElement('div');
+      prompt.id = 'ios-install-prompt'; // ✅ Needed for auto-hide
+      prompt.innerHTML = `
+        <div style="
+          background-color: #fffae6;
+          color: #333;
+          padding: 15px;
+          text-align: center;
+          font-size: 16px;
+          border: 1px solid #ffd700;
+          border-radius: 6px;
+          margin: 20px auto 0 auto;
+          max-width: 600px;
+        ">
+          📱 To install this app on your iPhone, tap the
+          <strong>Share</strong> button
+          <br>then choose <strong>Add to Home Screen</strong>.
+        </div>
+      `;
+
+      // ⬇️ Insert below the log container
+      const manageLog = document.getElementById('manage-log-container');
+      if (manageLog) {
+        manageLog.insertAdjacentElement('afterend', prompt);
+      } else {
+        document.body.appendChild(prompt);
+      }
+
+      // ⏱️ Auto-hide if user installs manually while the app is open
+      const checkInterval = setInterval(() => {
+        if (isInStandaloneMode()) {
+          const iosPrompt = document.getElementById('ios-install-prompt');
+          if (iosPrompt) iosPrompt.remove();
+          clearInterval(checkInterval);
+        }
+      }, 2000); // every 2 seconds
+    }
+  }
+});
+
+
+
 
     </script>
 
