@@ -155,6 +155,12 @@
     </div>
 
     <script>
+      function initOfflineListeners() {
+        updateOfflineBanner();
+        window.addEventListener("online", updateOfflineBanner);
+        window.addEventListener("offline", updateOfflineBanner);
+      }
+
       function scrollToTop() {
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
@@ -200,12 +206,9 @@
         }
       }
 
-      window.addEventListener("online", updateOfflineBanner);
-      window.addEventListener("offline", updateOfflineBanner);
-
       document.addEventListener("DOMContentLoaded", () => {
         loadOfflineLogs();
-        updateOfflineBanner();
+        initOfflineListeners(); // ✅ new centralized call
       });
 
       window.addEventListener("scroll", function () {
