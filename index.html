@@ -8,7 +8,7 @@
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
     <title>
-      Route and Cost Calculator with Log - Plan, Optimize, and Track Your Trips
+    Go Route Yourself - Route and Cost Calculator with Log - Plan, Optimize, and Track Your Trips
     </title>
 
     <meta
@@ -33,7 +33,8 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Route Calculator" />
     <meta name="theme-color" content="#ffffff" />
-    <!-- pick your site background color -->
+    <link rel="manifest" href="/manifest.json" />
+
 
     <style>
 
@@ -41,13 +42,16 @@
 
 @media (max-width: 600px) {
   #top-bar {
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1); /* 🆕 soft shadow */
-    background: white; /* ✅ ensures shadow shows cleanly */
-    padding: 5px 10px;  /* slight padding around top bar */
-    border-radius: 8px; /* optional: slightly round corners */
-    margin-top: 5px;
-    margin-bottom: 10px;
+    position: sticky;              /* ✅ preserve sticky on mobile */
+    top: 0;
+    z-index: 999;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    background: white;
+    padding: 10px;
     gap: 8px;
+    margin: 0 auto;
+    border-radius: 0;              /* ✅ matches desktop now */
+    max-width: 100%;
   }
 
   #hamburger-button {
@@ -65,6 +69,23 @@
   }
 }
 
+#top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 999;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 25px 0;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  border-radius: 0;
+  transition: box-shadow 0.3s;
+}
+
+
 
 @media (max-width: 600px) {
   #hamburger-button {
@@ -75,12 +96,6 @@
   #username-display {
     font-size: 14px;         /* slightly smaller username text */
     padding: 4px 8px;        /* less vertical padding */
-  }
-
-  #top-bar {
-    margin-top: 5px;
-    margin-bottom: 10px;
-    gap: 8px;
   }
 
   #logo-image {
@@ -963,6 +978,22 @@ transition: opacity 0.3s ease;
       </ul>
     
     </div> <!-- end of #log-container -->
+
+    <!-- 🆕 Hidden Install Button -->
+<button id="install-button" style="
+display: none;
+padding: 10px 20px;
+margin: 20px auto;
+background-color: #007bff;
+color: white;
+border: none;
+border-radius: 6px;
+cursor: pointer;
+display: block;
+font-size: 16px;
+">
+Install App
+</button>
     
       
 
@@ -971,6 +1002,7 @@ transition: opacity 0.3s ease;
 
       <ul id="log-list"></ul>
     </div>
+    
 
     <!-- Then AFTER log-container ends, manage-log-container starts -->
     <div
@@ -984,7 +1016,6 @@ transition: opacity 0.3s ease;
         Manage Log ▼
       </button>
       <div
-        <div
         id="manage-log-menu"
         style="
           display: none;
@@ -1362,6 +1393,8 @@ if (dateInput) {
 
   logEntries = await loadLog();
   displayLog();
+  initOfflineListeners();
+
 
 
   const script = document.createElement("script");
@@ -1371,10 +1404,6 @@ if (dateInput) {
   script.setAttribute("loading", "async");
   document.head.appendChild(script);
 
-  // Also setup offline banner updates
-  updateOfflineBanner();
-  window.addEventListener("online", updateOfflineBanner);
-  window.addEventListener("offline", updateOfflineBanner);
 
   document.getElementById("hours-worked").addEventListener("input", () => {
   const hoursWorked = parseFloat(document.getElementById("hours-worked").value) || 0;
@@ -1429,13 +1458,9 @@ async function syncAndReloadLogs() {
 }
 
 
-// Listen to online/offline events
-window.addEventListener("online", updateOfflineBanner);
-window.addEventListener("offline", updateOfflineBanner);
 
 // Call once on page load too
 document.addEventListener("DOMContentLoaded", () => {
-  updateOfflineBanner();
 });
 
       function showConfirmationMessage(message) {
@@ -2572,6 +2597,12 @@ document.getElementById("total-hours").textContent = `${totalH} hours ${totalM} 
         }, 0);
       }
 
+      function getNumberValue(id) {
+  const el = document.getElementById(id);
+  return el ? parseFloat(el.value) || 0 : 0;
+}
+
+
       async function saveEditedLogEntry() {
   if (editingIndex === -1) {
     console.warn("No entry selected for editing.");
@@ -2609,16 +2640,13 @@ document.getElementById("total-hours").textContent = `${totalH} hours ${totalM} 
     .reduce((sum, val) => sum + val, 0)
     .toFixed(2);
 
-  entry.fuelCost = parseFloat(document.getElementById("edit-fuel-cost").value);
-  entry.maintenanceCost = parseFloat(document.getElementById("edit-maintenance-cost").value);
-  entry.suppliesCost = parseFloat(document.getElementById("edit-supplies-cost").value);
-  entry.totalMileage = parseFloat(document.getElementById("edit-total-mileage").value);
-  entry.totalTime = document.getElementById("edit-total-time").value;
-  const hwRaw = document.getElementById("edit-hours-worked").value.trim();
-entry.hoursWorked = hwRaw.includes("hour") ? parseHoursAndMinutes(hwRaw) : parseFloat(hwRaw) || 0;
+    entry.fuelCost = getNumberValue("edit-fuel-cost");
+entry.maintenanceCost = getNumberValue("edit-maintenance-cost");
+entry.suppliesCost = getNumberValue("edit-supplies-cost");
+entry.totalMileage = getNumberValue("edit-total-mileage");
+entry.mpg = getNumberValue("edit-mpg");
+entry.gasPrice = getNumberValue("edit-gas-price");
 
-  entry.mpg = parseFloat(document.getElementById("edit-mpg").value);
-  entry.gasPrice = parseFloat(document.getElementById("edit-gas-price").value);
 
   const netProfitBeforeOptional = entry.totalEarnings - entry.fuelCost;
   entry.netProfit = (
@@ -3421,6 +3449,13 @@ function clearFilters() {
   filterLogs(); // ✅ Refresh the display
 }
 
+function initOfflineListeners() {
+  updateOfflineBanner(); // Set initial state
+  window.addEventListener("online", updateOfflineBanner);
+  window.addEventListener("offline", updateOfflineBanner);
+}
+
+
 
     </script>
 
@@ -3666,73 +3701,112 @@ function clearFilters() {
     <script>
 
 // 🧮 Time Helpers
-function convertTimeToHours(durationStr) {
-  if (!durationStr) return 0;
-
-  const hourMatch = durationStr.match(/(\d+)\s*hour/);
-  const minuteMatch = durationStr.match(/(\d+)\s*minute/);
-
-  const hours = hourMatch ? parseInt(hourMatch[1]) : 0;
-  const minutes = minuteMatch ? parseInt(minuteMatch[1]) : 0;
-
+function convertTimeToHours(durationStr = '') {
+  const hours = +(durationStr.match(/(\d+)\s*hour/)?.[1] || 0);
+  const minutes = +(durationStr.match(/(\d+)\s*minute/)?.[1] || 0);
   return hours + minutes / 60;
 }
 
-function formatHoursAndMinutes(decimal) {
-  if (isNaN(decimal)) return "0 minutes";
+
+function formatHoursAndMinutes(decimal = 0) {
+  if (isNaN(decimal) || decimal <= 0) return "0 minutes";
 
   let hours = Math.floor(decimal);
   let minutes = Math.round((decimal - hours) * 60);
 
-  // ✅ Round up if minutes == 60
-  if (minutes >= 60) {
+  if (minutes === 60) {
     hours += 1;
     minutes = 0;
   }
 
-  if (hours > 0 && minutes > 0) {
-    return `${hours} hour${hours !== 1 ? "s" : ""} ${minutes} minute${minutes !== 1 ? "s" : ""}`;
-  } else if (hours > 0) {
-    return `${hours} hour${hours !== 1 ? "s" : ""}`;
-  } else {
-    return `${minutes} minute${minutes !== 1 ? "s" : ""}`;
-  }
+  const hourPart = hours > 0 ? `${hours} hour${hours !== 1 ? "s" : ""}` : "";
+  const minutePart = minutes > 0 ? `${minutes} minute${minutes !== 1 ? "s" : ""}` : "";
+
+  return [hourPart, minutePart].filter(Boolean).join(" ");
 }
 
-function parseHoursAndMinutes(str) {
-  const match = str.match(/(\d+)\s*hour.*?(\d+)\s*minute/i);
-  if (!match) return 0;
-  const hours = parseInt(match[1]) || 0;
-  const minutes = parseInt(match[2]) || 0;
+
+function parseHoursAndMinutes(str = '') {
+  const hours = +(str.match(/(\d+)\s*hour/)?.[1] || 0);
+  const minutes = +(str.match(/(\d+)\s*minute/)?.[1] || 0);
   return hours + minutes / 60;
 }
 
 
 
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", function () {
-          navigator.serviceWorker.register("/service-worker.js").then(
-            function (registration) {
-              console.log(
-                "✅ Service Worker registered with scope:",
-                registration.scope
-              );
-            },
-            function (err) {
-              console.error("❌ Service Worker registration failed:", err);
-            }
-          );
-        });
-      }
+let deferredPrompt;
 
-      window.addEventListener('scroll', function() {
-  const topBar = document.getElementById('top-bar');
-  if (window.scrollY > 10) {
-    topBar.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.1)';
-  } else {
-    topBar.style.boxShadow = 'none';
+// ✅ Register the service worker
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("/service-worker.js").then(
+      function (registration) {
+        console.log(
+          "✅ Service Worker registered with scope:",
+          registration.scope
+        );
+      },
+      function (err) {
+        console.error("❌ Service Worker registration failed:", err);
+      }
+    );
+  });
+}
+
+// ✅ Show install button if eligible and not already installed
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+
+  // Only show if not already installed
+  if (!window.matchMedia("(display-mode: standalone)").matches) {
+    const btn = document.getElementById("install-button");
+    if (btn) btn.style.display = "inline-block";
   }
 });
+
+// ✅ Handle click on install button
+document.getElementById("install-button")?.addEventListener("click", () => {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then((choiceResult) => {
+      if (choiceResult.outcome === "accepted") {
+        console.log("✅ User accepted the install prompt");
+      } else {
+        console.log("❌ User dismissed the install prompt");
+      }
+      deferredPrompt = null;
+      document.getElementById("install-button").style.display = "none";
+    });
+  }
+});
+
+// ✅ Hide the install button if already installed (user is using PWA)
+window.addEventListener("DOMContentLoaded", () => {
+  const isStandalone =
+    window.matchMedia("(display-mode: standalone)").matches ||
+    window.navigator.standalone === true;
+
+  if (isStandalone) {
+    const btn = document.getElementById("install-button");
+    if (btn) btn.style.display = "none";
+  }
+});
+
+
+
+      let scrollTimeout;
+window.addEventListener('scroll', () => {
+  clearTimeout(scrollTimeout);
+  scrollTimeout = setTimeout(() => {
+    const topBar = document.getElementById('top-bar');
+    if (!topBar) return;
+    topBar.style.boxShadow = window.scrollY > 10
+      ? '0 2px 6px rgba(0,0,0,0.1)'
+      : 'none';
+  }, 50);
+});
+
     </script>
   </body>
 </html>
