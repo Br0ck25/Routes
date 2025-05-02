@@ -3,7 +3,6 @@
 const CACHE_NAME = "route-calculator-cache-v2";
 const urlsToCache = [
   "/",
-  "/index.html",
   "/offline.html",
   "/logo.png",
   "/logo-512.png",
