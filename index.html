@@ -1092,6 +1092,54 @@ transition: opacity 0.3s ease;
 
     <script>
 
+function clearTripForm() {
+  // Reset date to today
+  const today = new Date().toISOString().split("T")[0];
+  document.getElementById("log-date").value = today;
+
+  // ❌ Clear only optional fields
+  document.getElementById("start-time").value = "";
+  document.getElementById("end-time").value = "";
+  document.getElementById("hours-worked").value = "";
+  document.getElementById("maintenance-cost").value = "";
+  document.getElementById("supplies-cost").value = "";
+
+  // ✅ Keep start, end, mpg, and gas-price
+
+  // Reset destinations
+  const container = document.getElementById("destinations-container");
+  container.innerHTML = "";
+
+  // Add one fresh destination block
+  const div = document.createElement("div");
+  div.classList.add("destination");
+  div.innerHTML = `
+    <label for="destination-1">Destination 1</label>
+    <input type="text" id="destination-1" list="recent-destinations" placeholder="Enter destination address" required>
+    <label for="earnings-1">Earnings for Destination 1</label>
+    <input type="number" id="earnings-1" placeholder="Enter earnings for destination" required>
+    <div class="destination-actions">
+      <button class="delete-btn" onclick="deleteDestination(this)">Delete</button>
+      <button class="move-btn" onclick="moveDestinationUp(this)">Move Up</button>
+      <button class="move-btn" onclick="moveDestinationDown(this)">Move Down</button>
+    </div>
+  `;
+  container.appendChild(div);
+  initAutocompleteDestination(div.querySelector('input[type="text"]'));
+
+  // Hide results and reset UI
+  document.getElementById("results").classList.add("hidden");
+  document.getElementById("map").classList.add("hidden");
+  document.getElementById("detailed-results").innerHTML = "";
+  document.getElementById("mileage-display").textContent = "";
+  document.getElementById("optimized-mileage-display").textContent = "";
+}
+
+
+
+let disableAutoSave = false;
+
+
 
 function scrollToTop() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1486,25 +1534,54 @@ displayLog();
 }
 
 function saveDraftTrip() {
+  if (disableAutoSave) return;
+
+  const startTime = document.getElementById("start-time")?.value.trim();
+  const endTime = document.getElementById("end-time")?.value.trim();
+  const hoursWorked = document.getElementById("hours-worked")?.value.trim();
+  const maintenance = document.getElementById("maintenance-cost")?.value.trim();
+  const supplies = document.getElementById("supplies-cost")?.value.trim();
+
+  const destinations = Array.from(document.querySelectorAll('#destinations-container .destination'))
+    .map(div => ({
+      address: div.querySelector('input[id^="destination-"]')?.value.trim() || '',
+      earnings: div.querySelector('input[id^="earnings-"]')?.value.trim() || ''
+    }))
+    .filter(d => d.address || d.earnings);
+
+  const hasMeaningfulData =
+    destinations.length > 0 ||
+    startTime ||
+    endTime ||
+    hoursWorked ||
+    maintenance ||
+    supplies;
+
+  if (!hasMeaningfulData) {
+    localStorage.removeItem("draftTrip"); // 🚫 don't store empty form
+    return;
+  }
+
+  // Still include these in case the user wants them remembered
   const draft = {
     date: document.getElementById("log-date")?.value,
     start: document.getElementById("start-address")?.value,
     end: document.getElementById("end-address")?.value,
     mpg: document.getElementById("mpg")?.value,
     gas: document.getElementById("gas-price")?.value,
-    startTime: document.getElementById("start-time")?.value,
-    endTime: document.getElementById("end-time")?.value,
-    hoursWorked: document.getElementById("hours-worked")?.value,
-    maintenance: document.getElementById("maintenance-cost")?.value,
-    supplies: document.getElementById("supplies-cost")?.value,
-    destinations: Array.from(document.querySelectorAll('#destinations-container .destination')).map(div => ({
-      address: div.querySelector('input[id^="destination-"]')?.value || '',
-      earnings: div.querySelector('input[id^="earnings-"]')?.value || ''
-    }))
+    startTime,
+    endTime,
+    hoursWorked,
+    maintenance,
+    supplies,
+    destinations
   };
 
   localStorage.setItem("draftTrip", JSON.stringify(draft));
 }
+
+
+
 
 setInterval(saveDraftTrip, 5000); // Auto-save every 5 seconds
 
@@ -1513,58 +1590,81 @@ setInterval(saveDraftTrip, 5000); // Auto-save every 5 seconds
 document.addEventListener("DOMContentLoaded", async () => {
   const draft = localStorage.getItem("draftTrip");
 
-if (draft) {
-  const data = JSON.parse(draft);
+  if (draft) {
+  try {
+    const data = JSON.parse(draft);
 
-  const hasMeaningfulData =
-    data.destinations?.some(d => d.address || d.earnings) ||
-    data.startTime ||
-    data.endTime ||
-    data.hoursWorked ||
-    data.maintenance ||
-    data.supplies;
+    const destinations = Array.isArray(data.destinations)
+      ? data.destinations.filter(d => d.address || d.earnings)
+      : [];
 
-  if (hasMeaningfulData) {
-    const proceed = confirm("📝 Resume your last unsaved trip?");
-    if (proceed) {
-      document.getElementById("log-date").value = data.date || "";
-      document.getElementById("start-address").value = data.start || "";
-      document.getElementById("end-address").value = data.end || "";
-      document.getElementById("mpg").value = data.mpg || "";
-      document.getElementById("gas-price").value = data.gas || "";
-      document.getElementById("start-time").value = data.startTime || "";
-      document.getElementById("end-time").value = data.endTime || "";
-      document.getElementById("hours-worked").value = data.hoursWorked || "";
-      document.getElementById("maintenance-cost").value = data.maintenance || "";
-      document.getElementById("supplies-cost").value = data.supplies || "";
+    const hasMeaningfulData =
+      destinations.length > 0 ||
+      (data.startTime && data.startTime.trim()) ||
+      (data.endTime && data.endTime.trim()) ||
+      (data.hoursWorked && parseFloat(data.hoursWorked) > 0) ||
+      (data.maintenance && parseFloat(data.maintenance) > 0) ||
+      (data.supplies && parseFloat(data.supplies) > 0);
 
-      const container = document.getElementById("destinations-container");
-      container.innerHTML = "";
-
-      data.destinations.forEach((d, i) => {
-        const div = document.createElement("div");
-        div.classList.add("destination");
-        div.innerHTML = `
-          <label for="destination-${i + 1}">Destination ${i + 1}</label>
-          <input type="text" id="destination-${i + 1}" list="recent-destinations" value="${d.address || ""}">
-          <label for="earnings-${i + 1}">Earnings for Destination ${i + 1}</label>
-          <input type="number" id="earnings-${i + 1}" value="${d.earnings || ""}">
-          <div class="destination-actions">
-            <button class="delete-btn" onclick="deleteDestination(this)">Delete</button>
-            <button class="move-btn" onclick="moveDestinationUp(this)">Move Up</button>
-            <button class="move-btn" onclick="moveDestinationDown(this)">Move Down</button>
-          </div>
-        `;
-        container.appendChild(div);
-        initAutocompleteDestination(div.querySelector('input[type="text"]'));
-      });
-    } else {
+    if (!hasMeaningfulData) {
       localStorage.removeItem("draftTrip");
+      return; // ✅ Don't touch the DOM, silently skip
     }
-  } else {
+
+    const proceed = confirm("📝 Resume your last unsaved trip?");
+    if (!proceed) {
+  localStorage.removeItem("draftTrip");
+
+  // ✅ Reset date to today if user declines to restore
+  const today = new Date().toISOString().split("T")[0];
+  const dateInput = document.getElementById("log-date");
+  if (dateInput) {
+    dateInput.value = today;
+  }
+
+  return;
+}
+
+
+    // ✅ Now and only now, start restoring the form:
+    document.getElementById("log-date").value = data.date || "";
+    document.getElementById("start-address").value = data.start || "";
+    document.getElementById("end-address").value = data.end || "";
+    document.getElementById("mpg").value = data.mpg || "";
+    document.getElementById("gas-price").value = data.gas || "";
+    document.getElementById("start-time").value = data.startTime || "";
+    document.getElementById("end-time").value = data.endTime || "";
+    document.getElementById("hours-worked").value = data.hoursWorked || "";
+    document.getElementById("maintenance-cost").value = data.maintenance || "";
+    document.getElementById("supplies-cost").value = data.supplies || "";
+
+    const container = document.getElementById("destinations-container");
+    container.innerHTML = "";
+
+    destinations.forEach((d, i) => {
+      const div = document.createElement("div");
+      div.classList.add("destination");
+      div.innerHTML = `
+        <label for="destination-${i + 1}">Destination ${i + 1}</label>
+        <input type="text" id="destination-${i + 1}" list="recent-destinations" value="${d.address || ""}">
+        <label for="earnings-${i + 1}">Earnings for Destination ${i + 1}</label>
+        <input type="number" id="earnings-${i + 1}" value="${d.earnings || ""}">
+        <div class="destination-actions">
+          <button class="delete-btn" onclick="deleteDestination(this)">Delete</button>
+          <button class="move-btn" onclick="moveDestinationUp(this)">Move Up</button>
+          <button class="move-btn" onclick="moveDestinationDown(this)">Move Down</button>
+        </div>
+      `;
+      container.appendChild(div);
+      initAutocompleteDestination(div.querySelector('input[type="text"]'));
+    });
+  } catch (err) {
+    console.error("❌ Failed to parse draftTrip:", err);
     localStorage.removeItem("draftTrip");
   }
 }
+
+
 
 
 
@@ -2030,7 +2130,6 @@ document.getElementById("total-hours").textContent = `${totalH} hours ${totalM} 
         document.getElementById("mileage-display").textContent = "";
         document.getElementById("optimized-mileage-display").textContent = "";
       }
-
       async function logResults() {
   const token = localStorage.getItem("token");
   if (!token) {
@@ -2047,15 +2146,18 @@ document.getElementById("total-hours").textContent = `${totalH} hours ${totalM} 
     return;
   }
 
+  // ✅ Get calculation result
   const calculationResult = await calculateRouteData();
   if (calculationResult) {
     currentPage = 1;
     logEntry(calculationResult);
     displayLog();
     updateUI(calculationResult);
+    clearTripForm(); // ✅ Reset the form
     showConfirmationMessage("✅ Route logged successfully!");
   }
 }
+
 
 
       async function optimizeRoute() {
@@ -2287,17 +2389,24 @@ document.getElementById("total-hours").textContent = `${totalH} hours ${totalM} 
       }
 
       function logEntry(data) {
+  disableAutoSave = true; // ✅ stop the timer temporarily
+
   data.startClock = document.getElementById("start-time").value || "";
   data.endClock = document.getElementById("end-time").value || "";
-  
   data.mpg = parseFloat(document.getElementById("mpg").value) || 0;
   data.gasPrice = parseFloat(document.getElementById("gas-price").value) || 0;
-  
   data.lastModified = new Date().toISOString();
-logEntries.unshift(data);
-saveLog();
 
+  localStorage.removeItem("draftTrip"); // ✅ clear before save
+  logEntries.unshift(data);
+  saveLog();
+
+  setTimeout(() => {
+    disableAutoSave = false; // ✅ re-enable after logging finishes
+  }, 1000); // short delay to prevent race
 }
+
+
 
 
 
