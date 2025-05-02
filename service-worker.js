@@ -2,15 +2,18 @@
 
 const CACHE_NAME = "route-calculator-cache-v2";
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/offline.html',
-  '/logo.png',
-  '/logo-512.png'
+  "/",
+  "/index.html",
+  "/offline.html",
+  "/logo.png",
+  "/logo-512.png",
+  "/main.js",
+  "/styles.css",
 ];
 
-// Install: cache essential files
 self.addEventListener("install", (event) => {
+  self.skipWaiting(); // ✅ Activate new SW immediately
+
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       console.log("✅ Caching app shell");
@@ -19,8 +22,9 @@ self.addEventListener("install", (event) => {
   );
 });
 
-// Activate: remove old caches
 self.addEventListener("activate", (event) => {
+  self.clients.claim(); // ✅ Take control immediately
+
   event.waitUntil(
     caches.keys().then((cacheNames) =>
       Promise.all(
@@ -58,9 +62,9 @@ self.addEventListener("fetch", (event) => {
           return networkResponse;
         })
         .catch(() => {
-          if (event.request.destination === 'document') {
-            return caches.match('/offline.html');
-          }          
+          if (event.request.destination === "document") {
+            return caches.match("/offline.html");
+          }
         });
     })
   );
