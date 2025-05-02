@@ -1616,15 +1616,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!proceed) {
   localStorage.removeItem("draftTrip");
 
-  // ✅ Reset date to today if user declines to restore
-  const today = new Date().toISOString().split("T")[0];
+  // ✅ Reset date to today's local date
+  const today = new Date().toLocaleDateString("en-CA");
   const dateInput = document.getElementById("log-date");
   if (dateInput) {
     dateInput.value = today;
   }
 
+  // ✅ Re-run UI update for auth
+  updateAuthUI();
+
   return;
 }
+
 
 
     // ✅ Now and only now, start restoring the form:
