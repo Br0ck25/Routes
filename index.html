@@ -170,16 +170,47 @@ img {
   position: fixed;
   top: 0;
   left: -275px;
-  width: 250px;
+  width: 260px;
   height: 100%;
-  background-color: white;
-  box-shadow: 2px 0 5px rgba(0,0,0,0.5);
+  background: linear-gradient(to bottom, #ffffff, #f9f9f9);
+  box-shadow: 2px 0 8px rgba(0,0,0,0.2);
   z-index: 10000;
-  padding: 20px 10px;
+  padding-top: 10px;
   transition: left 0.3s ease;
   overflow-y: auto;
-  font-size: 16px; /* 🆕 Smaller text */
+  font-size: 16px;
 }
+
+#account-menu button {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  font-size: 15px;
+  border-radius: 6px;
+  margin: 8px 0;
+  cursor: pointer;
+  width: 100%;
+  max-width: 220px;
+  display: block;
+  text-align: center;
+  transition: background-color 0.2s;
+}
+
+#account-menu button:hover {
+  background-color: #45a049;
+}
+
+#account-menu button:last-child {
+  background-color: #dc3545;
+}
+
+#account-menu button:last-child:hover {
+  background-color: #c82333;
+}
+
+
+
 
 #account-menu.show {
   left: 0;
@@ -580,6 +611,37 @@ img {
 }
 
 
+  #account-menu button {
+    all: unset; /* ✅ Reset all inherited styles */
+    display: block;
+    width: 100%;
+    max-width: 220px;
+    padding: 10px 14px;
+    margin: 10px auto;
+    background-color: #4caf50;
+    color: white !important;
+    font-size: 15px;
+    text-align: center;
+    border-radius: 6px;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: background-color 0.2s ease;
+  }
+
+  #account-menu button:hover {
+    background-color: #45a049;
+  }
+
+  #account-menu button.danger {
+    background-color: #dc3545;
+  }
+
+  #account-menu button.danger:hover {
+    background-color: #c82333;
+  }
+
+
+
 
 
     </style>
@@ -688,104 +750,47 @@ img {
 
 
 
-<!-- 🔒 Only signed-in specific things -->
+<!-- ✅ FIX: Wrap in #logout-message -->
 <div id="logout-message" style="display: none; margin: 20px auto; max-width: 100%;">
   <div id="account-menu">
+    <!-- 🧭 Close Button -->
+    <div style="position: relative; width: 100%; height: 50px;">
+      <button onclick="closeMenu()" style="
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: none;
+        border: none;
+        font-size: 24px;
+        font-weight: bold;
+        color: black;
+        cursor: pointer;
+        line-height: 1;
+        transition: transform 0.2s;
+      " onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">
+        ✕
+      </button>
+    </div>
 
-    <!-- 🆕 Dark overlay -->
-<div id="menu-overlay" style="
-position: fixed;
-top: 0;
-left: 0;
-width: 100%;
-height: 100%;
-background: rgba(0, 0, 0, 0.4);
-z-index: 9999;
-display: none;
-opacity: 0;
-transition: opacity 0.3s ease;
-"></div>
+    <!-- 🖼 Logo -->
+    <div style="text-align: center; margin: 20px 0;">
+      <img src="/logo.png" alt="Logo" style="height: 40px;">
+    </div>
 
-<!-- ✅ FULL WIDTH X, tight to right -->
-<div style="
-  position: relative;
-  width: 100%;
-  height: 50px;
-">
-  <button onclick="closeMenu()" style="
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: none;
-    border: none;
-    font-size: 24px;
-    font-weight: bold;
-    color: black;
-    cursor: pointer;
-    line-height: 1;
-    transition: transform 0.2s;
-  " onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">
-    ✕
-  </button>
+    <!-- 📋 Menu Items -->
+    <div style="padding: 0 10px;">
+      <button onclick="closeMenu(); logout()">Log Out</button>
+      <button onclick="closeMenu(); showPasswordModal()">Change Password</button>
+      <button onclick="closeMenu(); showDeleteModal()">Delete Account</button>
+      
+    </div>
+  </div>
 </div>
 
 
 
 
-  
-    <!-- 🔻 Then your menu items -->
-    <button onclick="closeMenu(); logout()" style="width: 100%; padding: 10px; background: none; border: none; color: black; text-align: left;">Log Out</button>
-    <button onclick="closeMenu(); showPasswordModal()" style="width: 100%; padding: 10px; background: none; border: none; color: black; text-align: left;">Change Password</button>
-    <button onclick="closeMenu(); showDeleteModal()" style="width: 100%; padding: 10px; background: none; border: none; color: red; text-align: left;">Delete Account</button>
-  </div>
 
-
-
-
-
-        <div id="account-menu">
-          <button
-            onclick="closeMenu(); logout()"
-            style="
-              width: 100%;
-              padding: 10px;
-              background: none;
-              border: none;
-              color: black;
-              text-align: left;
-            "
-          >
-            Log Out
-          </button>
-          <button
-            onclick="closeMenu(); showPasswordModal()"
-            style="
-              width: 100%;
-              padding: 10px;
-              background: none;
-              border: none;
-              color: black;
-              text-align: left;
-            "
-          >
-            Change Password
-          </button>
-          <button
-            onclick="closeMenu(); showDeleteModal()"
-            style="
-              width: 100%;
-              padding: 10px;
-              background: none;
-              border: none;
-              color: red;
-              text-align: left;
-            "
-          >
-            Delete Account
-          </button>
-        </div>
-      </div>
-    </div>
 
     <div class="container" style="margin-top: 15px;">
 
