@@ -1512,45 +1512,61 @@ setInterval(saveDraftTrip, 5000); // Auto-save every 5 seconds
 
 document.addEventListener("DOMContentLoaded", async () => {
   const draft = localStorage.getItem("draftTrip");
+
 if (draft) {
-  const proceed = confirm("📝 Resume your last unsaved trip?");
-  if (proceed) {
-    const data = JSON.parse(draft);
-    document.getElementById("log-date").value = data.date || "";
-    document.getElementById("start-address").value = data.start || "";
-    document.getElementById("end-address").value = data.end || "";
-    document.getElementById("mpg").value = data.mpg || "";
-    document.getElementById("gas-price").value = data.gas || "";
-    document.getElementById("start-time").value = data.startTime || "";
-    document.getElementById("end-time").value = data.endTime || "";
-    document.getElementById("hours-worked").value = data.hoursWorked || "";
-    document.getElementById("maintenance-cost").value = data.maintenance || "";
-    document.getElementById("supplies-cost").value = data.supplies || "";
+  const data = JSON.parse(draft);
 
-    const container = document.getElementById("destinations-container");
-    container.innerHTML = "";
+  const hasMeaningfulData =
+    data.destinations?.some(d => d.address || d.earnings) ||
+    data.startTime ||
+    data.endTime ||
+    data.hoursWorked ||
+    data.maintenance ||
+    data.supplies;
 
-    data.destinations.forEach((d, i) => {
-      const div = document.createElement("div");
-      div.classList.add("destination");
-      div.innerHTML = `
-        <label for="destination-${i + 1}">Destination ${i + 1}</label>
-        <input type="text" id="destination-${i + 1}" list="recent-destinations" value="${d.address || ""}">
-        <label for="earnings-${i + 1}">Earnings for Destination ${i + 1}</label>
-        <input type="number" id="earnings-${i + 1}" value="${d.earnings || ""}">
-        <div class="destination-actions">
-          <button class="delete-btn" onclick="deleteDestination(this)">Delete</button>
-          <button class="move-btn" onclick="moveDestinationUp(this)">Move Up</button>
-          <button class="move-btn" onclick="moveDestinationDown(this)">Move Down</button>
-        </div>
-      `;
-      container.appendChild(div);
-      initAutocompleteDestination(div.querySelector('input[type="text"]'));
-    });
+  if (hasMeaningfulData) {
+    const proceed = confirm("📝 Resume your last unsaved trip?");
+    if (proceed) {
+      document.getElementById("log-date").value = data.date || "";
+      document.getElementById("start-address").value = data.start || "";
+      document.getElementById("end-address").value = data.end || "";
+      document.getElementById("mpg").value = data.mpg || "";
+      document.getElementById("gas-price").value = data.gas || "";
+      document.getElementById("start-time").value = data.startTime || "";
+      document.getElementById("end-time").value = data.endTime || "";
+      document.getElementById("hours-worked").value = data.hoursWorked || "";
+      document.getElementById("maintenance-cost").value = data.maintenance || "";
+      document.getElementById("supplies-cost").value = data.supplies || "";
+
+      const container = document.getElementById("destinations-container");
+      container.innerHTML = "";
+
+      data.destinations.forEach((d, i) => {
+        const div = document.createElement("div");
+        div.classList.add("destination");
+        div.innerHTML = `
+          <label for="destination-${i + 1}">Destination ${i + 1}</label>
+          <input type="text" id="destination-${i + 1}" list="recent-destinations" value="${d.address || ""}">
+          <label for="earnings-${i + 1}">Earnings for Destination ${i + 1}</label>
+          <input type="number" id="earnings-${i + 1}" value="${d.earnings || ""}">
+          <div class="destination-actions">
+            <button class="delete-btn" onclick="deleteDestination(this)">Delete</button>
+            <button class="move-btn" onclick="moveDestinationUp(this)">Move Up</button>
+            <button class="move-btn" onclick="moveDestinationDown(this)">Move Down</button>
+          </div>
+        `;
+        container.appendChild(div);
+        initAutocompleteDestination(div.querySelector('input[type="text"]'));
+      });
+    } else {
+      localStorage.removeItem("draftTrip");
+    }
   } else {
     localStorage.removeItem("draftTrip");
   }
 }
+
+
 
   // Set today's date
   const dateInput = document.getElementById("log-date");
