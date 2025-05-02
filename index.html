@@ -1590,6 +1590,7 @@ setInterval(saveDraftTrip, 5000); // Auto-save every 5 seconds
 
 document.addEventListener("DOMContentLoaded", async () => {
   const draft = localStorage.getItem("draftTrip");
+  updateAuthUI();
 
   if (draft) {
   try {
@@ -1622,9 +1623,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (dateInput) {
     dateInput.value = today;
   }
-
-  // ✅ Re-run UI update for auth
-  updateAuthUI();
 
   return;
 }
