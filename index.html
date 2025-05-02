@@ -1094,7 +1094,8 @@ transition: opacity 0.3s ease;
 
 function clearTripForm() {
   // Reset date to today
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toLocaleDateString("en-CA"); // format: YYYY-MM-DD in local time
+
   document.getElementById("log-date").value = today;
 
   // ❌ Clear only optional fields
