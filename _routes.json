@@ -1,5 +1,8 @@
 {
   "version": 1,
   "include": ["/*"],
-  "exclude": ["/assetlinks.json", "/privacy-policy.html"]
+  "exclude": [
+    "/.well-known/assetlinks.json",
+    "/privacy-policy.html"
+  ]
 }
