@@ -2672,25 +2672,27 @@ document.getElementById("total-hours").textContent = `${totalH} hours ${totalM} 
       }
 
       function moveEditDestinationUp(button) {
-        const destinationDiv = button.closest(".destination");
-        const prevDiv = destinationDiv.previousElementSibling;
-        if (prevDiv) {
-          destinationDiv.parentNode.insertBefore(destinationDiv, prevDiv);
-          resetOriginalMileageDisplay();
-          // Delay mileage recalculation until the user selects or finishes editing the address
-          addressInput.addEventListener("blur", recalculateEditMileageAndCosts);
+  const destinationDiv = button.closest(".destination");
+  const prevDiv = destinationDiv.previousElementSibling;
+  if (prevDiv) {
+    destinationDiv.parentNode.insertBefore(destinationDiv, prevDiv);
+    resetOriginalMileageDisplay();
 
-          // If using Google Autocomplete, also respond to a place selection
-          const autocomplete = new google.maps.places.Autocomplete(
-            addressInput,
-            { types: ["geocode"] }
-          );
-          autocomplete.addListener(
-            "place_changed",
-            recalculateEditMileageAndCosts
-          );
-        }
-      }
+    const addressInput = destinationDiv.querySelector('input[type="text"]');
+    if (!addressInput) {
+      console.warn("No address input found in destinationDiv");
+      return;
+    }
+
+    addressInput.addEventListener("blur", recalculateEditMileageAndCosts);
+
+    const autocomplete = new google.maps.places.Autocomplete(addressInput, {
+      types: ["geocode"],
+    });
+    autocomplete.addListener("place_changed", recalculateEditMileageAndCosts);
+  }
+}
+
 
       function moveEditDestinationDown(button) {
         const destinationDiv = button.closest(".destination");
