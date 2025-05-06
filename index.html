@@ -1629,6 +1629,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     dateInput.value = today;
   }
 
+  logEntries = JSON.parse(localStorage.getItem("cachedLogs") || "[]");
+  displayLog();
   return;
 }
 
