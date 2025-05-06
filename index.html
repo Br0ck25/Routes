@@ -1161,6 +1161,8 @@ let editingIndex = -1;
 let originalMileage = null;
 let logEntries = [];
 let currentPage = 1;
+let skipNextSync = false;
+
 const logsPerPage = 10;
 
 function getRecentDestinations() {
@@ -1523,14 +1525,18 @@ function updateOfflineBanner() {
 }
 
 async function syncAndReloadLogs() {
+  if (skipNextSync) {
+    console.log("⏭ Skipping sync due to Cancel selection");
+    skipNextSync = false; // reset it after skipping once
+    return;
+  }
+
   try {
     console.log("🔄 Online detected: syncing and reloading logs...");
 
     await syncPendingLogs();
-logEntries = await loadLog();
-displayLog();
-
-
+    logEntries = await loadLog();
+    displayLog();
 
     console.log("✅ Logs refreshed after reconnecting!");
     showConfirmationMessage("✅ Logs refreshed after reconnecting!");
@@ -1538,6 +1544,7 @@ displayLog();
     console.error("❌ Error refreshing logs:", error);
   }
 }
+
 
 function saveDraftTrip() {
   if (disableAutoSave) return;
@@ -1617,25 +1624,27 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
       const proceed = confirm("📝 Resume your last unsaved trip?");
-      if (!proceed) {
-        localStorage.removeItem("draftTrip");
+if (!proceed) {
+  localStorage.removeItem("draftTrip");
 
-        const today = new Date().toLocaleDateString("en-CA");
-        const dateInput = document.getElementById("log-date");
-        if (dateInput) dateInput.value = today;
+  const today = new Date().toLocaleDateString("en-CA");
+  const dateInput = document.getElementById("log-date");
+  if (dateInput) dateInput.value = today;
 
-        const cached = localStorage.getItem("cachedLogs");
-        if (cached) {
-          try {
-            logEntries = JSON.parse(cached);
-            displayLog();
-          } catch (e) {
-            console.error("❌ Failed to parse cachedLogs:", e);
-          }
-        }
+  const cached = localStorage.getItem("cachedLogs");
+  if (cached) {
+    try {
+      logEntries = JSON.parse(cached);
+      displayLog();
+    } catch (e) {
+      console.error("❌ Failed to parse cachedLogs:", e);
+    }
+  }
 
-        return;
-      }
+  skipNextSync = true; // ✅ prevent immediate server sync
+  return;
+}
+
 
       // ✅ Restore draft data
       document.getElementById("log-date").value = data.date || "";
