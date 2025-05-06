@@ -2573,14 +2573,19 @@ document.getElementById("total-hours").textContent = `${totalH} hours ${totalM} 
       }
 
       function organizeLogByDay() {
-        return logEntries.reduce((acc, entry) => {
-          if (!acc[entry.date]) {
-            acc[entry.date] = [];
-          }
-          acc[entry.date].push(entry);
-          return acc;
-        }, {});
-      }
+  const logByDay = {};
+
+  logEntries.forEach((entry) => {
+    if (!entry?.date) return;
+    if (!logByDay[entry.date]) {
+      logByDay[entry.date] = [];
+    }
+    logByDay[entry.date].push(entry);
+  });
+
+  return logByDay;
+}
+
 
 
 
