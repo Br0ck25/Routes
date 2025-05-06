@@ -2677,123 +2677,125 @@ document.getElementById("total-hours").textContent = `${totalH} hours ${totalM} 
   if (prevDiv) {
     destinationDiv.parentNode.insertBefore(destinationDiv, prevDiv);
     resetOriginalMileageDisplay();
-
-    const addressInput = destinationDiv.querySelector('input[type="text"]');
-    if (!addressInput) {
-      console.warn("No address input found in destinationDiv");
-      return;
-    }
-
-    addressInput.addEventListener("blur", recalculateEditMileageAndCosts);
-
-    const autocomplete = new google.maps.places.Autocomplete(addressInput, {
-      types: ["geocode"],
-    });
-    autocomplete.addListener("place_changed", recalculateEditMileageAndCosts);
+    reinitializeEditDestination(destinationDiv);
+    renumberEditDestinations();
   }
 }
 
 
-      function moveEditDestinationDown(button) {
-        const destinationDiv = button.closest(".destination");
-        const nextDiv = destinationDiv.nextElementSibling;
-        if (nextDiv) {
-          destinationDiv.parentNode.insertBefore(nextDiv, destinationDiv);
-          resetOriginalMileageDisplay();
-          recalculateEditMileageAndCosts();
-        }
+
+function moveEditDestinationDown(button) {
+  const destinationDiv = button.closest(".destination");
+  const nextDiv = destinationDiv.nextElementSibling;
+  if (nextDiv) {
+    destinationDiv.parentNode.insertBefore(nextDiv, destinationDiv);
+    resetOriginalMileageDisplay();
+    reinitializeEditDestination(destinationDiv);
+    renumberEditDestinations();
+  }
+}
+
+function reinitializeEditDestination(destinationDiv) {
+  const addressInput = destinationDiv.querySelector('input[type="text"]');
+  if (!addressInput) return;
+
+  // Avoid stacking duplicate listeners
+  addressInput.removeEventListener("blur", recalculateEditMileageAndCosts);
+  addressInput.addEventListener("blur", recalculateEditMileageAndCosts);
+
+  const autocomplete = new google.maps.places.Autocomplete(addressInput, {
+    types: ["geocode"],
+  });
+  autocomplete.addListener("place_changed", recalculateEditMileageAndCosts);
+
+  // 👇 Add Enter key listener
+  addressInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      const allDestInputs = document.querySelectorAll(
+        '#edit-destinations-container input[type="text"]'
+      );
+      if (addressInput === allDestInputs[allDestInputs.length - 1]) {
+        e.preventDefault(); // prevent form submit
+        addEditDestination(); // add a new destination
       }
+    }
+  });
+}
 
-      function addEditDestination() {
-        const container = document.getElementById(
-          "edit-destinations-container"
-        );
-        const newIndex = container.querySelectorAll(".destination").length + 1;
 
-        const destDiv = document.createElement("div");
-        destDiv.classList.add("destination");
-        destDiv.innerHTML = `
-        <label for="edit-destination-${newIndex}">Destination ${newIndex}</label>
-       <input type="text" id="edit-destination-${newIndex}" list="recent-destinations" placeholder="Enter destination address">
-        <label for="edit-earnings-${newIndex}">Earnings ${newIndex}</label>
-        <input type="number" id="edit-earnings-${newIndex}" placeholder="Enter earnings">
-        <div class="destination-actions">
-            <button type="button" class="delete-btn" onclick="deleteEditDestination(this)">Delete</button>
-            <button type="button" class="move-btn" onclick="moveEditDestinationUp(this)">Move Up</button>
-            <button type="button" class="move-btn" onclick="moveEditDestinationDown(this)">Move Down</button>
-        </div>
-    `;
+function renumberEditDestinations() {
+  const destinationDivs = document.querySelectorAll("#edit-destinations-container .destination");
 
-        container.appendChild(destDiv);
+  destinationDivs.forEach((div, index) => {
+    const destNum = index + 1;
+    const label = div.querySelector('label[for^="edit-destination-"]');
+    const earningsLabel = div.querySelector('label[for^="edit-earnings-"]');
+    const addressInput = div.querySelector('input[type="text"]');
+    const earningsInput = div.querySelector('input[type="number"]');
 
-        const addressInput = destDiv.querySelector(
-          `#edit-destination-${newIndex}`
-        );
-        const autocomplete = new google.maps.places.Autocomplete(addressInput, {
-          types: ["geocode"],
-        });
+    if (label) {
+      label.textContent = `Destination ${destNum}`;
+      label.setAttribute("for", `edit-destination-${destNum}`);
+    }
 
-        // ✅ Only trigger recalculation when a valid place is selected
-        autocomplete.addListener("place_changed", () => {
-          const place = autocomplete.getPlace();
-          if (place && place.geometry) {
-            recalculateEditMileageAndCosts();
-          } else {
-          }
-        });
+    if (earningsLabel) {
+      earningsLabel.textContent = `Earnings ${destNum}`;
+      earningsLabel.setAttribute("for", `edit-earnings-${destNum}`);
+    }
 
-        initAutocompleteDestination(addressInput); // optional, if used elsewhere
-        const earningsInput = destDiv.querySelector(
-          `#edit-earnings-${newIndex}`
-        );
-        earningsInput.addEventListener("change", updateEditTotalEarnings);
+    if (addressInput) {
+      addressInput.id = `edit-destination-${destNum}`;
+    }
 
-        resetOriginalMileageDisplay();
-      }
+    if (earningsInput) {
+      earningsInput.id = `edit-earnings-${destNum}`;
+    }
+  });
+}
+
+
+function addEditDestination() {
+  const container = document.getElementById("edit-destinations-container");
+
+  const destDiv = document.createElement("div");
+  destDiv.classList.add("destination");
+
+  destDiv.innerHTML = `
+    <label for="">Destination</label>
+    <input type="text" list="recent-destinations" placeholder="Enter destination address">
+
+    <label for="">Earnings</label>
+    <input type="number" placeholder="Enter earnings">
+
+    <div class="destination-actions">
+      <button type="button" class="delete-btn" onclick="deleteEditDestination(this)">Delete</button>
+      <button type="button" class="move-btn" onclick="moveEditDestinationUp(this)">Move Up</button>
+      <button type="button" class="move-btn" onclick="moveEditDestinationDown(this)">Move Down</button>
+    </div>
+  `;
+
+  container.appendChild(destDiv);
+
+  // Apply correct numbering and IDs
+  renumberEditDestinations();
+
+  // Reinitialize events and autocomplete on the new address input
+  reinitializeEditDestination(destDiv);
+}
+
 
       function deleteEditDestination(button) {
-        const destinationDiv = button.closest(".destination");
-        destinationDiv.remove();
+  const destinationDiv = button.closest(".destination");
+  if (destinationDiv) {
+    destinationDiv.remove();
+    renumberEditDestinations(); // 👈 Use shared function
+    updateEditTotalEarnings();  // 💰 Optional if you're tracking per stop
+    resetOriginalMileageDisplay();
+    recalculateEditMileageAndCosts();
+  }
+}
 
-        // Reindex the remaining destinations
-        const container = document.getElementById(
-          "edit-destinations-container"
-        );
-        const destinationDivs = container.querySelectorAll(".destination");
-        destinationDivs.forEach((div, index) => {
-          const newIndex = index + 1;
 
-          // Update labels and IDs for destination
-          const destLabel = div.querySelector(
-            'label[for^="edit-destination-"]'
-          );
-          const destInput = div.querySelector('input[id^="edit-destination-"]');
-          const earningsLabel = div.querySelector(
-            'label[for^="edit-earnings-"]'
-          );
-          const earningsInput = div.querySelector(
-            'input[id^="edit-earnings-"]'
-          );
-
-          if (destLabel)
-            destLabel.setAttribute("for", `edit-destination-${newIndex}`);
-          if (destInput) {
-            destInput.id = `edit-destination-${newIndex}`;
-            destInput.placeholder = `Enter destination address`;
-          }
-
-          if (earningsLabel)
-            earningsLabel.setAttribute("for", `edit-earnings-${newIndex}`);
-          if (earningsInput) {
-            earningsInput.id = `edit-earnings-${newIndex}`;
-            earningsInput.placeholder = `Enter earnings`;
-          }
-        });
-
-        updateEditTotalEarnings(); // Recalculate earnings after deletion
-        resetOriginalMileageDisplay();
-        recalculateEditMileageAndCosts(); // Recalculate mileage and costs
-      }
 
       function openEditForm(index) {
         editingIndex = index;
