@@ -1591,92 +1591,89 @@ function saveDraftTrip() {
 
 setInterval(saveDraftTrip, 5000); // Auto-save every 5 seconds
 
-
-
 document.addEventListener("DOMContentLoaded", async () => {
   const draft = localStorage.getItem("draftTrip");
   updateAuthUI();
 
   if (draft) {
-  try {
-    const data = JSON.parse(draft);
+    try {
+      const data = JSON.parse(draft);
 
-    const destinations = Array.isArray(data.destinations)
-      ? data.destinations.filter(d => d.address || d.earnings)
-      : [];
+      const destinations = Array.isArray(data.destinations)
+        ? data.destinations.filter(d => d.address || d.earnings)
+        : [];
 
-    const hasMeaningfulData =
-      destinations.length > 0 ||
-      (data.startTime && data.startTime.trim()) ||
-      (data.endTime && data.endTime.trim()) ||
-      (data.hoursWorked && parseFloat(data.hoursWorked) > 0) ||
-      (data.maintenance && parseFloat(data.maintenance) > 0) ||
-      (data.supplies && parseFloat(data.supplies) > 0);
+      const hasMeaningfulData =
+        destinations.length > 0 ||
+        (data.startTime && data.startTime.trim()) ||
+        (data.endTime && data.endTime.trim()) ||
+        (data.hoursWorked && parseFloat(data.hoursWorked) > 0) ||
+        (data.maintenance && parseFloat(data.maintenance) > 0) ||
+        (data.supplies && parseFloat(data.supplies) > 0);
 
-    if (!hasMeaningfulData) {
+      if (!hasMeaningfulData) {
+        localStorage.removeItem("draftTrip");
+        return;
+      }
+
+      const proceed = confirm("📝 Resume your last unsaved trip?");
+      if (!proceed) {
+        localStorage.removeItem("draftTrip");
+
+        const today = new Date().toLocaleDateString("en-CA");
+        const dateInput = document.getElementById("log-date");
+        if (dateInput) dateInput.value = today;
+
+        const cached = localStorage.getItem("cachedLogs");
+        if (cached) {
+          try {
+            logEntries = JSON.parse(cached);
+            displayLog();
+          } catch (e) {
+            console.error("❌ Failed to parse cachedLogs:", e);
+          }
+        }
+
+        return;
+      }
+
+      // ✅ Restore draft data
+      document.getElementById("log-date").value = data.date || "";
+      document.getElementById("start-address").value = data.start || "";
+      document.getElementById("end-address").value = data.end || "";
+      document.getElementById("mpg").value = data.mpg || "";
+      document.getElementById("gas-price").value = data.gas || "";
+      document.getElementById("start-time").value = data.startTime || "";
+      document.getElementById("end-time").value = data.endTime || "";
+      document.getElementById("hours-worked").value = data.hoursWorked || "";
+      document.getElementById("maintenance-cost").value = data.maintenance || "";
+      document.getElementById("supplies-cost").value = data.supplies || "";
+
+      const container = document.getElementById("destinations-container");
+      container.innerHTML = "";
+
+      destinations.forEach((d, i) => {
+        const div = document.createElement("div");
+        div.classList.add("destination");
+        div.innerHTML = `
+          <label for="destination-${i + 1}">Destination ${i + 1}</label>
+          <input type="text" id="destination-${i + 1}" list="recent-destinations" value="${d.address || ""}">
+          <label for="earnings-${i + 1}">Earnings for Destination ${i + 1}</label>
+          <input type="number" id="earnings-${i + 1}" value="${d.earnings || ""}">
+          <div class="destination-actions">
+            <button class="delete-btn" onclick="deleteDestination(this)">Delete</button>
+            <button class="move-btn" onclick="moveDestinationUp(this)">Move Up</button>
+            <button class="move-btn" onclick="moveDestinationDown(this)">Move Down</button>
+          </div>
+        `;
+        container.appendChild(div);
+        initAutocompleteDestination(div.querySelector('input[type="text"]'));
+      });
+    } catch (err) {
+      console.error("❌ Failed to parse draftTrip:", err);
       localStorage.removeItem("draftTrip");
-      return; // ✅ Don't touch the DOM, silently skip
     }
-
-    const proceed = confirm("📝 Resume your last unsaved trip?");
-    if (!proceed) {
-  localStorage.removeItem("draftTrip");
-
-  // ✅ Reset date to today's local date
-  const today = new Date().toLocaleDateString("en-CA");
-  const dateInput = document.getElementById("log-date");
-  if (dateInput) {
-    dateInput.value = today;
   }
-
-  logEntries = JSON.parse(localStorage.getItem("cachedLogs") || "[]");
-  displayLog();
-  return;
-}
-
-
-
-    // ✅ Now and only now, start restoring the form:
-    document.getElementById("log-date").value = data.date || "";
-    document.getElementById("start-address").value = data.start || "";
-    document.getElementById("end-address").value = data.end || "";
-    document.getElementById("mpg").value = data.mpg || "";
-    document.getElementById("gas-price").value = data.gas || "";
-    document.getElementById("start-time").value = data.startTime || "";
-    document.getElementById("end-time").value = data.endTime || "";
-    document.getElementById("hours-worked").value = data.hoursWorked || "";
-    document.getElementById("maintenance-cost").value = data.maintenance || "";
-    document.getElementById("supplies-cost").value = data.supplies || "";
-
-    const container = document.getElementById("destinations-container");
-    container.innerHTML = "";
-
-    destinations.forEach((d, i) => {
-      const div = document.createElement("div");
-      div.classList.add("destination");
-      div.innerHTML = `
-        <label for="destination-${i + 1}">Destination ${i + 1}</label>
-        <input type="text" id="destination-${i + 1}" list="recent-destinations" value="${d.address || ""}">
-        <label for="earnings-${i + 1}">Earnings for Destination ${i + 1}</label>
-        <input type="number" id="earnings-${i + 1}" value="${d.earnings || ""}">
-        <div class="destination-actions">
-          <button class="delete-btn" onclick="deleteDestination(this)">Delete</button>
-          <button class="move-btn" onclick="moveDestinationUp(this)">Move Up</button>
-          <button class="move-btn" onclick="moveDestinationDown(this)">Move Down</button>
-        </div>
-      `;
-      container.appendChild(div);
-      initAutocompleteDestination(div.querySelector('input[type="text"]'));
-    });
-  } catch (err) {
-    console.error("❌ Failed to parse draftTrip:", err);
-    localStorage.removeItem("draftTrip");
-  }
-}
-
-
-
-
 
   // Set today's date
   const dateInput = document.getElementById("log-date");
