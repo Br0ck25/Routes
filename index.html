@@ -1825,7 +1825,10 @@ if (dateInput) {
   const hoursWorked = parseFloat(document.getElementById("hours-worked").value) || 0;
   const driveTimeInHours = convertTimeToHours(document.getElementById("total-time").textContent);
 
-  const totalWorkedMinutes = Math.round(hoursWorked * 60 + driveTimeInHours * 60);
+  const workedMinutes = Math.round(hoursWorked * 60);
+const driveMinutes = Math.round(driveTimeInHours * 60);
+const totalWorkedMinutes = workedMinutes + driveMinutes;
+
   const totalHoursDecimal = totalWorkedMinutes / 60;
 
   document.getElementById("total-hours").textContent = formatHoursAndMinutes(totalHoursDecimal);
