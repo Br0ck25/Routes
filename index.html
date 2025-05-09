@@ -3612,42 +3612,49 @@ async function importLog() {
   );
 
   if (res.ok) {
-  // 1. Clear all auth and cached data
-  localStorage.removeItem("username");
-  localStorage.removeItem("token");
-  localStorage.removeItem("cachedLogs");
-  localStorage.removeItem("pendingLogs");
+    // 1. Clear all auth and cached data
+    localStorage.removeItem("username");
+    localStorage.removeItem("token");
+    localStorage.removeItem("cachedLogs");
+    localStorage.removeItem("pendingLogs");
 
-  // 2. Close the modal and reset password input
-  closeDeleteModal();
-  document.getElementById("delete-password").value = "";
+    // 2. Close the modal and reset password input
+    closeDeleteModal();
+    document.getElementById("delete-password").value = "";
 
-  // 3. Force UI update
-  updateAuthUI();
+    // 3. Clear in-memory logs
+    logEntries = [];
 
-  // 4. Immediately disable log buttons
-  document.querySelectorAll('button').forEach(btn => {
-    if (
-      btn.textContent.includes("Log Route") ||
-      btn.textContent.includes("Optimize") ||
-      btn.textContent.includes("Calculate")
-    ) {
-      btn.disabled = true;
-    }
-  });
+    // 4. Clear UI elements
+    document.getElementById("log-list").innerHTML = "";
+    document.getElementById("log-summary").innerHTML = "";
+    document.getElementById("log-container").style.display = "none";
 
-  // 5. Alert and reload
-  logEntries = []; // ✅ Clear in-memory logs
-showAlertModal("✅ Your account has been deleted.", () => {
-  location.reload();
-});
+    const manageLog = document.getElementById("manage-log-container");
+    if (manageLog) manageLog.style.display = "none";
 
+    // 5. Update auth UI and disable key buttons
+    updateAuthUI();
+    document.querySelectorAll('button').forEach(btn => {
+      if (
+        btn.textContent.includes("Log Route") ||
+        btn.textContent.includes("Optimize") ||
+        btn.textContent.includes("Calculate")
+      ) {
+        btn.disabled = true;
+      }
+    });
 
+    // 6. Alert and reload
+    showAlertModal("✅ Your account has been deleted.", () => {
+      location.reload();
+    });
   } else {
     const msg = await res.text();
     showAlertModal("❌ " + msg);
   }
 }
+
 
 
       window.toggleMenu = function () {
