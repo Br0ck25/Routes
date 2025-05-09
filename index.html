@@ -3637,9 +3637,10 @@ async function importLog() {
   });
 
   // 5. Alert and reload
-  showAlertModal("✅ Your account has been deleted.", () => {
-    location.reload();
-  });
+  logEntries = []; // ✅ Clear in-memory logs
+showAlertModal("✅ Your account has been deleted.", () => {
+  location.reload();
+});
 
 
   } else {
