@@ -3056,19 +3056,18 @@ if (earningsInput) {
 
         // ✅ Show Edit form
         if (editFormContainer && overlay) {
-          editFormContainer.style.display = "block";
-          overlay.style.display = "block";
-          const startTimeInput = document.getElementById("edit-start-time");
-          const endTimeInput = document.getElementById("edit-end-time");
+  editFormContainer.style.display = "block";
+  overlay.style.display = "block";
 
-          if (startTimeInput && endTimeInput) {
-            startTimeInput.addEventListener(
-              "change",
-              recalculateEditHoursWorked
-            );
-            endTimeInput.addEventListener("change", recalculateEditHoursWorked);
-          }
-        }
+  const startTimeInput = document.getElementById("edit-start-time");
+  const endTimeInput = document.getElementById("edit-end-time");
+
+  if (startTimeInput && endTimeInput) {
+    startTimeInput.addEventListener("input", recalculateEditHoursWorked);
+    endTimeInput.addEventListener("input", recalculateEditHoursWorked);
+  }
+}
+
 
         // ✅ Setup Autocomplete after a tiny delay
         setTimeout(() => {
@@ -3851,46 +3850,51 @@ function filterLogs() {
 
 `;
       }
-
       function recalculateEditHoursWorked() {
   const startTime = document.getElementById("edit-start-time")?.value;
   const endTime = document.getElementById("edit-end-time")?.value;
   const totalTimeStr = document.getElementById("edit-total-time")?.value;
   const hoursWorkedInput = document.getElementById("edit-hours-worked");
 
-  if (startTime && endTime && hoursWorkedInput) {
-    const [startHours, startMinutes] = startTime.split(":").map(Number);
-    const [endHours, endMinutes] = endTime.split(":").map(Number);
+  if (!hoursWorkedInput) return;
 
-    let start = startHours * 60 + startMinutes;
-    let end = endHours * 60 + endMinutes;
-
-    if (end < start) {
-      end += 24 * 60; // overnight shift
-    }
-
-    const totalWorkedMinutes = end - start; // total minutes logged
-    let driveMinutes = 0;
-
-    // Parse total drive time from edit-total-time input
-    if (totalTimeStr) {
-      const hoursMatch = totalTimeStr.match(/(\d+)\s*hour/);
-      const minutesMatch = totalTimeStr.match(/(\d+)\s*minute/);
-
-      if (hoursMatch) {
-        driveMinutes += parseInt(hoursMatch[1], 10) * 60;
-      }
-      if (minutesMatch) {
-        driveMinutes += parseInt(minutesMatch[1], 10);
-      }
-    }
-
-    const actualWorkedMinutes = Math.max(totalWorkedMinutes - driveMinutes, 0);
-    const actualWorkedHours = actualWorkedMinutes / 60;
-
-    hoursWorkedInput.value = actualWorkedHours.toFixed(2);
+  // 🔁 If either input is missing, clear and unlock the field
+  if (!startTime || !endTime) {
+    hoursWorkedInput.value = "";
+    hoursWorkedInput.readOnly = false;
+    hoursWorkedInput.style.backgroundColor = ""; // Restore default style
+    return;
   }
+
+  const [startHours, startMinutes] = startTime.split(":").map(Number);
+  const [endHours, endMinutes] = endTime.split(":").map(Number);
+
+  let start = startHours * 60 + startMinutes;
+  let end = endHours * 60 + endMinutes;
+
+  if (end < start) end += 24 * 60; // overnight shift
+
+  const totalWorkedMinutes = end - start;
+  let driveMinutes = 0;
+
+  // Parse total drive time
+  if (totalTimeStr) {
+    const hoursMatch = totalTimeStr.match(/(\d+)\s*hour/);
+    const minutesMatch = totalTimeStr.match(/(\d+)\s*minute/);
+    if (hoursMatch) driveMinutes += parseInt(hoursMatch[1], 10) * 60;
+    if (minutesMatch) driveMinutes += parseInt(minutesMatch[1], 10);
+  }
+
+  const actualWorkedMinutes = Math.max(totalWorkedMinutes - driveMinutes, 0);
+  const actualWorkedHours = actualWorkedMinutes / 60;
+
+  // ✅ Set and lock the field
+  hoursWorkedInput.value = actualWorkedHours.toFixed(2);
+  hoursWorkedInput.readOnly = true;
+  hoursWorkedInput.style.backgroundColor = "#f0f0f0"; // Light gray for visual feedback
 }
+
+
 
 
       function formatTimeToAmPm(timeStr) {
