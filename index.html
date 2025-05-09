@@ -664,6 +664,10 @@ img {
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script>
+      updateAuthUI(); // early trigger
+    </script>
+    
   </head>
   <body>
 
@@ -672,7 +676,7 @@ img {
 <div id="top-bar" style="
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   position: fixed;
   top: 0;
   left: 0;
@@ -688,16 +692,18 @@ img {
   transition: none;
 ">
 
- 
-  <button id="hamburger-button" onclick="toggleMenu()">☰</button>
+  <!-- Left: Hamburger -->
+  <div style="flex: 1; display: flex; justify-content: flex-start; padding-left: 10px;">
+    <button id="hamburger-button" onclick="toggleMenu()">☰</button>
+  </div>
 
+  <!-- Center: Logo -->
+  <div style="flex: 1; display: flex; justify-content: center;">
+    <img id="logo-image" src="/logo.png" alt="Logo" style="height: 50px; max-height: 70px; cursor: pointer;" onclick="scrollToTop()">
+  </div>
 
-
-  <!-- Centered Logo -->
-  <img id="logo-image" src="/logo.png" alt="Logo" style="height: 50px; max-height: 70px; cursor: pointer;" onclick="scrollToTop()">
-
-  <!-- Right Spacer (Username) -->
-  <div style="position: absolute; right: 22px; display: flex; align-items: center; height: 100%;">
+  <!-- Right: Username -->
+  <div style="flex: 1; display: flex; justify-content: flex-end; padding-right: 10px;">
     <span id="username-display" style="
       font-size: 16px;
       font-weight: bold;
@@ -708,10 +714,13 @@ img {
       transition: background-color 0.3s;
     "></span>
   </div>
+
 </div>
+
 
 <!-- Scrollable Auth Message (Sign In Banner) -->
 <div id="auth-message" style="
+  display: none;
   background-color: #fff3cd;
   color: #856404;
   border: 1px solid #ffeeba;
@@ -4249,6 +4258,7 @@ function updateAuthUI() {
 
 
 
+
 // 🧮 Time Helpers
 function convertTimeToHours(durationStr = '') {
   const hours = +(durationStr.match(/(\d+)\s*hour/)?.[1] || 0);
@@ -4383,3 +4393,4 @@ align-items: center;
 
   </body>
 </html>
+<img id="logo-image"
