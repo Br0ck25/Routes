@@ -43,6 +43,11 @@
 
     <style>
 
+      #hamburger-manage-log-menu button {
+  margin: 10px auto;
+}
+
+
 .date-filter input[type="date"] {
   min-width: 120px;
   width: 100%;
@@ -235,16 +240,6 @@ img {
   background-color: #45a049;
 }
 
-#account-menu button:last-child {
-  background-color: #dc3545;
-}
-
-#account-menu button:last-child:hover {
-  background-color: #c82333;
-}
-
-
-
 
 #account-menu.show {
   left: 0;
@@ -254,6 +249,14 @@ img {
   margin: 0;
   padding: 0;
   width: 100%;
+}
+
+#account-menu button.danger {
+  background-color: #dc3545;
+}
+
+#account-menu button.danger:hover {
+  background-color: #c82333;
 }
 
 
@@ -666,14 +669,6 @@ img {
     background-color: #45a049;
   }
 
-  #account-menu button.danger {
-    background-color: #dc3545;
-  }
-
-  #account-menu button.danger:hover {
-    background-color: #c82333;
-  }
-
   #hamburger-button {
   display: none; /* hidden by default */
   background: none;
@@ -806,6 +801,7 @@ img {
 <!-- ✅ FIX: Wrap in #logout-message -->
 <div id="logout-message" style="display: none; margin: 20px auto; max-width: 100%;">
   <div id="account-menu">
+  
     <!-- 🧭 Close Button -->
     <div style="position: relative; width: 100%; height: 50px;">
       <button onclick="closeMenu()" style="
@@ -831,14 +827,64 @@ img {
     </div>
 
     <!-- 📋 Menu Items -->
-    <div style="padding: 0 10px;">
-      <button onclick="closeMenu(); logout()">Log Out</button>
-      <button onclick="closeMenu(); showPasswordModal()">Change Password</button>
-      <button onclick="closeMenu(); showDeleteModal()">Delete Account</button>
-      
-    </div>
+
+      <!-- ✅ New Manage Account collapsible section -->
+<div style="margin-top: 10px;">
+  <button id="hamburger-manage-account-toggle" onclick="toggleHamburgerManageAccountMenu()">
+    Manage Account <span id="hamburger-manage-account-arrow" style="display: inline-block; transition: transform 0.3s;">▼</span>
+  </button>
+  <div id="hamburger-manage-account-menu" style="
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    margin-top: 5px;
+    text-align: center;
+    padding: 0 10px;
+  ">
+    <button onclick="closeMenu(); showPasswordModal()">Change Password</button>
+    <button onclick="closeMenu(); showDeleteModal()" class="danger">Delete Account</button>
   </div>
 </div>
+
+
+      <!-- ✅ NEW Manage Log button (collapsible) -->
+<!-- Manage Log Toggle -->
+<button id="hamburger-manage-toggle" onclick="toggleHamburgerManageLogMenu()">
+  Manage Log <span id="hamburger-manage-arrow" style="display: inline-block; transition: transform 0.3s;">▼</span>
+</button>
+
+
+
+<!-- Dropdown Menu -->
+<div id="hamburger-manage-log-menu" style="
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  margin-top: 5px;
+  text-align: center;
+  padding: 0 10px;
+">
+  <button onclick="triggerImportFile()">Import CSV</button>
+  <button onclick="exportToCSVWithTotals()">Export CSV</button>
+  <button onclick="exportToPDFWithTotals()">Export PDF</button>
+</div>
+
+    <div style="padding: 0 10px;">
+      <button onclick="closeMenu(); logout()">Log Out</button>
+
+      </div>
+    </div> <!-- 👈 closes menu items -->
+  </div> <!-- 👈 closes #account-menu -->
+</div> <!-- 👈 closes #logout-message -->
+
 
 
 
@@ -1071,87 +1117,6 @@ img {
       <ul id="log-list"></ul>
     </div>
     
-
-    <!-- Then AFTER log-container ends, manage-log-container starts -->
-    <div
-      id="manage-log-container"
-      style="text-align: center; margin-top: 20px; position: relative"
-    >
-      <button
-        onclick="toggleManageLogMenu()"
-        style="padding: 10px 15px; font-size: 16px"
-      >
-      Manage Log ▼
-    </button>
-    <div
-      id="manage-log-menu"
-      style="
-        display: none;
-        position: absolute;
-        top: 100%;
-        left: 50%;
-        transform: translateX(-50%);
-        background: white;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-        z-index: 9999;
-        min-width: 160px;
-        margin-top: 5px;
-        text-align: center;
-      "
-    >
-      <button
-        onclick="triggerImportFile()"
-        style="
-          width: auto;
-          min-width: 120px;
-          padding: 10px;
-          background: none;
-          border: none;
-          text-align: center;
-          color: black;
-          display: inline-block;
-          margin: 5px 0;
-        "
-      >
-        Import CSV
-      </button>
-      <button
-        onclick="exportToCSVWithTotals()"
-        style="
-          width: auto;
-          min-width: 120px;
-          padding: 10px;
-          background: none;
-          border: none;
-          text-align: center;
-          color: black;
-          display: inline-block;
-          margin: 5px 0;
-        "
-      >
-        Export CSV
-      </button>
-      <button
-        onclick="exportToPDFWithTotals()"
-        style="
-          width: auto;
-          min-width: 120px;
-          padding: 10px;
-          background: none;
-          border: none;
-          text-align: center;
-          color: black;
-          display: inline-block;
-          margin: 5px 0;
-        "
-      >
-        Export PDF
-      </button>
-    </div>
-    </div>
-    </div>
     
 
     <input
@@ -1190,6 +1155,7 @@ img {
     <button onclick="discardDraftTrip()" style="margin-top: 10px; background-color: #ccc; color: black;">Discard</button>
   </div>
 </div>
+
 
 
     <script>
@@ -1280,21 +1246,6 @@ function updateDatalistSuggestions() {
   datalist.innerHTML = recent.map(dest => `<option value="${dest}">`).join("");
 }
 
-
-      function toggleManageLogMenu() {
-        const menu = document.getElementById("manage-log-menu");
-        const body = document.body;
-
-        if (!menu) return;
-
-        if (menu.style.display === "none" || menu.style.display === "") {
-          menu.style.display = "block";
-          body.style.paddingBottom = "200px"; // 🆕 Add extra bottom space
-        } else {
-          menu.style.display = "none";
-          body.style.paddingBottom = "0"; // 🆕 Remove extra space
-        }
-      }
 
       function onStartDateChange() {
   filterLogs(); // existing filter logic
@@ -1482,6 +1433,40 @@ function closeUniversalModal() {
   modal.style.display = "none";
   window._universalCallback = null; // clean up
 }
+
+function toggleHamburgerManageLogMenu() {
+  const menu = document.getElementById("hamburger-manage-log-menu");
+  const arrow = document.getElementById("hamburger-manage-arrow");
+  if (!menu || !arrow) return;
+
+  const isOpen = menu.style.maxHeight && menu.style.maxHeight !== "0px";
+
+  if (isOpen) {
+    menu.style.maxHeight = "0";
+    arrow.style.transform = "rotate(0deg)";
+  } else {
+    menu.style.maxHeight = menu.scrollHeight + "px";
+    arrow.style.transform = "rotate(180deg)";
+  }
+}
+function toggleHamburgerManageAccountMenu() {
+  const menu = document.getElementById("hamburger-manage-account-menu");
+  const arrow = document.getElementById("hamburger-manage-account-arrow");
+  if (!menu || !arrow) return;
+
+  const isOpen = menu.style.maxHeight && menu.style.maxHeight !== "0px";
+
+  if (isOpen) {
+    menu.style.maxHeight = "0";
+    arrow.style.transform = "rotate(0deg)";
+  } else {
+    menu.style.maxHeight = menu.scrollHeight + "px";
+    arrow.style.transform = "rotate(180deg)";
+  }
+}
+
+
+
 
 
 
@@ -4272,6 +4257,34 @@ function formatHoursAndMinutesFromMinutes(totalMinutes) {
   const minuteText = m > 0 ? `${m} minute${m !== 1 ? "s" : ""}` : "";
   return [hourText, minuteText].filter(Boolean).join(" ");
 }
+
+document.addEventListener("click", function (event) {
+  const logMenu = document.getElementById("hamburger-manage-log-menu");
+  const logToggle = document.getElementById("hamburger-manage-toggle");
+
+  const accountMenu = document.getElementById("hamburger-manage-account-menu");
+  const accountToggle = document.getElementById("hamburger-manage-account-toggle");
+
+  // Ignore clicks on either toggle buttons
+  if (logToggle?.contains(event.target) || accountToggle?.contains(event.target)) return;
+
+  // Ignore clicks inside the menus
+  if (logMenu?.contains(event.target) || accountMenu?.contains(event.target)) return;
+
+  // Close both dropdowns
+  if (logMenu) {
+    logMenu.style.maxHeight = "0";
+    const arrow = document.getElementById("hamburger-manage-arrow");
+    if (arrow) arrow.style.transform = "rotate(0deg)";
+  }
+
+  if (accountMenu) {
+    accountMenu.style.maxHeight = "0";
+    const arrow = document.getElementById("hamburger-manage-account-arrow");
+    if (arrow) arrow.style.transform = "rotate(0deg)";
+  }
+});
+
 
 
 
