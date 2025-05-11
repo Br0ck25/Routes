@@ -4012,12 +4012,17 @@ function calculateTotals(logs) {
 
 function convertTimeToMinutes(timeStr) {
   if (!timeStr) return 0;
+
+  // Match "X hour(s)" and "Y minute(s)", ignore seconds entirely
   const hourMatch = timeStr.match(/(\d+)\s*hour/);
   const minMatch = timeStr.match(/(\d+)\s*minute/);
+
   const hours = hourMatch ? parseInt(hourMatch[1]) : 0;
   const minutes = minMatch ? parseInt(minMatch[1]) : 0;
+
   return hours * 60 + minutes;
 }
+
 
 function exportToCSVWithTotals() {
   const header =
@@ -4053,7 +4058,7 @@ function exportToCSVWithTotals() {
 
   // Totals
   let totalNetProfit = 0;
-  let totalMinutes = 0;
+  let totalDriveMinutes = 0;
   let totalEarnings = 0;
   let fuelCost = 0;
   let maintenance = 0;
@@ -4070,20 +4075,19 @@ function exportToCSVWithTotals() {
     mileage += parseFloat(entry.totalMileage) || 0;
     hoursWorked += parseFloat(entry.hoursWorked) || 0;
 
-    const worked = parseFloat(entry.hoursWorked) || 0;
-    const drive = convertTimeToHours(entry.totalTime || "");
-    totalMinutes += Math.round((worked + drive) * 60);
+    totalDriveMinutes += convertTimeToMinutes(entry.totalTime || "");
   });
 
-  const totalHoursDecimal = totalMinutes / 60;
+  const totalHoursDecimal = (hoursWorked * 60 + totalDriveMinutes) / 60;
   const profitPerHour = totalHoursDecimal > 0 ? totalNetProfit / totalHoursDecimal : 0;
 
+  const formattedDriveTime = `${Math.floor(totalDriveMinutes / 60)} hour${Math.floor(totalDriveMinutes / 60) !== 1 ? "s" : ""} ${totalDriveMinutes % 60} minutes`;
   const formattedTotalTime = `${Math.floor(totalHoursDecimal)} hour${Math.floor(totalHoursDecimal) !== 1 ? "s" : ""} ${Math.round((totalHoursDecimal % 1) * 60)} minutes`;
 
   const totalRow = [
     "Totals:", "", "", "", "", "", "",
     mileage.toFixed(2),
-    formattedTotalTime,
+    formattedDriveTime,  // 🆕 Drive Time only
     totalEarnings.toFixed(2),
     fuelCost.toFixed(2),
     maintenance.toFixed(2),
