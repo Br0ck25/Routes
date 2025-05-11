@@ -3,16 +3,17 @@
 const CACHE_NAME = "route-calculator-cache-v2.1";
 const urlsToCache = [
   "/",
+  "/index.html",
   "/offline.html",
   "/logo.png",
   "/logo-512.png",
   "/main.js",
-  "/styles.css",
+  "/styles.css"
 ];
 
+// ✅ Install: cache updated app shell
 self.addEventListener("install", (event) => {
-  self.skipWaiting(); // ✅ Activate new SW immediately
-
+  self.skipWaiting(); // Activate immediately
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       console.log("✅ Caching app shell");
@@ -21,8 +22,9 @@ self.addEventListener("install", (event) => {
   );
 });
 
+// ✅ Activate: delete old caches & force reload
 self.addEventListener("activate", (event) => {
-  self.clients.claim(); // ✅ Take control immediately
+  self.clients.claim(); // Take control immediately
 
   event.waitUntil(
     caches.keys().then((cacheNames) =>
@@ -34,10 +36,15 @@ self.addEventListener("activate", (event) => {
           }
         })
       )
+    ).then(() =>
+      self.clients.matchAll().then((clients) => {
+        clients.forEach((client) => client.navigate(client.url)); // 🔁 Refresh open tabs
+      })
     )
   );
 });
 
+// ✅ Fetch: serve cache-first, fallback to network
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
@@ -47,10 +54,8 @@ self.addEventListener("fetch", (event) => {
 
       return fetch(event.request)
         .then((networkResponse) => {
-          // Cache third-party files (e.g., CDN) dynamically if successful
           const cloned = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
-            // Only cache CDN/static files (optional: add whitelist logic)
             if (
               event.request.url.startsWith("https://cdnjs.cloudflare.com") ||
               event.request.url.startsWith(self.origin)
