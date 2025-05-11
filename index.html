@@ -3773,15 +3773,17 @@ function filterLogs() {
       let startMin = sh * 60 + sm;
       let endMin = eh * 60 + em;
       if (endMin < startMin) endMin += 24 * 60;
+
       totalMinutes += endMin - startMin;
     }
   });
 
-  const totalHoursDecimal = totalMinutes / 60;
+  const totalHoursDecimal = totalMinutes / 60; // unrounded for profit calculations
   const profitPerHour = totalHoursDecimal > 0 ? totalNetProfit / totalHoursDecimal : 0;
 
-  const formattedTime = formatHoursAndMinutesFromMinutes(totalMinutes);
-
+  const fullHours = Math.floor(totalHoursDecimal);
+  const fullMinutes = Math.round((totalHoursDecimal % 1) * 60);
+  const formattedTime = `${fullHours} hour${fullHours !== 1 ? "s" : ""}${fullMinutes > 0 ? ` ${fullMinutes} minute${fullMinutes !== 1 ? "s" : ""}` : ""}`;
 
   summaryDiv.innerHTML = `
     <div style="display: flex; flex-direction: column; align-items: center;">
@@ -3797,6 +3799,7 @@ function filterLogs() {
     </div>
   `;
 }
+
 
 
 function recalculateEditHoursWorked() {
@@ -4026,13 +4029,13 @@ function convertTimeToMinutes(timeStr) {
 
 function exportToCSVWithTotals() {
   const header =
-    "Date,Start Time,End Time,Start Address,Destinations,End Address,Earnings per Stop,Mileage,Drive Time,Total Earnings,Fuel Cost,Maintenance,Supplies,Hours Worked,Total Hours,Net Profit,Profit per Hour\n";
+    "Date,Start Time,End Time,Start Address,Destinations,End Address,Earnings per Stop,Mileage,Drive Time,Total Earnings,Fuel Cost,Maintenance,Supplies,Hours Worked,Total Hours,Net Profit,Profit Per Hour\n";
 
   const csvRows = logEntries.map((entry) => {
     const destinationsString = `"${(entry.destinations || []).join(";")}"`;
     const earningsString = `"${(entry.earnings || []).map(e => `$${parseFloat(e).toFixed(2)}`).join(";")}"`;
 
-    const driveMinutes = convertTimeToMinutes(entry.totalTime);
+    const driveMinutes = convertTimeToMinutes(entry.totalTime || "");
     const totalHours = (parseFloat(entry.hoursWorked || 0) + driveMinutes / 60).toFixed(2);
 
     return [
@@ -4064,7 +4067,8 @@ function exportToCSVWithTotals() {
   let maintenance = 0;
   let supplies = 0;
   let mileage = 0;
-  let hoursWorked = 0;
+  let totalSessionMinutes = 0;
+  let totalHoursWorked = 0;
 
   logEntries.forEach((entry) => {
     totalNetProfit += parseFloat(entry.netProfit) || 0;
@@ -4073,26 +4077,36 @@ function exportToCSVWithTotals() {
     maintenance += parseFloat(entry.maintenanceCost) || 0;
     supplies += parseFloat(entry.suppliesCost) || 0;
     mileage += parseFloat(entry.totalMileage) || 0;
-    hoursWorked += parseFloat(entry.hoursWorked) || 0;
+    totalHoursWorked += parseFloat(entry.hoursWorked) || 0;
 
     totalDriveMinutes += convertTimeToMinutes(entry.totalTime || "");
+
+    const start = entry.startClock || "";
+    const end = entry.endClock || "";
+    if (start && end && start.includes(":") && end.includes(":")) {
+      const [sh, sm] = start.split(":").map(Number);
+      const [eh, em] = end.split(":").map(Number);
+      let startMin = sh * 60 + sm;
+      let endMin = eh * 60 + em;
+      if (endMin < startMin) endMin += 24 * 60;
+      totalSessionMinutes += endMin - startMin;
+    }
   });
 
-  const totalHoursDecimal = (hoursWorked * 60 + totalDriveMinutes) / 60;
+  const totalHoursDecimal = totalSessionMinutes / 60;
   const profitPerHour = totalHoursDecimal > 0 ? totalNetProfit / totalHoursDecimal : 0;
 
   const formattedDriveTime = `${Math.floor(totalDriveMinutes / 60)} hour${Math.floor(totalDriveMinutes / 60) !== 1 ? "s" : ""} ${totalDriveMinutes % 60} minutes`;
-  const formattedTotalTime = `${Math.floor(totalHoursDecimal)} hour${Math.floor(totalHoursDecimal) !== 1 ? "s" : ""} ${Math.round((totalHoursDecimal % 1) * 60)} minutes`;
 
   const totalRow = [
     "Totals:", "", "", "", "", "", "",
     mileage.toFixed(2),
-    formattedDriveTime,  // 🆕 Drive Time only
+    formattedDriveTime,
     totalEarnings.toFixed(2),
     fuelCost.toFixed(2),
     maintenance.toFixed(2),
     supplies.toFixed(2),
-    hoursWorked.toFixed(2),
+    totalHoursWorked.toFixed(2),
     totalHoursDecimal.toFixed(2),
     totalNetProfit.toFixed(2),
     profitPerHour.toFixed(2)
@@ -4112,12 +4126,17 @@ function exportToCSVWithTotals() {
 
 
 
+
+
+
+
 function exportToPDFWithTotals() {
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({ orientation: "landscape" });
 
   const columns = [
-    "Date", "Start", "Destinations", "End", "Earnings", "Fuel", "Maintenance", "Supplies", "Net Profit", "Mileage", "Drive Time", "Earnings per Stop", "Profit per Hour"
+    "Date", "Start", "Destinations", "End", "Earnings", "Fuel", "Maintenance", "Supplies",
+    "Net Profit", "Mileage", "Drive Time", "Earnings per Stop", "Profit per Hour"
   ];
 
   const data = logEntries.map((entry) => [
@@ -4136,21 +4155,55 @@ function exportToPDFWithTotals() {
     `$${entry.profitPerHour || "0.00"}`
   ]);
 
-  const totals = calculateTotals(logEntries);
-  const totalDriveHours = totals.driveMinutes / 60;
-  const averageProfitPerHour = totals.count > 0 ? (totals.profitPerHourSum / totals.count).toFixed(2) : "0.00";
+  // Totals
+  let totalNetProfit = 0;
+  let totalDriveMinutes = 0;
+  let totalEarnings = 0;
+  let fuelCost = 0;
+  let maintenance = 0;
+  let supplies = 0;
+  let mileage = 0;
+  let totalSessionMinutes = 0;
+
+  logEntries.forEach((entry) => {
+    totalNetProfit += parseFloat(entry.netProfit) || 0;
+    totalEarnings += parseFloat(entry.totalEarnings) || 0;
+    fuelCost += parseFloat(entry.fuelCost) || 0;
+    maintenance += parseFloat(entry.maintenanceCost) || 0;
+    supplies += parseFloat(entry.suppliesCost) || 0;
+    mileage += parseFloat(entry.totalMileage) || 0;
+
+    totalDriveMinutes += convertTimeToMinutes(entry.totalTime || "");
+
+    const start = entry.startClock || "";
+    const end = entry.endClock || "";
+    if (start && end && start.includes(":") && end.includes(":")) {
+      const [sh, sm] = start.split(":").map(Number);
+      const [eh, em] = end.split(":").map(Number);
+      let startMin = sh * 60 + sm;
+      let endMin = eh * 60 + em;
+      if (endMin < startMin) endMin += 24 * 60;
+      totalSessionMinutes += endMin - startMin;
+    }
+  });
+
+  const totalDriveHours = totalDriveMinutes / 60;
+  const totalSessionHours = totalSessionMinutes / 60;
+  const profitPerHour = totalSessionHours > 0 ? (totalNetProfit / totalSessionHours) : 0;
+
+  const formattedDriveTime = `${Math.floor(totalDriveHours)} hr ${Math.round(totalDriveHours % 1 * 60)} min`;
 
   data.push([
     "Totals:", "", "", "",
-    `$${totals.earnings.toFixed(2)}`,
-    `$${totals.fuel.toFixed(2)}`,
-    `$${totals.maintenance.toFixed(2)}`,
-    `$${totals.supplies.toFixed(2)}`,
-    `$${totals.net.toFixed(2)}`,
-    `${totals.mileage.toFixed(2)} mi`,
-    `${Math.floor(totalDriveHours)} hr ${Math.round((totalDriveHours % 1) * 60)} min`,
+    `$${totalEarnings.toFixed(2)}`,
+    `$${fuelCost.toFixed(2)}`,
+    `$${maintenance.toFixed(2)}`,
+    `$${supplies.toFixed(2)}`,
+    `$${totalNetProfit.toFixed(2)}`,
+    `${mileage.toFixed(2)} mi`,
+    formattedDriveTime,
     "",
-    `$${averageProfitPerHour}`
+    `$${profitPerHour.toFixed(2)}`
   ]);
 
   pdf.autoTable({
@@ -4182,6 +4235,7 @@ function exportToPDFWithTotals() {
 
   pdf.save("profit_log_with_totals.pdf");
 }
+
 
 function formatHoursAndMinutesFromMinutes(totalMinutes) {
   const h = Math.floor(totalMinutes / 60);
