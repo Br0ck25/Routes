@@ -1257,6 +1257,7 @@ let autocompleteStart, autocompleteEnd;
 let editingIndex = -1;
 let originalMileage = null;
 let logEntries = [];
+let currentFilterFn = null;
 let currentPage = 1;
 let skipNextSync = false;
 
@@ -3621,13 +3622,12 @@ function filterLogs() {
   const endDate = document.getElementById('filter-end-date').value;
   const searchQuery = document.getElementById('filter-search').value.trim().toLowerCase();
 
-  displayLog((entryDate, entry) => {
-    // Date range filter
+  // ✅ Define the shared filter logic
+  currentFilterFn = (entryDate, entry) => {
     let matchesDate = true;
     if (startDate && entryDate < startDate) matchesDate = false;
     if (endDate && entryDate > endDate) matchesDate = false;
 
-    // Text search across all fields
     const fieldsToSearch = [
       entry.startTime,
       entry.endTime,
@@ -3646,8 +3646,12 @@ function filterLogs() {
     const matchesSearch = !searchQuery || fieldsToSearch.includes(searchQuery);
 
     return matchesDate && matchesSearch;
-  });
+  };
+
+  // ✅ Use that filter directly in display
+  displayLog(currentFilterFn);
 }
+
 
 
       // Hide Manage Log menu when clicking outside
@@ -4028,10 +4032,19 @@ function convertTimeToMinutes(timeStr) {
 
 
 function exportToCSVWithTotals() {
+  const filtered = typeof currentFilterFn === "function"
+    ? logEntries.filter((entry) => entry?.date && currentFilterFn(entry.date, entry))
+    : logEntries;
+
+  if (filtered.length === 0) {
+    alert("❌ No entries to export.");
+    return;
+  }
+
   const header =
     "Date,Start Time,End Time,Start Address,Destinations,End Address,Earnings per Stop,Mileage,Drive Time,Total Earnings,Fuel Cost,Maintenance,Supplies,Hours Worked,Total Hours,Net Profit,Profit Per Hour\n";
 
-  const csvRows = logEntries.map((entry) => {
+  const csvRows = filtered.map((entry) => {
     const destinationsString = `"${(entry.destinations || []).join(";")}"`;
     const earningsString = `"${(entry.earnings || []).map(e => `$${parseFloat(e).toFixed(2)}`).join(";")}"`;
 
@@ -4070,7 +4083,7 @@ function exportToCSVWithTotals() {
   let totalSessionMinutes = 0;
   let totalHoursWorked = 0;
 
-  logEntries.forEach((entry) => {
+  filtered.forEach((entry) => {
     totalNetProfit += parseFloat(entry.netProfit) || 0;
     totalEarnings += parseFloat(entry.totalEarnings) || 0;
     fuelCost += parseFloat(entry.fuelCost) || 0;
@@ -4130,7 +4143,17 @@ function exportToCSVWithTotals() {
 
 
 
+
 function exportToPDFWithTotals() {
+  const filtered = typeof currentFilterFn === "function"
+    ? logEntries.filter((entry) => entry?.date && currentFilterFn(entry.date, entry))
+    : logEntries;
+
+  if (filtered.length === 0) {
+    alert("❌ No entries to export.");
+    return;
+  }
+
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({ orientation: "landscape" });
 
@@ -4141,7 +4164,7 @@ function exportToPDFWithTotals() {
     "Earnings per Stop", "Hours Worked", "Profit per Hour"
   ];
 
-  const data = logEntries.map((entry) => [
+  const data = filtered.map((entry) => [
     entry.date,
     entry.startTime,
     (entry.destinations || []).join("\n"),
@@ -4158,7 +4181,6 @@ function exportToPDFWithTotals() {
     `$${entry.profitPerHour || "0.00"}`
   ]);
 
-  // Totals
   let totalNetProfit = 0;
   let totalDriveMinutes = 0;
   let totalHoursWorked = 0;
@@ -4169,7 +4191,7 @@ function exportToPDFWithTotals() {
   let supplies = 0;
   let mileage = 0;
 
-  logEntries.forEach((entry) => {
+  filtered.forEach((entry) => {
     totalNetProfit += parseFloat(entry.netProfit) || 0;
     totalEarnings += parseFloat(entry.totalEarnings) || 0;
     fuelCost += parseFloat(entry.fuelCost) || 0;
@@ -4239,6 +4261,7 @@ function exportToPDFWithTotals() {
 
   pdf.save("profit_log_with_totals.pdf");
 }
+
 
 
 
