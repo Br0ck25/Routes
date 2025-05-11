@@ -3280,21 +3280,27 @@ async function importLog() {
               const totalTime = values[10].replace(/^"|"$/g, "").trim();
 
               newLogEntries.push({
-                date: values[0],
-                startTime,
-                destinations,
-                endTime,
-                totalEarnings: parseFloat(values[4]),
-                fuelCost: parseFloat(values[5]),
-                maintenanceCost: parseFloat(values[6]),
-                suppliesCost: parseFloat(values[7]),
-                netProfit: parseFloat(values[8]),
-                totalMileage: parseFloat(values[9]),
-                totalTime,
-                earnings,
-                profitPerHour: parseFloat(values[12]) || 0,
-                lastModified: new Date().toISOString(),
-              });
+  date: values[0],
+  startTime: startTime,
+  destinations: destinations,
+  endTime: endTime,
+  totalEarnings: parseFloat(values[4]),
+  fuelCost: parseFloat(values[5]),
+  maintenanceCost: parseFloat(values[6]),
+  suppliesCost: parseFloat(values[7]),
+  netProfit: parseFloat(values[8]),
+  totalMileage: parseFloat(values[9]),
+  totalTime: totalTime,
+  earnings: earnings,
+  profitPerHour: parseFloat(values[12]) || 0,
+  mpg: 0, // optional default if missing
+  gasPrice: 0,
+  startClock: "", // could be parsed from time string if needed
+  endClock: "",
+  hoursWorked: 0,
+  lastModified: new Date().toISOString(),
+});
+
             } catch (err) {
               console.warn("❌ Skipping row due to error:", err);
             }
@@ -4020,48 +4026,72 @@ function exportToCSVWithTotals() {
   const csvRows = logEntries.map((entry) => {
     const destinationsString = `"${(entry.destinations || []).join(";")}"`;
     const earningsString = `"${(entry.earnings || []).map(e => `$${parseFloat(e).toFixed(2)}`).join(";")}"`;
+
     const driveMinutes = convertTimeToMinutes(entry.totalTime);
     const totalHours = (parseFloat(entry.hoursWorked || 0) + driveMinutes / 60).toFixed(2);
 
     return [
-  entry.date,
-  entry.startClock || "",
-  entry.endClock || "",
-  `"${(entry.startTime || "").replace(/"/g, '""')}"`,
-  destinationsString,
-  `"${(entry.endTime || "").replace(/"/g, '""')}"`,
-  earningsString,
-  entry.totalMileage,
-  entry.totalTime,
-  entry.totalEarnings,
-  entry.fuelCost,
-  entry.maintenanceCost,
-  entry.suppliesCost,
-  entry.hoursWorked,
-  totalHours,
-  entry.netProfit,
-  entry.profitPerHour || ""
-].join(",");
-
+      entry.date,
+      entry.startClock || "",
+      entry.endClock || "",
+      `"${(entry.startTime || "").replace(/"/g, '""')}"`,
+      destinationsString,
+      `"${(entry.endTime || "").replace(/"/g, '""')}"`,
+      earningsString,
+      entry.totalMileage,
+      entry.totalTime,
+      entry.totalEarnings,
+      entry.fuelCost,
+      entry.maintenanceCost,
+      entry.suppliesCost,
+      entry.hoursWorked,
+      totalHours,
+      entry.netProfit,
+      entry.profitPerHour || ""
+    ].join(",");
   });
 
-  const totals = calculateTotals(logEntries);
-  const totalDriveHours = totals.driveMinutes / 60;
-  const totalHours = totals.hoursWorked + totalDriveHours;
-  const avgProfitPerHour = totals.count > 0 ? (totals.profitPerHourSum / totals.count).toFixed(2) : "0.00";
+  // Totals
+  let totalNetProfit = 0;
+  let totalMinutes = 0;
+  let totalEarnings = 0;
+  let fuelCost = 0;
+  let maintenance = 0;
+  let supplies = 0;
+  let mileage = 0;
+  let hoursWorked = 0;
+
+  logEntries.forEach((entry) => {
+    totalNetProfit += parseFloat(entry.netProfit) || 0;
+    totalEarnings += parseFloat(entry.totalEarnings) || 0;
+    fuelCost += parseFloat(entry.fuelCost) || 0;
+    maintenance += parseFloat(entry.maintenanceCost) || 0;
+    supplies += parseFloat(entry.suppliesCost) || 0;
+    mileage += parseFloat(entry.totalMileage) || 0;
+    hoursWorked += parseFloat(entry.hoursWorked) || 0;
+
+    const worked = parseFloat(entry.hoursWorked) || 0;
+    const drive = convertTimeToHours(entry.totalTime || "");
+    totalMinutes += Math.round((worked + drive) * 60);
+  });
+
+  const totalHoursDecimal = totalMinutes / 60;
+  const profitPerHour = totalHoursDecimal > 0 ? totalNetProfit / totalHoursDecimal : 0;
+
+  const formattedTotalTime = `${Math.floor(totalHoursDecimal)} hour${Math.floor(totalHoursDecimal) !== 1 ? "s" : ""} ${Math.round((totalHoursDecimal % 1) * 60)} minutes`;
 
   const totalRow = [
     "Totals:", "", "", "", "", "", "",
-    totals.mileage.toFixed(2),
-    `${Math.floor(totalDriveHours)} hour${Math.floor(totalDriveHours) !== 1 ? 's' : ''} ${Math.round((totalDriveHours % 1) * 60)} minutes`,
-    totals.totalEarnings.toFixed(2),
-    totals.fuelCost.toFixed(2),
-    totals.maintenance.toFixed(2),
-    totals.supplies.toFixed(2),
-    totals.hoursWorked.toFixed(2),
-    totalHours.toFixed(2),
-    totals.netProfit.toFixed(2),
-    avgProfitPerHour
+    mileage.toFixed(2),
+    formattedTotalTime,
+    totalEarnings.toFixed(2),
+    fuelCost.toFixed(2),
+    maintenance.toFixed(2),
+    supplies.toFixed(2),
+    hoursWorked.toFixed(2),
+    totalHoursDecimal.toFixed(2),
+    totalNetProfit.toFixed(2),
+    profitPerHour.toFixed(2)
   ].join(",");
 
   const csvString = header + csvRows.join("\n") + "\n" + totalRow;
@@ -4075,6 +4105,7 @@ function exportToCSVWithTotals() {
   link.click();
   document.body.removeChild(link);
 }
+
 
 
 function exportToPDFWithTotals() {
