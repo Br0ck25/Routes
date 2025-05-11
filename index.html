@@ -4135,8 +4135,10 @@ function exportToPDFWithTotals() {
   const pdf = new jsPDF({ orientation: "landscape" });
 
   const columns = [
-    "Date", "Start", "Destinations", "End", "Earnings", "Fuel", "Maintenance", "Supplies",
-    "Net Profit", "Mileage", "Drive Time", "Earnings per Stop", "Profit per Hour"
+    "Date", "Start", "Destinations", "End",
+    "Earnings", "Fuel", "Maintenance", "Supplies",
+    "Net Profit", "Mileage", "Drive Time",
+    "Earnings per Stop", "Hours Worked", "Profit per Hour"
   ];
 
   const data = logEntries.map((entry) => [
@@ -4152,18 +4154,20 @@ function exportToPDFWithTotals() {
     `${entry.totalMileage} mi`,
     entry.totalTime,
     (entry.earnings || []).map(e => `$${parseFloat(e).toFixed(2)}`).join(", "),
+    entry.hoursWorked || "0",
     `$${entry.profitPerHour || "0.00"}`
   ]);
 
   // Totals
   let totalNetProfit = 0;
   let totalDriveMinutes = 0;
+  let totalHoursWorked = 0;
+  let totalSessionMinutes = 0;
   let totalEarnings = 0;
   let fuelCost = 0;
   let maintenance = 0;
   let supplies = 0;
   let mileage = 0;
-  let totalSessionMinutes = 0;
 
   logEntries.forEach((entry) => {
     totalNetProfit += parseFloat(entry.netProfit) || 0;
@@ -4172,7 +4176,7 @@ function exportToPDFWithTotals() {
     maintenance += parseFloat(entry.maintenanceCost) || 0;
     supplies += parseFloat(entry.suppliesCost) || 0;
     mileage += parseFloat(entry.totalMileage) || 0;
-
+    totalHoursWorked += parseFloat(entry.hoursWorked) || 0;
     totalDriveMinutes += convertTimeToMinutes(entry.totalTime || "");
 
     const start = entry.startClock || "";
@@ -4187,11 +4191,10 @@ function exportToPDFWithTotals() {
     }
   });
 
-  const totalDriveHours = totalDriveMinutes / 60;
   const totalSessionHours = totalSessionMinutes / 60;
-  const profitPerHour = totalSessionHours > 0 ? (totalNetProfit / totalSessionHours) : 0;
+  const profitPerHour = totalSessionHours > 0 ? totalNetProfit / totalSessionHours : 0;
 
-  const formattedDriveTime = `${Math.floor(totalDriveHours)} hr ${Math.round(totalDriveHours % 1 * 60)} min`;
+  const formattedDriveTime = `${Math.floor(totalDriveMinutes / 60)} hr ${totalDriveMinutes % 60} min`;
 
   data.push([
     "Totals:", "", "", "",
@@ -4203,6 +4206,7 @@ function exportToPDFWithTotals() {
     `${mileage.toFixed(2)} mi`,
     formattedDriveTime,
     "",
+    totalHoursWorked.toFixed(2),
     `$${profitPerHour.toFixed(2)}`
   ]);
 
@@ -4235,6 +4239,7 @@ function exportToPDFWithTotals() {
 
   pdf.save("profit_log_with_totals.pdf");
 }
+
 
 
 function formatHoursAndMinutesFromMinutes(totalMinutes) {
