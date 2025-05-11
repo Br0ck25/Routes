@@ -2159,6 +2159,12 @@ async function calculateRouteData() {
   const logDateInput = document.getElementById("log-date").value;
   const selectedDate = logDateInput || new Date().toISOString().split("T")[0];
 
+  if (!navigator.onLine) {
+  showAlertModal("🛜 You're offline. Route calculation is unavailable until you're reconnected.");
+  return Promise.resolve(null);
+}
+
+
   return new Promise((resolve, reject) => {
     directionsService.route(request, (response, status) => {
       if (status === "OK") {
