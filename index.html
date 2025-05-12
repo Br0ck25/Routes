@@ -3240,11 +3240,25 @@ async function saveEditedLogEntry() {
   const netProfitFloat = entry.totalEarnings - entry.fuelCost - entry.maintenanceCost - entry.suppliesCost;
 
   const driveTime = convertTimeToHours(entry.totalTime || "");
-  const totalHours = entry.hoursWorked + driveTime;
+// ✅ Use full clock span only (start-end time)
+let sessionMinutes = 0;
+const start = entry.startClock;
+const end = entry.endClock;
 
-  entry.profitPerHour = totalHours > 0
-    ? (netProfitFloat / totalHours).toFixed(2)
-    : "0.00";
+if (start && end && start.includes(":") && end.includes(":")) {
+  const [sh, sm] = start.split(":").map(Number);
+  const [eh, em] = end.split(":").map(Number);
+  let startMin = sh * 60 + sm;
+  let endMin = eh * 60 + em;
+  if (endMin < startMin) endMin += 1440;
+  sessionMinutes = endMin - startMin;
+}
+
+const sessionHours = sessionMinutes / 60;
+entry.profitPerHour = sessionHours > 0
+  ? (netProfitFloat / sessionHours).toFixed(2)
+  : "0.00";
+
 
   entry.netProfit = netProfitFloat.toFixed(2);
   entry.lastModified = new Date().toISOString();
