@@ -3368,14 +3368,18 @@ if (successCount === 0) {
       console.error("❌ Error processing file:", err);
       showAlertModal("❌ Failed to process the file.");
     } finally {
-      fileReaderBusy = false;
+      fileInput.value = ""; // reset for next upload
+fileReaderBusy = false;
+
     }
   };
 
-  reader.onerror = () => {
-    fileReaderBusy = false;
-    showAlertModal("❌ Error reading the file.");
-  };
+reader.onerror = () => {
+  fileInput.value = ""; // reset in case of error
+  fileReaderBusy = false;
+  showAlertModal("❌ Error reading the file.");
+};
+
 
   reader.readAsText(file);
 }
