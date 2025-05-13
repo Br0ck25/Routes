@@ -963,10 +963,10 @@ img {
         required
       />
 
-      <label for="start-time">Start Time (Optional)</label>
+      <label for="start-time">Start Time</label>
       <input type="time" id="start-time" placeholder="Enter start time" />
 
-      <label for="end-time">End Time (Optional)</label>
+      <label for="end-time">End Time</label>
       <input type="time" id="end-time" placeholder="Enter end time" />
 
 <label for="total-hours">Total Hours</label>
@@ -1003,6 +1003,26 @@ img {
           placeholder="Enter supplies cost for the day"
         />
       </div>
+<label for="log-notes" style="margin-top: 8px; display: block; font-weight: bold; color: #555;">Notes (Optional)</label>
+<textarea
+  id="log-notes"
+  rows="4"
+  placeholder="Enter any notes for this trip"
+  style="
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 16px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 10px;
+    margin-top: 4px;
+    margin-bottom: 12px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    resize: vertical;
+  "
+></textarea>
+
+
       <button onclick="optimizeRoute()">Optimize Route</button>
       <button onclick="calculateRoute()">Calculate Route</button>
       <button onclick="logResults()">Log Route</button>
@@ -1344,10 +1364,10 @@ function resumeDraftTrip() {
   document.getElementById("start-time").value = data.startTime || "";
   document.getElementById("end-time").value = data.endTime || "";
   document.getElementById("total-hours").value = formatHoursAndMinutes(data.hoursWorked || 0);
-
-
   document.getElementById("maintenance-cost").value = data.maintenance || "";
   document.getElementById("supplies-cost").value = data.supplies || "";
+  document.getElementById("log-notes").value = data.notes || "";
+
 
   const container = document.getElementById("destinations-container");
   container.innerHTML = "";
@@ -1552,6 +1572,25 @@ function isDuplicateEntry(entry, existingLog) {
   style="background-color: #f0f0f0; cursor: not-allowed;"
 />
 <div id="edit-hours-message" style="font-size: 14px; color: #666; margin-top: 4px;"></div>
+
+<label for="edit-notes" style="margin-top: 8px; display: block; font-weight: bold; color: #555;">Notes</label>
+<textarea
+  id="edit-notes"
+  rows="4"
+  placeholder="Enter notes here..."
+  style="
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 16px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 10px;
+    margin-top: 4px;
+    margin-bottom: 12px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    resize: vertical;
+  "
+></textarea>
 
 
 
@@ -1778,6 +1817,7 @@ function saveDraftTrip() {
 
   const maintenance = document.getElementById("maintenance-cost")?.value.trim();
   const supplies = document.getElementById("supplies-cost")?.value.trim();
+  const notes = document.getElementById("log-notes")?.value.trim(); // ✅ add this
 
   const destinations = Array.from(document.querySelectorAll('#destinations-container .destination'))
     .map(div => ({
@@ -1792,14 +1832,14 @@ function saveDraftTrip() {
     endTime ||
     hoursWorked ||
     maintenance ||
-    supplies;
+    supplies ||
+    notes; // ✅ now considers notes too
 
   if (!hasMeaningfulData) {
-    localStorage.removeItem("draftTrip"); // 🚫 don't store empty form
+    localStorage.removeItem("draftTrip");
     return;
   }
 
-  // Still include these in case the user wants them remembered
   const draft = {
     date: document.getElementById("log-date")?.value,
     start: document.getElementById("start-address")?.value,
@@ -1811,11 +1851,13 @@ function saveDraftTrip() {
     hoursWorked,
     maintenance,
     supplies,
+    notes, // ✅ save notes to draft
     destinations
   };
 
   localStorage.setItem("draftTrip", JSON.stringify(draft));
 }
+
 
 
 
@@ -2615,6 +2657,8 @@ async function optimizeRoute() {
   data.mpg = parseFloat(document.getElementById("mpg").value) || 0;
   data.gasPrice = parseFloat(document.getElementById("gas-price").value) || 0;
   data.lastModified = new Date().toISOString();
+  data.notes = document.getElementById("log-notes")?.value || "";
+
 
   // ✅ Calculate total time from start and end clock times
   const start = document.getElementById("start-time").value;
@@ -3095,12 +3139,10 @@ if (earningsInput) {
         setInputValue("edit-total-mileage", entry.totalMileage);
         setInputValue("edit-total-time", entry.totalTime);
         setInputValue("edit-hours-worked", entry.hoursWorked ?? 0);
-
-
-
-
         setInputValue("edit-mpg", entry.mpg);
         setInputValue("edit-gas-price", entry.gasPrice);
+        setInputValue("edit-notes", entry.notes || "");
+
 
         const destinationsContainer = document.getElementById(
           "edit-destinations-container"
@@ -3205,6 +3247,8 @@ async function saveEditedLogEntry() {
   entry.startTime = document.getElementById("edit-start-address").value;
   entry.endTime = document.getElementById("edit-end-address").value;
   entry.totalTime = document.getElementById("edit-total-time")?.value || "";
+  entry.notes = document.getElementById("edit-notes").value.trim();
+
 
   entry.destinations = [];
   entry.earnings = [];
@@ -3329,52 +3373,54 @@ for (const line of lines) {
   }
 
   try {
-  const destinations = values[4]
-    .replace(/^"|"$/g, "")
-    .split(";")
-    .map((d) => d.trim());
+    const destinations = values[4]
+      .replace(/^"|"$/g, "")
+      .split(";")
+      .map((d) => d.trim());
 
-  const earnings = values[6]
-    .replace(/^"|"$/g, "")
-    .split(";")
-    .map((v) => parseFloat(v.trim()) || 0);
+    const earnings = values[6]
+      .replace(/^"|"$/g, "")
+      .split(";")
+      .map((v) => parseFloat(v.trim()) || 0);
 
-  const entry = {
-    date: values[0],
-    startClock: values[1],
-    endClock: values[2],
-    startTime: values[3]?.replace(/^"|"$/g, "") || "",
-    destinations: destinations,
-    endTime: values[5]?.replace(/^"|"$/g, "") || "",
-    earnings: earnings,
-    totalMileage: parseFloat(values[7]) || 0,
-    totalTime: values[8]?.replace(/^"|"$/g, ""),
-    totalEarnings: parseFloat(values[9]) || 0,
-    fuelCost: parseFloat(values[10]) || 0,
-    maintenanceCost: parseFloat(values[11]) || 0,
-    suppliesCost: parseFloat(values[12]) || 0,
-    hoursWorked: parseFormattedTime(values[13]),
-    totalHours: parseFormattedTime(values[14]),
-    netProfit: parseFloat(values[15]) || 0,
-    profitPerHour: parseFloat(values[16]) || 0,
-    mpg: 0,
-    gasPrice: 0,
-    lastModified: new Date().toISOString(),
-  };
+    const notes = values[17] ? values[17].replace(/^"|"$/g, "").replace(/""/g, '"') : "";
 
-if (isDuplicateEntry(entry, logEntries)) {
-  duplicateCount++;
-  continue;
+    const entry = {
+      date: values[0],
+      startClock: values[1],
+      endClock: values[2],
+      startTime: values[3]?.replace(/^"|"$/g, "") || "",
+      destinations,
+      endTime: values[5]?.replace(/^"|"$/g, "") || "",
+      earnings,
+      totalMileage: parseFloat(values[7]) || 0,
+      totalTime: values[8]?.replace(/^"|"$/g, ""),
+      totalEarnings: parseFloat(values[9]) || 0,
+      fuelCost: parseFloat(values[10]) || 0,
+      maintenanceCost: parseFloat(values[11]) || 0,
+      suppliesCost: parseFloat(values[12]) || 0,
+      hoursWorked: parseFormattedTime(values[13]),
+      totalHours: parseFormattedTime(values[14]),
+      netProfit: parseFloat(values[15]) || 0,
+      profitPerHour: parseFloat(values[16]) || 0,
+      notes, // ✅ new!
+      mpg: 0,
+      gasPrice: 0,
+      lastModified: new Date().toISOString(),
+    };
+
+    if (isDuplicateEntry(entry, logEntries)) {
+      duplicateCount++;
+      continue;
+    }
+
+    newLogEntries.push(entry);
+    successCount++;
+  } catch (err) {
+    console.warn("❌ Error parsing CSV row:", err, line);
+  }
 }
 
-
-  newLogEntries.push(entry);
-  successCount++;
-} catch (err) {
-  console.warn("❌ Error parsing CSV row:", err, line);
-}
-
-}
 
 if (successCount === 0) {
   if (duplicateCount > 0) {
@@ -3987,6 +4033,9 @@ function recalculateEditHoursWorked() {
   <div><strong>Net Profit:</strong> $${entry.netProfit}</div>
   <div><strong>Profit per Hour:</strong> $${entry.profitPerHour}</div>
 `;
+if (entry.notes) {
+  detailsDiv.innerHTML += `<div><strong>Notes:</strong> ${entry.notes}</div>`;
+}
 
 
     detailsDiv.classList.remove("hidden");
@@ -4126,7 +4175,7 @@ function exportToCSVWithTotals() {
   }
 
   const header =
-    "Date,Start Time,End Time,Start Address,Destinations,End Address,Earnings per Stop,Mileage,Drive Time,Total Earnings,Fuel Cost,Maintenance,Supplies,Hours Worked,Total Hours,Net Profit,Profit Per Hour\n";
+    "Date,Start Time,End Time,Start Address,Destinations,End Address,Earnings per Stop,Mileage,Drive Time,Total Earnings,Fuel Cost,Maintenance,Supplies,Hours Worked,Total Hours,Net Profit,Profit Per Hour,Notes\n";
 
   const csvRows = filtered.map((entry) => {
     const destinationsString = `"${(entry.destinations || []).join(";")}"`;
@@ -4166,11 +4215,11 @@ function exportToCSVWithTotals() {
       `"${formatHoursAndMinutesFromMinutes(workedMinutes)}"`,
       `"${formatHoursAndMinutesFromMinutes(sessionMinutes)}"`,
       entry.netProfit,
-      entry.profitPerHour || ""
+      entry.profitPerHour || "",
+      `"${(entry.notes || "").replace(/"/g, '""')}"`
     ].join(",");
   });
 
-  // Totals
   let totalNetProfit = 0;
   let totalDriveMinutes = 0;
   let totalSessionMinutes = 0;
@@ -4206,7 +4255,6 @@ function exportToCSVWithTotals() {
   const formattedWorkedTime = formatHoursAndMinutesFromMinutes(totalWorkedMinutes);
   const formattedTotalTime = formatHoursAndMinutesFromMinutes(totalSessionMinutes);
   const profitPerHour = totalSessionMinutes > 0 ? totalNetProfit / (totalSessionMinutes / 60) : 0;
-
   const formattedDriveTime = `${Math.floor(totalDriveMinutes / 60)} hour${Math.floor(totalDriveMinutes / 60) !== 1 ? "s" : ""} ${totalDriveMinutes % 60} minutes`;
 
   const totalRow = [
@@ -4220,7 +4268,8 @@ function exportToCSVWithTotals() {
     formattedWorkedTime,
     formattedTotalTime,
     totalNetProfit.toFixed(2),
-    profitPerHour.toFixed(2)
+    profitPerHour.toFixed(2),
+    "" // Notes
   ].join(",");
 
   const csvString = header + csvRows.join("\n") + "\n" + totalRow;
@@ -4257,7 +4306,7 @@ function exportToPDFWithTotals() {
     "Date", "Start", "Destinations", "End",
     "Earnings", "Fuel", "Maintenance", "Supplies",
     "Net Profit", "Mileage", "Drive Time",
-    "Earnings per Stop", "Hours Worked", "Total Hours", "Profit per Hour"
+    "Earnings per Stop", "Hours Worked", "Total Hours", "Profit per Hour", "Notes"
   ];
 
   const data = filtered.map((entry) => {
@@ -4298,7 +4347,8 @@ function exportToPDFWithTotals() {
       earningsPerStop,
       formatHoursAndMinutesFromMinutes(workedMinutes),
       formatHoursAndMinutesFromMinutes(sessionMinutes),
-      `$${entry.profitPerHour || "0.00"}`
+      `$${entry.profitPerHour || "0.00"}`,
+      entry.notes || ""
     ];
   });
 
@@ -4351,7 +4401,8 @@ function exportToPDFWithTotals() {
     "",
     formattedWorkedTime,
     formattedTotalTime,
-    `$${profitPerHour.toFixed(2)}`
+    `$${profitPerHour.toFixed(2)}`,
+    "" // Notes
   ]);
 
   pdf.autoTable({
@@ -4383,6 +4434,7 @@ function exportToPDFWithTotals() {
 
   pdf.save("profit_log_with_totals.pdf");
 }
+
 
 
 
