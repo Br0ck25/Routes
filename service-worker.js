@@ -1,6 +1,6 @@
 // service-worker.js
 
-const CACHE_NAME = "route-calculator-cache-v2.1.5";
+const CACHE_NAME = "route-calculator-cache-v2.1.4";
 const urlsToCache = [
   "/",
   "/index.html",
