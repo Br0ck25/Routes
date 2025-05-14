@@ -39,6 +39,8 @@
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCHrNRHP9LNGVHi9Srk1Gfcrv-4ee_gUHQ&libraries=places&callback=initMap"
     defer
   ></script>
+
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   
 
     <style>
@@ -4479,6 +4481,28 @@ document.addEventListener("click", function (event) {
 });
 
 
+async function handleGoogleSignIn(response) {
+  const credential = response.credential;
+  try {
+    const res = await fetch("https://logs.gorouteyourself.com/api/google-login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ credential })
+    });
+    const data = await res.json();
+    if (data.token) {
+      localStorage.setItem("token", data.token);
+      updateAuthUI();
+      showConfirmationMessage("✅ Signed in with Google!");
+    } else {
+      alert("Google sign-in failed.");
+    }
+  } catch (err) {
+    console.error("Google login error:", err);
+    alert("Google login failed. Try again.");
+  }
+}
+
 
 
 
@@ -4530,28 +4554,38 @@ document.addEventListener("click", function (event) {
           "
         />
 
-        <button onclick="submitAuth()" style="width: 100%">Submit</button>
-        <button
-          onclick="closeAuthModal()"
-          style="
-            width: 100%;
-            margin-top: 10px;
-            background-color: #ccc;
-            color: #333;
-          "
-        >
-          Cancel
-        </button>
-        <p style="text-align: center; margin-top: 10px">
-          <a href="#" onclick="toggleAuthMode()"
-            >Switch to <span id="auth-switch-label">Sign Up</span></a
-          ><br />
-          <a
-            href="#"
-            onclick="showResetModal()"
-            style="font-size: 0.9em; color: #0d6efd"
-            >Forgot Password?</a
-          >
+<button onclick="submitAuth()" style="width: 100%">Submit</button>
+<button
+  onclick="closeAuthModal()"
+  style="width: 100%; margin-top: 10px; background-color: #ccc; color: #333;"
+>
+  Cancel
+</button>
+
+<!-- ✅ Google Sign-In Button -->
+<div id="g_id_onload"
+     data-client_id="793067024580-t9o9tq1pist1qte0odvsrvi853t3n9oh.apps.googleusercontent.com"
+     data-callback="handleGoogleSignIn"
+     data-auto_prompt="false">
+</div>
+<div class="g_id_signin"
+     data-type="standard"
+     data-size="large"
+     data-theme="outline"
+     data-text="sign_in_with"
+     data-shape="rectangular"
+     data-logo_alignment="left">
+</div>
+
+<p style="text-align: center; margin-top: 10px">
+  <a href="#" onclick="toggleAuthMode()">
+    Switch to <span id="auth-switch-label">Sign Up</span>
+  </a><br />
+  <a href="#" onclick="showResetModal()" style="font-size: 0.9em; color: #0d6efd">
+    Forgot Password?
+  </a>
+</p>
+
         </p>
       </div>
     </div>
