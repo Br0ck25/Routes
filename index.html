@@ -40,7 +40,9 @@
     defer
   ></script>
 
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+
   
 
     <style>
@@ -1505,6 +1507,38 @@ function isDuplicateEntry(entry, existingLog) {
   );
 }
 
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  if (document.getElementById("g_id_signin")) {
+    google.accounts.id.initialize({
+      client_id: '793067024580-t9o9tq1pist1qte0odvsrvi853t3n9oh.apps.googleusercontent.com',
+      callback: handleCredentialResponse
+    });
+
+    google.accounts.id.renderButton(
+      document.getElementById("g_id_signin"),
+      { theme: "outline", size: "large" }
+    );
+  }
+
+  function handleCredentialResponse(response) {
+    fetch('https://gorouteyourself.com/api/google-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ credential: response.credential })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+        updateAuthUI(); // ✅ this function already exists in your app
+      } else {
+        alert("Google sign-in failed.");
+      }
+    });
+  }
+});
 
 
 
@@ -4483,25 +4517,29 @@ document.addEventListener("click", function (event) {
 
 async function handleGoogleSignIn(response) {
   const credential = response.credential;
+
   try {
     const res = await fetch("https://logs.gorouteyourself.com/api/google-login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ credential })
+      body: JSON.stringify({ credential }),
     });
+
     const data = await res.json();
+
     if (data.token) {
       localStorage.setItem("token", data.token);
-      updateAuthUI();
+      updateAuthUI?.(); // Optional: refresh UI
       showConfirmationMessage("✅ Signed in with Google!");
     } else {
       alert("Google sign-in failed.");
     }
   } catch (err) {
     console.error("Google login error:", err);
-    alert("Google login failed. Try again.");
+    alert("Login failed");
   }
 }
+
 
 
 
