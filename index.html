@@ -1529,16 +1529,16 @@ google.accounts.id.initialize({
   }
 
 function handleCredentialResponse(response) {
-  console.log("🧠 Google returned credential:", response); // ✅ Add this
+  console.log("🧠 Google returned credential:", response);
 
   fetch('https://gorouteyourself.com/api/google-login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id_token: response.credential })  // ✅ note: must be id_token
+    body: JSON.stringify({ id_token: response.credential })  // ✅ this line is critical
   })
   .then(res => res.json())
   .then(data => {
-    console.log("🔐 Login API response:", data); // ✅ Add this
+    console.log("🔐 Login API response:", data);
     if (data.token) {
       localStorage.setItem('token', data.token);
       localStorage.setItem('username', data.username);
@@ -1548,6 +1548,7 @@ function handleCredentialResponse(response) {
     }
   });
 }
+
 
 
 });
