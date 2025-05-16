@@ -1535,14 +1535,15 @@ google.accounts.id.initialize({
       body: JSON.stringify({ credential: response.credential })
     })
     .then(res => res.json())
-    .then(data => {
-      if (data.token) {
-        localStorage.setItem('token', data.token);
-        updateAuthUI(); // ✅ this function already exists in your app
-      } else {
-        alert("Google sign-in failed.");
-      }
-    });
+.then(data => {
+  console.log("✅ Google login response:", data); // ← Add this line
+  if (data.token) {
+    localStorage.setItem('token', data.token);
+    updateAuthUI();
+  } else {
+    alert("Google sign-in failed.");
+  }
+});
   }
 });
 
