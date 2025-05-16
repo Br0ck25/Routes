@@ -1,3 +1,14 @@
-/*
+/manifest.json
+  Content-Type: application/json
+  Access-Control-Allow-Origin: *
+
+/logo.png
+  Content-Type: image/png
+
+/logo-512.png
+  Content-Type: image/png
+
+/index.html
   Cross-Origin-Opener-Policy:
   Cross-Origin-Embedder-Policy:
+  Cache-Control: no-store
