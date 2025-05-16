@@ -2,7 +2,8 @@
   "version": 1,
   "include": ["/*"],
   "exclude": [
-    "/.well-known/assetlinks.json",
-    "/privacy-policy"
+    "/privacy-policy.html",
+    "/privacy-policy",
+    "/.well-known/assetlinks.json"
   ]
 }
