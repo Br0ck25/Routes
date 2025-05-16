@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "include": ["/*"],
+  "exclude": [
+    "/privacy-policy",
+    "/privacy-policy.html",
+    "/privacy",
+    "/privacy/",
+    "/privacy/index.html",
+    "/.well-known/assetlinks.json"
+  ]
+}
