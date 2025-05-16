@@ -1515,11 +1515,13 @@ function isDuplicateEntry(entry, existingLog) {
 
 window.onload = () => {
   if (window.google && google.accounts && document.getElementById("g_id_signin")) {
-    google.accounts.id.initialize({
-      client_id: '793067024580-t9o9tq1pist1qte0odvsrvi853t3n9oh.apps.googleusercontent.com',
-      callback: handleCredentialResponse,
-      ux_mode: 'popup'
-    });
+google.accounts.id.initialize({
+  client_id: '793067024580-t9o9tq1pist1qte0odvsrvi853t3n9oh.apps.googleusercontent.com',
+  callback: handleCredentialResponse,
+  ux_mode: 'redirect',
+  login_uri: 'https://gorouteyourself.com'  // This must match the origin
+});
+
 
     google.accounts.id.renderButton(
       document.getElementById("g_id_signin"),
