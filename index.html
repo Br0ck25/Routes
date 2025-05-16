@@ -712,6 +712,7 @@ img {
 
   </head>
   <body>
+<div id="g_id_signin"></div>
 
 
 <!-- Fixed Top Bar -->
@@ -1514,10 +1515,12 @@ function isDuplicateEntry(entry, existingLog) {
 
 document.addEventListener("DOMContentLoaded", () => {
   if (document.getElementById("g_id_signin")) {
-    google.accounts.id.initialize({
-      client_id: '793067024580-t9o9tq1pist1qte0odvsrvi853t3n9oh.apps.googleusercontent.com',
-      callback: handleCredentialResponse
-    });
+google.accounts.id.initialize({
+  client_id: '793067024580-t9o9tq1pist1qte0odvsrvi853t3n9oh.apps.googleusercontent.com',
+  callback: handleCredentialResponse,
+  ux_mode: 'popup' // ✅ Force popup mode
+});
+
 
     google.accounts.id.renderButton(
       document.getElementById("g_id_signin"),
