@@ -1,4 +1,14 @@
-/*
+/manifest.json
+  Content-Type: application/json
+  Access-Control-Allow-Origin: *
+
+/logo.png
+  Content-Type: image/png
+
+/logo-512.png
+  Content-Type: image/png
+
+/index.html
+  Cache-Control: no-store
   Cross-Origin-Opener-Policy: unsafe-none
-  Cross-Origin-Embedder-Policy: unsafe-none
-  Content-Security-Policy: default-src * data: blob: 'unsafe-inline' 'unsafe-eval'
+  Cross-Origin-Embedder-Policy:
