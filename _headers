@@ -9,6 +9,4 @@
   Content-Type: image/png
 
 /index.html
-  Cross-Origin-Opener-Policy:
-  Cross-Origin-Embedder-Policy:
   Cache-Control: no-store
