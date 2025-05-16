@@ -41,6 +41,14 @@ self.addEventListener("activate", (event) => {
 
 // ✅ Fetch: Cache-first, then network, then fallback — but don't cache .html pages
 self.addEventListener("fetch", (event) => {
+  if (event.request.mode === "navigate") {
+    // Always try to fetch fresh index.html for navigation
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match("/offline.html"))
+    );
+    return;
+  }
+
   if (event.request.method !== "GET") return;
 
   event.respondWith(
@@ -53,7 +61,7 @@ self.addEventListener("fetch", (event) => {
 
           const url = new URL(event.request.url);
           const isSameOrigin = url.origin === self.location.origin;
-          const isHTML = url.pathname.endsWith(".html") || url.pathname === "/";
+          const isHTML = url.pathname.endsWith(".html");
 
           if (
             !isHTML &&
