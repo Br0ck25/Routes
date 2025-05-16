@@ -1682,27 +1682,25 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
 
-      async function saveLog() {
+async function saveLog() {
   const token = localStorage.getItem("token");
 
   if (!token) {
-  console.error("❌ No token found. User must be signed in to save.");
-  showAlertModal("❌ You must be signed in to save your route logs.", showLogin);
-  return;
-}
-
+    console.error("❌ No token found. User must be signed in to save.");
+    showAlertModal("❌ You must be signed in to save your route logs.", showLogin);
+    return;
+  }
 
   console.log("⏳ Saving route...");
 
   // 🛜 Detect if offline
   if (!navigator.onLine) {
-  console.warn("🛜 Offline: Saving log locally.");
-  localStorage.setItem("pendingLogs", JSON.stringify(logEntries));
-  localStorage.setItem("cachedLogs", JSON.stringify(logEntries));
-  showAlertModal("⚠️ Offline: Route saved locally. Will sync when back online.");
-  return;
-}
-
+    console.warn("🛜 Offline: Saving log locally.");
+    localStorage.setItem("pendingLogs", JSON.stringify(logEntries));
+    localStorage.setItem("cachedLogs", JSON.stringify(logEntries));
+    showAlertModal("⚠️ Offline: Route saved locally. Will sync when back online.");
+    return;
+  }
 
   try {
     const response = await fetch(
@@ -1722,15 +1720,18 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     console.log("✅ Saved to KV");
-    localStorage.setItem("cachedLogs", JSON.stringify(logEntries)); // ✅ Save fresh logs locally
-    localStorage.removeItem("pendingLogs"); // ✅ Clear pending if successful
+
+    // ✅ Force refresh after successful save
+    await syncAndReloadLogs();
+
   } catch (err) {
     console.error("❌ Save failed. Saving offline:", err);
-    localStorage.setItem("pendingLogs", JSON.stringify(logEntries)); // ✅ Save pending
-    localStorage.setItem("cachedLogs", JSON.stringify(logEntries)); // ✅ Update visible logs too
+    localStorage.setItem("pendingLogs", JSON.stringify(logEntries));
+    localStorage.setItem("cachedLogs", JSON.stringify(logEntries));
     showAlertModal("⚠️ Offline mode: Your changes are saved locally. We'll sync them next time you're online.");
   }
 }
+
 
 
 async function syncPendingLogs() {
@@ -4932,6 +4933,59 @@ window.addEventListener('scroll', () => {
       : 'none';
   }, 50);
 });
+
+
+  async function onGoogleLogin(response) {
+    try {
+      const res = await fetch("/api/google-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id_token: response.credential }),
+      });
+
+      if (!res.ok) {
+        throw new Error(await res.text());
+      }
+
+      const data = await res.json();
+      localStorage.setItem("token", data.token);
+
+      // Refresh UI, show welcome, or reload logs
+      updateAuthUI?.();
+      await syncAndReloadLogs?.();
+    } catch (err) {
+      alert("❌ Google login failed: " + err.message);
+    }
+  }
+
+
+  window.handleGoogleSignIn = async function (response) {
+    try {
+      if (!response || !response.credential) {
+        throw new Error("Missing credential");
+      }
+
+      const res = await fetch("https://logs.gorouteyourself.com/api/google-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id_token: response.credential }),
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(errorText);
+      }
+
+      const data = await res.json();
+      localStorage.setItem("token", data.token);
+      updateAuthUI?.();
+      await syncAndReloadLogs?.();
+    } catch (err) {
+      console.error("Google login error:", err);
+      alert("❌ Google login failed: " + err.message);
+    }
+  };
+
 
     </script>
 
