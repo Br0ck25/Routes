@@ -1,16 +1,21 @@
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="padding-bottom: env(safe-area-inset-bottom); background: white;">
+
+ 
   <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-    />
+
+
+
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+
     <meta http-equiv="Cross-Origin-Opener-Policy" content="unsafe-none" />
     <title>
     Go Route Yourself - Route and Cost Calculator with Log - Plan, Optimize, and Track Your Trips
     </title>
+
 
     <meta
       name="description"
@@ -47,6 +52,145 @@
   
 
     <style>
+
+        html, body {
+    overflow-x: hidden;
+  }
+
+      button {
+  all: unset; /* Reset all native button styles */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent; /* Removes gray tap on Android */
+  text-align: center;
+  font-size: 12px;
+  color: #333;
+}
+
+button:focus,
+button:active,
+button:focus-visible {
+  outline: none !important;
+  background: none !important;
+  box-shadow: none !important;
+}
+
+
+      button {
+  -webkit-tap-highlight-color: transparent; /* ⛔ Removes gray iOS tap highlight */
+  outline: none;
+  border: none;
+  background: none;
+}
+
+button:focus,
+button:focus-visible,
+button:active {
+  outline: none !important;
+  box-shadow: none !important;
+  background: none !important;
+}
+
+
+      button:focus {
+  outline: none;
+}
+
+button::-moz-focus-inner {
+  border: 0;
+}
+
+button:active {
+  outline: none;
+}
+
+button:focus-visible {
+  outline: none;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+
+
+      body {
+  padding-bottom: calc(100px + env(safe-area-inset-bottom));
+  overflow-x: hidden;
+}
+
+#bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  background: white;
+  border-top: 1px solid #ddd;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0;
+  padding-bottom: env(safe-area-inset-bottom);
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
+  z-index: 1000;
+  touch-action: manipulation;
+}
+
+#bottom-bar button {
+  all: unset;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 8px 0;
+  font-size: 12px;
+  color: #333;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+}
+
+#bottom-bar button:focus,
+#bottom-bar button:focus-visible,
+#bottom-bar button:active {
+  outline: none !important;
+  box-shadow: none !important;
+  background-color: transparent !important;
+}
+
+
+
+#bottom-bar .material-icons {
+  font-size: 35px;
+  line-height: 1;
+  margin-bottom: 0;
+  color: #4caf50;
+  transition: color 0.2s ease;
+}
+
+#bottom-bar button:hover {
+  background-color: #f0f0f0;
+}
+
+#bottom-bar button:hover .material-icons {
+  color: #388e3c;
+}
+
+
+
+
 
       #hamburger-manage-log-menu button {
   margin: 10px auto;
@@ -140,7 +284,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 25px 0;
+  padding: 20px 0;
   width: 100%;
   max-width: 900px;
   margin: 0 auto;
@@ -371,23 +515,50 @@ img {
         background-color: #45a049;
       }
 
-      #results {
-        display: none;
-        margin-top: 20px;
-        padding: 15px;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-        background-color: #f9f9f9;
-      }
+/* Prevent scroll globally */
+html, body {
+  overflow-x: hidden;
+}
 
-      #map {
-        width: 100%;
-        height: 300px;
-        margin-top: 20px;
-        flex-shrink: 0;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-      }
+/* Route results box */
+#results {
+  display: none;
+  margin-top: 20px;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+  box-sizing: border-box;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Keep map clean and constrained */
+#map {
+  width: 100%;
+  height: 300px;
+  margin-top: 20px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  box-sizing: border-box;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Text sections */
+#detailed-results,
+#mileage-display,
+#optimized-mileage-display {
+  max-width: 900px;
+  margin: 10px auto 0 auto;
+  padding: 0 15px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+
 
       .destination {
         display: flex;
@@ -710,6 +881,8 @@ img {
 
   </head>
   <body>
+
+    
 <div id="g_id_signin"></div>
 
 
@@ -717,7 +890,7 @@ img {
 <div id="top-bar" style="
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   position: fixed;
   top: 0;
   left: 0;
@@ -733,28 +906,42 @@ img {
   transition: none;
 ">
 
-  <!-- Left: Hamburger -->
-  <div style="flex: 1; display: flex; justify-content: flex-start; padding-left: 10px;">
-    <button id="hamburger-button" onclick="toggleMenu()">☰</button>
-  </div>
 
-  <!-- Center: Logo -->
-  <div style="flex: 1; display: flex; justify-content: center;">
-    <img id="logo-image" src="/logo.png" alt="Logo" style="height: 50px; max-height: 70px; cursor: pointer;" onclick="scrollToTop()">
-  </div>
+<!-- Left: Hamburger -->
+<div style="position: absolute; left: 12px; display: flex; align-items: center; height: 100%;">
+  <button id="hamburger-button" onclick="toggleMenu()" style="
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    color: black;
+    padding: 6px 10px;
+    border-radius: 8px;
+    transition: background-color 0.3s;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  ">☰</button>
+</div>
 
-  <!-- Right: Username -->
-  <div style="flex: 1; display: flex; justify-content: flex-end; padding-right: 10px;">
-    <span id="username-display" style="
-      font-size: 16px;
-      font-weight: bold;
-      background: none;
-      padding: 6px 10px;
-      border-radius: 8px;
-      color: black;
-      transition: background-color 0.3s;
-    "></span>
-  </div>
+<!-- Centered Logo -->
+<img id="logo-image" src="/logo.png" alt="Logo" style="height: 50px; max-height: 70px; cursor: pointer;" onclick="scrollToTop()">
+
+<!-- Right: Username -->
+<div style="position: absolute; right: 22px; display: flex; align-items: center; height: 100%;">
+  <span id="username-display" style="
+    font-size: 16px;
+    font-weight: bold;
+    background: none;
+    padding: 6px 10px;
+    border-radius: 8px;
+    color: black;
+    transition: background-color 0.3s;
+  "></span>
+</div>
+
 
 </div>
 
@@ -864,7 +1051,6 @@ img {
 </button>
 
 
-
 <!-- Dropdown Menu -->
 <div id="hamburger-manage-log-menu" style="
   max-height: 0;
@@ -882,6 +1068,32 @@ img {
   <button onclick="exportToCSVWithTotals()">Export CSV</button>
   <button onclick="exportToPDFWithTotals()">Export PDF</button>
 </div>
+
+<!-- ✅ New Settings Dropdown -->
+<!-- ✅ New Settings Dropdown -->
+<button id="hamburger-settings-toggle" onclick="toggleHamburgerSettingsMenu()">
+  Settings <span id="hamburger-settings-arrow" style="display: inline-block; transition: transform 0.3s;">▼</span>
+</button>
+
+<div id="hamburger-settings-menu" style="
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  margin-top: 5px;
+  text-align: center;
+  padding: 0 10px;
+">
+  <button onclick="installApp()">Install App</button>
+  <button onclick="window.open('/privacy-policy.html', '_blank')">Privacy Policy</button>
+  <button onclick="window.open('/faq.html', '_blank')">FAQ</button>
+
+</div>
+
+
 
     <div style="padding: 0 10px;">
       <button onclick="closeMenu(); logout()">Log Out</button>
@@ -1028,17 +1240,13 @@ img {
   "
 ></textarea>
 
-
-      <button onclick="optimizeRoute()">Optimize Route</button>
-      <button onclick="calculateRoute()">Calculate Route</button>
-      <button onclick="logResults()">Log Route</button>
-      <button onclick="openInGoogleMaps()">Open Route in Google Maps</button>
       <div
         id="confirmation-message"
         style="display: none; color: green; font-weight: bold; margin-top: 10px"
       ></div>
 
-      <div id="results" class="hidden">
+      <div class="container" style="padding: 0;">
+  <div id="results" class="hidden">
         <p>Mileage: <span id="total-mileage"></span> miles</p>
         <p>Drive Time: <span id="total-time"></span></p>
         <p>Total Earnings: $<span id="total-earnings"></span></p>
@@ -1053,19 +1261,16 @@ img {
             id="profit-per-hour"
           ></span>
         </p>
+        </div>
       </div>
 
-      <div id="map" class="hidden"></div>
-      <div id="detailed-results" style="margin-top: 20px"></div>
-      <div
-        id="mileage-display"
-        style="text-align: center; font-weight: bold; margin-top: 10px"
-      ></div>
-      <div
-        id="optimized-mileage-display"
-        style="text-align: center; font-weight: bold; margin-top: 10px"
-      ></div>
-    </div>
+<div id="map" class="hidden"></div>
+<div id="detailed-results" style="margin-top: 20px"></div>
+<div id="mileage-display" style="text-align: center; font-weight: bold; margin-top: 10px"></div>
+<div id="optimized-mileage-display" style="text-align: center; font-weight: bold; margin-top: 10px"></div>
+
+</div>
+
 
     <div id="log-container">
 
@@ -1130,16 +1335,6 @@ img {
       </ul>
     
     </div> <!-- end of #log-container -->
-
-<!-- 🆗 Android/Chrome will show this button; iOS won't -->
-<button id="install-button">Install App</button>
-
-
-    
-      
-
-
-
 
       <ul id="log-list"></ul>
     </div>
@@ -2136,8 +2331,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       }
 
-      async function calculateRoute() {
-  // 🚨 Check for at least one destination
+async function calculateRoute() {
   const destinationInputs = document.querySelectorAll('input[id^="destination-"]');
   const filledDestinations = Array.from(destinationInputs).filter(input => input.value.trim() !== "");
   if (filledDestinations.length === 0) {
@@ -2149,8 +2343,12 @@ document.addEventListener("DOMContentLoaded", () => {
   if (calculationResult) {
     updateUI(calculationResult);
     showConfirmationMessage("✅ Route calculated successfully!");
+
+    // ✅ Scroll to map
+    document.getElementById("map")?.scrollIntoView({ behavior: "smooth" });
   }
 }
+
 
 
 async function calculateRouteData() {
@@ -2570,7 +2768,11 @@ async function optimizeRoute() {
       };
 
       updateUI(optimizedData);
-      showConfirmationMessage("✅ Route optimized successfully!");
+showConfirmationMessage("✅ Route optimized successfully!");
+
+// ✅ Scroll to map after optimization
+document.getElementById("map")?.scrollIntoView({ behavior: "smooth" });
+
     } else if (status === "OK") {
       directionsRenderer.setDirections(response);
     } else {
@@ -4811,7 +5013,7 @@ function parseHoursAndMinutes(str = '') {
 
 
 
-let deferredPrompt;
+
 
 // ✅ Register the service worker
 if ("serviceWorker" in navigator) {
@@ -4937,6 +5139,46 @@ window.addEventListener('scroll', () => {
   };
 
 
+let deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+});
+
+function installApp() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then((choiceResult) => {
+      if (choiceResult.outcome === 'accepted') {
+        console.log('✅ User accepted the install prompt');
+      } else {
+        console.log('❌ User dismissed the install prompt');
+      }
+      deferredPrompt = null;
+    });
+  } else {
+    alert("⚠️ Installation is not supported or already installed.");
+  }
+}
+
+function toggleHamburgerSettingsMenu() {
+  const menu = document.getElementById("hamburger-settings-menu");
+  const arrow = document.getElementById("hamburger-settings-arrow");
+  if (!menu || !arrow) return;
+
+  const isOpen = menu.style.maxHeight && menu.style.maxHeight !== "0px";
+
+  if (isOpen) {
+    menu.style.maxHeight = "0";
+    arrow.style.transform = "rotate(0deg)";
+  } else {
+    menu.style.maxHeight = menu.scrollHeight + "px";
+    arrow.style.transform = "rotate(180deg)";
+  }
+}
+
+
     </script>
 
 <div id="universal-modal" style="
@@ -4964,11 +5206,38 @@ align-items: center;
 </div>
 </div>
 
-<footer style="text-align: center; padding: 20px 10px; font-size: 14px; color: #555;">
-  © Go Route Yourself ·
-  <a href="/privacy-policy.html" style="color: #0d6efd; text-decoration: none;">Privacy Policy</a>
-</footer>
+<div id="bottom-bar">
+<button onclick="calculateRoute()">
+  <span class="material-icons">calculate</span>
+  <span>Calculate</span>
+</button>
+
+  <button onclick="optimizeRoute()">
+    <span class="material-icons">tune</span>
+    <span>Optimize</span>
+  </button>
+  <button onclick="logResults()">
+    <span class="material-icons">edit_note</span>
+    <span>Log</span>
+  </button>
+  <button onclick="openInGoogleMaps()">
+    <span class="material-icons">map</span>
+    <span>Map</span>
+  </button>
+</div>
+
+<script>
+  function blurButtonOnInteraction(e) {
+    const btn = e.target.closest("button");
+    if (btn) btn.blur();
+  }
+
+  document.addEventListener("click", blurButtonOnInteraction);
+  document.addEventListener("touchend", blurButtonOnInteraction);
+</script>
+
+
+
 
   </body>
 </html>
-<img id="logo-image"
