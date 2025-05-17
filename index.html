@@ -41,8 +41,6 @@
     defer
   ></script>
 
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-
 <!-- <link rel="icon" href="favicon.ico" /> -->
 
 
@@ -1510,49 +1508,6 @@ function isDuplicateEntry(entry, existingLog) {
     parseFloat(e.totalMileage) === parseFloat(entry.totalMileage)
   );
 }
-
-
-
-window.onload = () => {
-  if (window.google && google.accounts && document.getElementById("g_id_signin")) {
-google.accounts.id.initialize({
-  client_id: '793067024580-t9o9tq1pist1qte0odvsrvi853t3n9oh.apps.googleusercontent.com',
-  callback: handleCredentialResponse,
-  ux_mode: 'popup'
-});
-
-
-
-    google.accounts.id.renderButton(
-      document.getElementById("g_id_signin"),
-      { theme: "outline", size: "large" }
-    );
-  }
-
-  function handleCredentialResponse(response) {
-    console.log("🧠 Google returned credential:", response);
-
-    fetch('https://gorouteyourself.com/api/google-login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id_token: response.credential })
-    })
-    .then(res => res.json())
-    .then(data => {
-      console.log("🔐 Login API response:", data);
-      if (data.token) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('username', data.username);
-        updateAuthUI();
-      } else {
-        alert("Google sign-in failed.");
-      }
-    });
-  }
-};
-
-
-
 
 
 
@@ -4612,21 +4567,6 @@ async function handleGoogleSignIn(response) {
 >
   Cancel
 </button>
-
-<!-- ✅ Google Sign-In Button -->
-<div id="g_id_onload"
-     data-client_id="793067024580-t9o9tq1pist1qte0odvsrvi853t3n9oh.apps.googleusercontent.com"
-     data-callback="handleGoogleSignIn"
-     data-auto_prompt="false">
-</div>
-<div class="g_id_signin"
-     data-type="standard"
-     data-size="large"
-     data-theme="outline"
-     data-text="sign_in_with"
-     data-shape="rectangular"
-     data-logo_alignment="left">
-</div>
 
 <p style="text-align: center; margin-top: 10px">
   <a href="#" onclick="toggleAuthMode()">
