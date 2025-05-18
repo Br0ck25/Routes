@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Panel</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f7fa;
+      padding: 20px;
+      margin: 0;
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 30px;
+    }
+    #login-section, #admin-section {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    input[type="password"] {
+      padding: 10px;
+      width: 80%;
+      font-size: 16px;
+      margin-right: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    button {
+      padding: 10px 16px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      background-color: #11A6DE;
+      color: white;
+    }
+    button:hover {
+      background-color: #0d8cc5;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      background: #f0f4f8;
+      margin-bottom: 10px;
+      padding: 15px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .user-info {
+      font-size: 16px;
+    }
+    .btns button {
+      margin-left: 8px;
+      background-color: #F67031;
+    }
+    .btns button:last-child {
+      background-color: #8DC42B;
+    }
+    .btns button:hover {
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+  <h2>Admin Panel</h2>
+  <div id="login-section">
+    <p>Enter admin token:</p>
+    <input type="password" id="admin-token" placeholder="Admin token" />
+    <button onclick="submitToken()">Submit</button>
+    <p id="error-message" style="color: red;"></p>
+  </div>
+
+  <div id="admin-section" style="display: none;">
+    <ul id="user-list"></ul>
+  </div>
+
+  <script>
+    let adminToken = "";
+
+    function submitToken() {
+      const token = document.getElementById("admin-token").value.trim();
+      if (!token) return;
+      adminToken = token;
+      loadUsers();
+    }
+
+    async function loadUsers() {
+      try {
+        const res = await fetch("https://logs.gorouteyourself.com/admin/users", {
+          headers: { Authorization: `Bearer ${adminToken}` }
+        });
+        if (!res.ok) throw new Error("Unauthorized");
+        const users = await res.json();
+        document.getElementById("login-section").style.display = "none";
+        document.getElementById("admin-section").style.display = "block";
+        const list = document.getElementById("user-list");
+        list.innerHTML = "";
+        users.forEach(u => {
+          const li = document.createElement("li");
+          li.innerHTML = `
+            <div class="user-info">
+              <strong>${u.username}</strong><br>
+              Reset Key: <code>${u.resetKey}</code>
+            </div>
+            <div class="btns">
+              <button onclick="deleteUser('${u.username}')">🗑 Delete</button>
+              <button onclick="resetPassword('${u.username}')">🔑 Reset</button>
+            </div>
+          `;
+          list.appendChild(li);
+        });
+      } catch (err) {
+        document.getElementById("error-message").textContent = "Invalid token or error loading users.";
+      }
+    }
+
+    async function deleteUser(username) {
+      if (!confirm(`Delete user ${username}?`)) return;
+      await fetch("https://logs.gorouteyourself.com/admin/delete", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${adminToken}`
+        },
+        body: JSON.stringify({ username })
+      });
+      loadUsers();
+    }
+
+    async function resetPassword(username) {
+      const newHash = prompt("Enter new hashed password for " + username);
+      if (!newHash) return;
+      await fetch("https://logs.gorouteyourself.com/admin/reset-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${adminToken}`
+        },
+        body: JSON.stringify({ username, newHash })
+      });
+      alert("Password reset.");
+    }
+  </script>
+</body>
+</html>
