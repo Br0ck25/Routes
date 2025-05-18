@@ -4,6 +4,17 @@
     <meta charset="UTF-8" />
     <title>Admin Panel</title>
     <style>
+      #logs-modal table th,
+      #logs-modal table td {
+        border-bottom: 1px solid #ccc;
+        padding: 8px;
+        text-align: left;
+      }
+      #logs-modal table th {
+        background-color: #11a6de;
+        color: white;
+      }
+
       body {
         font-family: "Segoe UI", Tahoma, sans-serif;
         background-color: #f4f7fa;
@@ -216,7 +227,25 @@
         >✖</span
       >
       <h3>Logs</h3>
-      <pre id="logs-output">Loading...</pre>
+      <div style="overflow-x: auto">
+        <table
+          id="logs-table"
+          style="width: 100%; border-collapse: collapse; margin-top: 10px"
+        >
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Destinations</th>
+              <th>Total Earnings</th>
+              <th>Mileage</th>
+              <th>Drive Time</th>
+              <th>Profit</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody id="logs-output"></tbody>
+        </table>
+      </div>
     </div>
 
     <script>
@@ -350,15 +379,36 @@
       async function viewLogs(username) {
         const user = allUsers.find((u) => u.username === username);
         if (!user || !user.token) return alert("User token missing.");
+
         const res = await fetch("https://logs.gorouteyourself.com/logs", {
           headers: {
             Authorization: `Bearer ${user.token}`,
           },
         });
 
-        const data = await res.text();
-        document.getElementById("logs-output").textContent =
-          data || "No logs found.";
+        const logs = await res.json().catch(() => []);
+        const tbody = document.getElementById("logs-output");
+        tbody.innerHTML = "";
+
+        if (!Array.isArray(logs) || logs.length === 0) {
+          tbody.innerHTML =
+            '<tr><td colspan="7" style="text-align:center;">No logs found</td></tr>';
+        } else {
+          logs.forEach((log) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+        <td>${log.date || ""}</td>
+        <td>${(log.destinations || []).join("<br>")}</td>
+        <td>$${Number(log.totalEarnings || 0).toFixed(2)}</td>
+        <td>${log.totalMileage || ""}</td>
+        <td>${log.totalTime || ""}</td>
+        <td>$${log.netProfit || ""}</td>
+        <td>${log.notes || ""}</td>
+      `;
+            tbody.appendChild(row);
+          });
+        }
+
         document.getElementById("logs-modal").style.display = "block";
       }
     </script>
