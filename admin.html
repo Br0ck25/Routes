@@ -127,7 +127,7 @@
       const ok = confirm(`Are you sure you want to '${action}' for '${username}'?`);
       if (!ok) return;
 
-      const res = await fetch("/admin/actions", {
+      const res = await fetch("https://logs.gorouteyourself.com/admin/fixable-users", {
         method: "POST",
         headers: {
           Authorization: adminToken,
@@ -141,7 +141,8 @@
     }
 
     async function viewLog(token) {
-      const res = await fetch("/logs", {
+      const res = await fetch("https://logs.gorouteyourself.com/admin/fixable-users", {
+
         headers: { Authorization: "Bearer " + token }
       });
       const logs = await res.json();
@@ -149,7 +150,8 @@
     }
 
     async function loadCorruptedUsers() {
-      const res = await fetch("/admin/fixable-users", {
+      const res = await fetch("https://logs.gorouteyourself.com/admin/fixable-users", {
+
         headers: { Authorization: adminToken }
       });
       const list = await res.json();
@@ -180,7 +182,8 @@
           const token = btn.dataset.token || crypto.randomUUID();
           const resetKey = crypto.randomUUID();
 
-          const resp = await fetch("/admin/fix-user", {
+          const resp = await fetch("https://logs.gorouteyourself.com/admin/fixable-users", {
+
             method: "POST",
             headers: {
               "Content-Type": "application/json",
