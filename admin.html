@@ -1,404 +1,279 @@
-// src/index.js
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Admin Panel - Go Route Yourself</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        background: #f4f6f9;
+      }
+      h1 {
+        color: #333;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        background: white;
+        margin-bottom: 30px;
+      }
+      th,
+      td {
+        border: 1px solid #ccc;
+        padding: 10px;
+        text-align: left;
+        font-size: 14px;
+      }
+      th {
+        background: #007bff;
+        color: white;
+      }
+      button {
+        padding: 6px 10px;
+        font-size: 13px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .danger {
+        background-color: #dc3545;
+        color: white;
+      }
+      .reset {
+        background-color: #17a2b8;
+        color: white;
+      }
+      .token {
+        background-color: #ffc107;
+        color: black;
+      }
+      .disable {
+        background-color: #6c757d;
+        color: white;
+      }
+      .view {
+        background-color: #28a745;
+        color: white;
+      }
+      .fix-btn {
+        background-color: #28a745;
+        color: white;
+        margin-top: 10px;
+      }
+      code {
+        background: #f0f0f0;
+        padding: 2px 5px;
+        border-radius: 4px;
+      }
+      .user-block {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        padding: 12px;
+        margin-bottom: 12px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🔐 Admin Panel — Registered Users</h1>
+    <table id="user-table">
+      <tr>
+        <th>Username</th>
+        <th>Reset Key</th>
+        <th>Created At</th>
+        <th>Method</th>
+        <th>Logs</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </table>
 
-function withCors(resp, req) {
-	const allowedOrigins = ['https://gorouteyourself.com', 'https://betaroute.brocksville.com'];
-	const origin = req.headers.get('Origin');
-	if (allowedOrigins.includes(origin)) {
-		resp.headers.set('Access-Control-Allow-Origin', origin);
-	}
-	resp.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-	resp.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-	resp.headers.set('Access-Control-Max-Age', '86400');
-	return resp;
-}
+    <h2>🧩 Fix Corrupted Users</h2>
+    <div id="corrupted-users">Loading corrupted users...</div>
 
-async function hashPassword(password) {
-	const encoder = new TextEncoder();
-	const data = encoder.encode(password);
-	const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-	return [...new Uint8Array(hashBuffer)].map((b) => b.toString(16).padStart(2, '0')).join('');
-}
+    <script>
+      const adminToken = "Bearer Jbrock25!";
 
-export default {
-	async fetch(request, env, ctx) {
-		try {
-			const url = new URL(request.url);
-			const { pathname } = url;
+      async function loadUsers() {
+        const res = await fetch(
+          "https://logs.gorouteyourself.com/admin/users",
+          {
+            headers: { Authorization: adminToken },
+          }
+        );
+        const users = await res.json();
+        const table = document.getElementById("user-table");
 
-			const ADMIN_KEY = env.ADMIN_TOKEN || 'my-super-secret-token';
-			const isAdmin = (req) => req.headers.get('authorization') === `Bearer ${ADMIN_KEY}`;
+        users.forEach((user) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+        <td>${user.username}</td>
+        <td><code>${user.resetKey}</code></td>
+        <td>${user.createdAt || ""}</td>
+        <td>${user.method}</td>
+        <td>${user.logCount}</td>
+        <td>${user.disabled ? "❌ Disabled" : "✅ Active"}</td>
+        <td>
+          <button class="reset" onclick="resetUserPassword('${
+            user.username
+          }')">Reset Password</button>
 
-			if (request.method === 'OPTIONS') {
-				return withCors(new Response(null, { status: 204 }), request);
-			}
+          <button class="reset" onclick="adminAction('reset-key','${
+            user.username
+          }')">New Reset Key</button>
+          <button class="token" onclick="adminAction('reset-token','${
+            user.username
+          }')">New Token</button>
+          <button class="disable" onclick="adminAction('toggle-disabled','${
+            user.username
+          }')">${user.disabled ? "Enable" : "Disable"}</button>
+          <button class="danger" onclick="adminAction('delete','${
+            user.username
+          }')">Delete</button>
+          <button class="view" onclick="viewLog('${
+            user.token
+          }')">View Log</button>
+        </td>
+      `;
+          table.appendChild(tr);
+        });
+      }
 
-			const json = async () => await request.json().catch(() => ({}));
-			const getUserKey = (username) => `user:${username}`;
-			const getLogsKey = (token) => `logs:${token}`;
+      async function adminAction(action, username) {
+        const ok = confirm(
+          `Are you sure you want to '${action}' for '${username}'?`
+        );
+        if (!ok) return;
 
-			// 🔐 Admin: List users
-			if (pathname === '/admin/users' && request.method === 'GET') {
-				if (!isAdmin(request)) return withCors(new Response('Unauthorized', { status: 401 }), request);
+        const payload = { action, username };
 
-				const list = await env.LOGS_KV.list({ prefix: 'user:' });
-				const users = [];
+        const res = await fetch(
+          "https://logs.gorouteyourself.com/admin/actions",
+          {
+            method: "POST",
+            headers: {
+              Authorization: adminToken,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          }
+        );
 
-				for (const key of list.keys) {
-					try {
-						const value = await env.LOGS_KV.get(key.name, { type: 'json' });
-						if (value && typeof value === 'object') {
-							const token = value.token;
-							const logsRaw = await env.LOGS_KV.get(`logs:${token}`);
-							const logs = logsRaw ? JSON.parse(logsRaw) : [];
-							users.push({
-								username: value.username || key.name.replace('user:', ''),
-								resetKey: value.resetKey || '(none)',
-								createdAt: value.createdAt || '',
-								method: value.google ? 'Google' : 'Manual',
-								disabled: !!value.disabled,
-								logCount: logs.length,
-								token: value.token || '',
-							});
-						}
-					} catch (err) {
-						console.warn(`Skipping malformed user: ${key.name}`);
-					}
-				}
+        const contentType = res.headers.get("content-type") || "";
+        let message = "";
 
-				return withCors(Response.json(users), request);
-			}
+        if (contentType.includes("application/json")) {
+          const result = await res.json();
+          if (result.status === "updated") {
+            const user = result.user;
+            message = `✅ Action completed for ${user.username}\n\nNew Token:\n${user.token}\nReset Key:\n${user.resetKey}`;
+          } else {
+            message = "Something went wrong: " + JSON.stringify(result);
+          }
+        } else {
+          message = await res.text();
+        }
 
-			// 🔐 Admin: Perform actions on user
-			if (pathname === '/admin/actions' && request.method === 'POST') {
-				if (!isAdmin(request)) return withCors(new Response('Unauthorized', { status: 401 }), request);
+        alert(message);
+        location.reload();
+      }
 
-				const { action, username, newPassword } = await json();
-				const userKey = getUserKey(username);
-				const user = await env.LOGS_KV.get(userKey, { type: 'json' });
-				if (!user) return withCors(new Response('User not found', { status: 404 }), request);
+      async function viewLog(token) {
+        const res = await fetch("https://logs.gorouteyourself.com/logs", {
+          headers: { Authorization: "Bearer " + token },
+        });
+        const logs = await res.json();
+        alert("Logs:\n\n" + JSON.stringify(logs, null, 2));
+      }
 
-				let updated = false;
+      async function loadCorruptedUsers() {
+        const res = await fetch(
+          "https://logs.gorouteyourself.com/admin/fixable-users",
+          {
+            headers: { Authorization: adminToken },
+          }
+        );
+        const list = await res.json();
+        const container = document.getElementById("corrupted-users");
+        container.innerHTML = "";
 
-				if (action === 'reset-key') {
-					user.resetKey = crypto.randomUUID();
-					updated = true;
-				} else if (action === 'reset-token') {
-					user.token = crypto.randomUUID();
-					updated = true;
-				} else if (action === 'toggle-disabled') {
-					user.disabled = !user.disabled;
-					updated = true;
-				} else if (action === 'reset-password' && newPassword) {
-					user.password = await hashPassword(newPassword);
-					updated = true;
-				} else if (action === 'delete') {
-					await env.LOGS_KV.delete(userKey);
-					await env.LOGS_KV.delete(getLogsKey(user.token));
-					return withCors(Response.json({ status: 'deleted' }), request);
-				}
+        if (list.length === 0) {
+          container.textContent = "✅ No corrupted users found.";
+          return;
+        }
 
-				if (updated) {
-					await env.LOGS_KV.put(userKey, JSON.stringify(user));
-					return withCors(Response.json({ status: 'updated', user }), request);
-				}
+        list.forEach((user) => {
+          const div = document.createElement("div");
+          div.className = "user-block";
+          div.innerHTML = `
+        <div><strong>${user.key}</strong></div>
+        <div>Password: <code>${user.password}</code></div>
+        <div>Token: <code>${
+          user.token || "(new will be generated)"
+        }</code></div>
+        <button class="fix-btn" data-key="${user.key}" data-password="${
+            user.password
+          }" data-token="${user.token}">✅ Fix User</button>
+      `;
+          container.appendChild(div);
+        });
 
-				return withCors(new Response('No changes made', { status: 400 }), request);
-			}
+        document.querySelectorAll(".fix-btn").forEach((btn) => {
+          btn.addEventListener("click", async () => {
+            const key = btn.dataset.key;
+            const password = btn.dataset.password;
+            const token = btn.dataset.token || crypto.randomUUID();
+            const resetKey = crypto.randomUUID();
 
-			// 🧑 User: Sign up
-			if (pathname === '/api/signup' && request.method === 'POST') {
-				const { username, password } = await json();
-				const userKey = getUserKey(username);
-				if (await env.LOGS_KV.get(userKey)) {
-					return withCors(Response.json({ error: 'That username is already taken. Please choose another.' }, { status: 400 }), request);
-				}
+            const resp = await fetch(
+              "https://logs.gorouteyourself.com/admin/fix-user",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: adminToken,
+                },
+                body: JSON.stringify({ key, password, token, resetKey }),
+              }
+            );
 
-				const token = crypto.randomUUID();
-				const resetKey = crypto.randomUUID();
-				const hashedPassword = await hashPassword(password);
-				await env.LOGS_KV.put(
-					userKey,
-					JSON.stringify({
-						username,
-						password: hashedPassword,
-						token,
-						resetKey,
-						createdAt: new Date().toISOString(),
-					})
-				);
+            alert(await resp.text());
+            location.reload();
+          });
+        });
+      }
+      async function resetUserPassword(username) {
+        const newPassword = prompt(`Enter a new password for ${username}`);
+        if (!newPassword) return;
 
-				return withCors(Response.json({ token, resetKey }), request);
-			}
+        const res = await fetch(
+          "https://logs.gorouteyourself.com/admin/actions",
+          {
+            method: "POST",
+            headers: {
+              Authorization: adminToken,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              action: "reset-password",
+              username,
+              newPassword,
+            }),
+          }
+        );
 
-			// 🧑 User: Login
-			if (pathname === '/api/login' && request.method === 'POST') {
-				const { username, password } = await json();
-				const userKey = getUserKey(username);
-				const data = await env.LOGS_KV.get(userKey);
-				if (!data) return withCors(new Response('User not found', { status: 404 }), request);
-				const user = JSON.parse(data);
-				if (user.disabled) {
-					return withCors(new Response('Account disabled', { status: 403 }), request);
-				}
+        const result = await res.json().catch(() => null);
+        if (result?.status === "updated") {
+          alert(`✅ Password reset for ${username}`);
+        } else {
+          alert("❌ Failed to reset password.");
+        }
+      }
 
-				const hashed = await hashPassword(password);
-
-				if (user.password === password) {
-					user.password = hashed;
-					await env.LOGS_KV.put(userKey, JSON.stringify(user));
-				}
-
-				if (user.password !== hashed) {
-					return withCors(new Response('Invalid password', { status: 403 }), request);
-				}
-
-				return withCors(Response.json({ token: user.token }), request);
-			}
-
-			// 🧑 User: Change password
-			if (pathname === '/api/change-password' && request.method === 'POST') {
-				const { username, currentPassword, newPassword } = await json();
-				const userKey = getUserKey(username);
-				const data = await env.LOGS_KV.get(userKey);
-				if (!data) return withCors(new Response('User not found', { status: 404 }), request);
-				const user = JSON.parse(data);
-				if (user.disabled) {
-					return withCors(new Response('Account disabled', { status: 403 }), request);
-				}
-
-				const token = request.headers.get('Authorization');
-				const hashedCurrent = await hashPassword(currentPassword);
-
-				if (user.token !== token || user.password !== hashedCurrent) {
-					return withCors(new Response('Unauthorized', { status: 403 }), request);
-				}
-
-				user.password = await hashPassword(newPassword);
-				await env.LOGS_KV.put(userKey, JSON.stringify(user));
-				return withCors(new Response('Password changed'), request);
-			}
-
-			// 🧑 User: Reset password with reset key
-			if (pathname === '/api/reset-password' && request.method === 'POST') {
-				const { username, resetKey, newPassword } = await json();
-				const userKey = getUserKey(username);
-				const data = await env.LOGS_KV.get(userKey);
-				if (!data) return withCors(new Response('User not found', { status: 404 }), request);
-				const user = JSON.parse(data);
-				if (user.disabled) {
-					return withCors(new Response('Account disabled', { status: 403 }), request);
-				}
-
-				if (user.resetKey !== resetKey) return withCors(new Response('Invalid reset key', { status: 403 }), request);
-				user.password = await hashPassword(newPassword);
-				await env.LOGS_KV.put(userKey, JSON.stringify(user));
-				return withCors(new Response('Password reset'), request);
-			}
-
-			// 🧑 User: Delete account
-			if (pathname === '/api/delete-account' && request.method === 'POST') {
-				const { username, password } = await json();
-				const userKey = getUserKey(username);
-				const data = await env.LOGS_KV.get(userKey);
-				if (!data) return withCors(new Response('User not found', { status: 404 }), request);
-				const user = JSON.parse(data);
-				if (user.disabled) {
-					return withCors(new Response('Account disabled', { status: 403 }), request);
-				}
-
-				const token = request.headers.get('Authorization');
-				const hashedPassword = await hashPassword(password);
-
-				if (user.token !== token || user.password !== hashedPassword) {
-					return withCors(new Response('Unauthorized', { status: 403 }), request);
-				}
-
-				await env.LOGS_KV.delete(userKey);
-				await env.LOGS_KV.delete(getLogsKey(user.token));
-				return withCors(new Response('Account deleted'), request);
-			}
-
-			// 🧾 GET /logs — User or admin impersonation
-			if (pathname === '/logs' && request.method === 'GET') {
-				const authHeader = request.headers.get('Authorization') || '';
-				const token = authHeader.replace('Bearer ', '').trim();
-				if (!token) return withCors(new Response('Missing token', { status: 401 }), request);
-
-				// ✅ Check if user is disabled
-				const list = await env.LOGS_KV.list({ prefix: 'user:' });
-				for (const key of list.keys) {
-					const value = await env.LOGS_KV.get(key.name, { type: 'json' });
-					if (value?.token === token && value.disabled) {
-						return withCors(new Response('Account disabled', { status: 403 }), request);
-					}
-				}
-
-				// ✅ Validate and return logs
-				const raw = await env.LOGS_KV.get(getLogsKey(token));
-				let safeLogs = '[]';
-
-				try {
-					if (raw) {
-						JSON.parse(raw); // Validate
-						safeLogs = raw;
-					}
-				} catch (err) {
-					console.warn('⚠️ Corrupted logs in KV for token:', token, '→ returning empty array');
-					// optional: await env.LOGS_KV.delete(getLogsKey(token)); // purge bad log if you want
-				}
-
-				return withCors(
-					new Response(safeLogs, {
-						headers: { 'Content-Type': 'application/json' },
-					}),
-					request
-				);
-			}
-
-			// 🧾 POST /logs — Save logs for a user
-			if (pathname === '/logs' && request.method === 'POST') {
-				const authHeader = request.headers.get('Authorization') || '';
-				const token = authHeader.replace('Bearer ', '').trim();
-				if (!token) return withCors(new Response('Missing token', { status: 401 }), request);
-
-				// ✅ Find user by token and check if disabled
-				const list = await env.LOGS_KV.list({ prefix: 'user:' });
-				for (const key of list.keys) {
-					const value = await env.LOGS_KV.get(key.name, { type: 'json' });
-					if (value?.token === token && value.disabled) {
-						return withCors(new Response('Account disabled', { status: 403 }), request);
-					}
-				}
-
-				// ✅ Save logs if not disabled
-				const body = await request.text();
-
-				try {
-					const parsed = JSON.parse(body);
-					if (!Array.isArray(parsed)) {
-						return withCors(new Response('Invalid log format: expected array', { status: 400 }), request);
-					}
-				} catch (err) {
-					return withCors(new Response('Invalid JSON in logs', { status: 400 }), request);
-				}
-
-				await env.LOGS_KV.put(getLogsKey(token), body);
-				return withCors(new Response('Logs saved'), request);
-			}
-
-			if (pathname === '/' || pathname === '/index.html') {
-				const html = await env.ASSETS.get('index.html');
-				if (!html) return new Response('index.html not found', { status: 404 });
-
-				const headers = new Headers({ 'Content-Type': 'text/html; charset=utf-8' });
-				headers.set('Cache-Control', 'no-store');
-				headers.delete('Cross-Origin-Opener-Policy');
-				headers.delete('Cross-Origin-Embedder-Policy');
-
-				return new Response(html, { headers });
-			}
-
-			const staticAsset = await env.ASSETS.get(pathname.slice(1));
-			if (staticAsset) {
-				let contentType = 'application/octet-stream';
-				if (pathname.endsWith('.html')) contentType = 'text/html; charset=utf-8';
-				else if (pathname.endsWith('.json')) contentType = 'application/json';
-				else if (pathname.endsWith('.png')) contentType = 'image/png';
-				else if (pathname.endsWith('.svg')) contentType = 'image/svg+xml';
-				else if (pathname.endsWith('.js')) contentType = 'application/javascript';
-
-				const headers = new Headers({ 'Content-Type': contentType });
-
-				if (contentType.startsWith('text/html')) {
-					headers.set('Cache-Control', 'no-store');
-					headers.delete('Cross-Origin-Opener-Policy');
-					headers.delete('Cross-Origin-Embedder-Policy');
-				}
-
-				return new Response(staticAsset, { headers });
-			}
-
-			if (pathname === '/debug/dump-bad-kv') {
-				const results = [];
-
-				const list = await env.LOGS_KV.list();
-				for (const key of list.keys) {
-					const value = await env.LOGS_KV.get(key.name);
-					if (value && value.trim().startsWith('YLLpL075bj')) {
-						results.push({ key: key.name, value });
-					}
-				}
-
-				return new Response(JSON.stringify(results, null, 2), {
-					headers: { 'Content-Type': 'application/json' },
-				});
-			}
-
-			if (pathname === '/admin/fix-user' && request.method === 'POST') {
-				if (!isAdmin(request)) return new Response('Unauthorized', { status: 401 });
-				const { key, password, token, resetKey } = await json();
-
-				const hashed = await hashPassword(password);
-
-				const user = {
-					username: key.replace('user:', ''),
-					password: hashed,
-					token,
-					resetKey: resetKey || crypto.randomUUID(),
-					createdAt: new Date().toISOString(),
-				};
-
-				await env.LOGS_KV.put(key, JSON.stringify(user));
-				return new Response('✅ User fixed');
-			}
-
-			if (pathname === '/admin/fixable-users' && request.method === 'GET') {
-				if (!isAdmin(request)) return new Response('Unauthorized', { status: 401 });
-
-				const results = [];
-
-				const list = await env.LOGS_KV.list({ prefix: 'user:' });
-				for (const key of list.keys) {
-					try {
-						const val = await env.LOGS_KV.get(key.name);
-						const parsed = JSON.parse(val);
-						if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
-							throw new Error('Not a valid user object');
-						}
-					} catch (err) {
-						// It's a malformed entry — likely a password string
-						const tokenGuess = key.name.replace('user:', '');
-						const possibleLogs = await env.LOGS_KV.list({ prefix: 'logs:' });
-						let match = possibleLogs.keys.find((k) => k.name.endsWith(tokenGuess));
-						results.push({
-							key: key.name,
-							password: await env.LOGS_KV.get(key.name),
-							token: match ? match.name.replace('logs:', '') : null,
-						});
-					}
-				}
-
-				return withCors(
-					new Response(JSON.stringify(results), {
-						headers: { 'Content-Type': 'application/json' },
-					}),
-					request
-				);
-			}
-
-			return withCors(new Response('Not found', { status: 404 }), request);
-		} catch (err) {
-			return withCors(
-				Response.json(
-					{
-						error: 'Internal Server Error',
-						message: err.message,
-						stack: err.stack,
-					},
-					{ status: 500 }
-				),
-				request
-			);
-		}
-	},
-};
+      loadUsers();
+      loadCorruptedUsers();
+    </script>
+  </body>
+</html>
