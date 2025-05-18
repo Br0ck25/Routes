@@ -2668,6 +2668,16 @@ async function optimizeRoute() {
   }
 
   if (originalMileage === null) {
+  const result = await calculateRouteData();
+  if (result && result.totalMileage) {
+    originalMileage = parseFloat(result.totalMileage);
+    document.getElementById("mileage-display").textContent =
+      "Original Route: " + originalMileage.toFixed(2) + " miles";
+  }
+}
+
+
+  if (originalMileage === null) {
     await calculateRouteData();
   }
 
