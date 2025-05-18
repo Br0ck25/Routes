@@ -1,416 +1,202 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8" />
-    <title>Admin Panel</title>
-    <style>
-      #logs-modal table th,
-      #logs-modal table td {
-        border-bottom: 1px solid #ccc;
-        padding: 8px;
-        text-align: left;
-      }
-      #logs-modal table th {
-        background-color: #11a6de;
-        color: white;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Panel - Go Route Yourself</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f4f6f9;
+    }
+    h1 {
+      color: #333;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      background: white;
+      margin-bottom: 30px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: left;
+      font-size: 14px;
+    }
+    th {
+      background: #007bff;
+      color: white;
+    }
+    button {
+      padding: 6px 10px;
+      font-size: 13px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .danger {
+      background-color: #dc3545;
+      color: white;
+    }
+    .reset {
+      background-color: #17a2b8;
+      color: white;
+    }
+    .token {
+      background-color: #ffc107;
+      color: black;
+    }
+    .disable {
+      background-color: #6c757d;
+      color: white;
+    }
+    .view {
+      background-color: #28a745;
+      color: white;
+    }
+    .fix-btn {
+      background-color: #28a745;
+      color: white;
+      margin-top: 10px;
+    }
+    code {
+      background: #f0f0f0;
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+    .user-block {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+  </style>
+</head>
+<body>
+  <h1>🔐 Admin Panel — Registered Users</h1>
+  <table id="user-table">
+    <tr>
+      <th>Username</th>
+      <th>Reset Key</th>
+      <th>Created At</th>
+      <th>Method</th>
+      <th>Logs</th>
+      <th>Status</th>
+      <th>Actions</th>
+    </tr>
+  </table>
 
-      body {
-        font-family: "Segoe UI", Tahoma, sans-serif;
-        background-color: #f4f7fa;
-        margin: 0;
-        padding: 0;
-      }
+  <h2>🧩 Fix Corrupted Users</h2>
+  <div id="corrupted-users">Loading corrupted users...</div>
 
-      #admin-section {
-        max-width: 1200px;
-        margin: 50px auto;
-        background: white;
-        padding: 30px;
-        border-radius: 10px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      }
+  <script>
+    const adminToken = "Bearer Jbrock25!";
 
-      h2 {
-        text-align: center;
-        color: #333;
-        margin-bottom: 30px;
-      }
+    async function loadUsers() {
+      const res = await fetch("/admin/users", {
+        headers: { Authorization: adminToken }
+      });
+      const users = await res.json();
+      const table = document.getElementById("user-table");
 
-      .admin-login {
-        text-align: center;
-        margin-bottom: 20px;
-      }
-
-      .admin-login input {
-        padding: 10px;
-        width: 250px;
-        border-radius: 6px;
-        border: 1px solid #ccc;
-        font-size: 16px;
-        margin-right: 10px;
-      }
-
-      .admin-login button {
-        padding: 10px 20px;
-        font-size: 16px;
-        border-radius: 6px;
-        border: none;
-        background-color: #11a6de;
-        color: white;
-        cursor: pointer;
-      }
-
-      .admin-login button:hover {
-        background-color: #0d8cc5;
-      }
-
-      #search-container {
-        margin-bottom: 15px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-
-      #search-input {
-        padding: 8px;
-        font-size: 16px;
-        width: 300px;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-      }
-
-      #export-btn {
-        padding: 8px 14px;
-        background-color: #8dc42b;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-      }
-
-      #export-btn:hover {
-        background-color: #77ad23;
-      }
-
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 10px;
-      }
-
-      th,
-      td {
-        padding: 12px 15px;
-        border-bottom: 1px solid #ddd;
-        text-align: left;
-      }
-
-      th {
-        background-color: #11a6de;
-        color: white;
-        position: sticky;
-        top: 0;
-        z-index: 1;
-      }
-
-      td code {
-        font-family: monospace;
-        font-size: 0.85em;
-        background: #f2f2f2;
-        padding: 2px 4px;
-        border-radius: 4px;
-      }
-
-      td button {
-        padding: 6px 10px;
-        font-size: 14px;
-        margin: 2px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-      }
-
-      .danger {
-        background-color: #f35e34;
-        color: white;
-      }
-      .primary {
-        background-color: #11a6de;
-        color: white;
-      }
-      .success {
-        background-color: #8dc42b;
-        color: white;
-      }
-      .warn {
-        background-color: #f67031;
-        color: white;
-      }
-
-      #error-message {
-        color: red;
-        text-align: center;
-        font-weight: bold;
-        margin-top: 15px;
-      }
-
-      #logs-modal {
-        display: none;
-        position: fixed;
-        top: 10%;
-        left: 10%;
-        width: 80%;
-        height: 70%;
-        background: white;
-        border: 1px solid #ccc;
-        overflow: auto;
-        padding: 20px;
-        z-index: 10;
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-      }
-
-      #logs-modal pre {
-        white-space: pre-wrap;
-        word-wrap: break-word;
-      }
-
-      #close-modal {
-        position: absolute;
-        top: 10px;
-        right: 20px;
-        font-size: 18px;
-        cursor: pointer;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="admin-section">
-      <h2>Admin Panel</h2>
-      <div class="admin-login" id="admin-login">
-        <input
-          type="password"
-          id="admin-token"
-          placeholder="Enter admin token"
-        />
-        <button onclick="submitToken()">Submit</button>
-        <p id="error-message"></p>
-      </div>
-      <div id="search-container" style="display: none">
-        <input
-          id="search-input"
-          oninput="filterUsers()"
-          placeholder="Search by username..."
-        />
-        <button id="export-btn" onclick="exportCSV()">📥 Export Users</button>
-      </div>
-      <table id="user-table" style="display: none">
-        <thead>
-          <tr>
-            <th>Username</th>
-            <th>Reset Key</th>
-            <th>Created At</th>
-            <th>Method</th>
-            <th>Logs</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="user-rows"></tbody>
-      </table>
-    </div>
-
-    <div id="logs-modal">
-      <span
-        id="close-modal"
-        onclick="document.getElementById('logs-modal').style.display='none'"
-        >✖</span
-      >
-      <h3>Logs</h3>
-      <div style="overflow-x: auto">
-        <table
-          id="logs-table"
-          style="width: 100%; border-collapse: collapse; margin-top: 10px"
-        >
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Destinations</th>
-              <th>Total Earnings</th>
-              <th>Mileage</th>
-              <th>Drive Time</th>
-              <th>Profit</th>
-              <th>Notes</th>
-            </tr>
-          </thead>
-          <tbody id="logs-output"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <script>
-      let adminToken = "";
-      let allUsers = [];
-
-      function submitToken() {
-        adminToken = document.getElementById("admin-token").value;
-        if (!adminToken) return;
-        document.getElementById("admin-login").style.display = "none";
-        document.getElementById("search-container").style.display = "flex";
-        loadUsers();
-      }
-
-      async function loadUsers() {
-        try {
-          const res = await fetch(
-            "https://logs.gorouteyourself.com/admin/users",
-            {
-              headers: { Authorization: `Bearer ${adminToken}` },
-            }
-          );
-          const users = await res.json();
-          allUsers = users;
-          renderUsers(users);
-        } catch (err) {
-          document.getElementById("error-message").textContent =
-            "Failed to load users.";
-          document.getElementById("admin-login").style.display = "block";
-        }
-      }
-
-      function renderUsers(users) {
-        document.getElementById("user-table").style.display = "";
-        const tbody = document.getElementById("user-rows");
-        tbody.innerHTML = "";
-
-        users.forEach((u) => {
-          const row = document.createElement("tr");
-          row.innerHTML = `
-          <td>${u.username}</td>
-          <td><code>${u.resetKey}</code></td>
-          <td>${u.createdAt}</td>
-          <td>${u.method}</td>
-          <td>${u.logCount}</td>
-          <td>${u.disabled ? "🔒 Disabled" : "✅ Active"}</td>
+      users.forEach(user => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${user.username}</td>
+          <td><code>${user.resetKey}</code></td>
+          <td>${user.createdAt || ""}</td>
+          <td>${user.method}</td>
+          <td>${user.logCount}</td>
+          <td>${user.disabled ? "❌ Disabled" : "✅ Active"}</td>
           <td>
-            <button class="primary" onclick="act('${
-              u.username
-            }', 'reset-key')">Reset Key</button>
-            <button class="success" onclick="act('${
-              u.username
-            }', 'reset-token')">New Token</button>
-            <button class="warn" onclick="act('${
-              u.username
-            }', 'toggle-disabled')">${
-            u.disabled ? "Enable" : "Disable"
-          }</button>
-            <button class="primary" onclick="viewLogs('${
-              u.username
-            }')">View Logs</button>
-            <button class="danger" onclick="deleteUser('${
-              u.username
-            }')">Delete</button>
+            <button class="reset" onclick="adminAction('reset-key','${user.username}')">New Reset Key</button>
+            <button class="token" onclick="adminAction('reset-token','${user.username}')">New Token</button>
+            <button class="disable" onclick="adminAction('toggle-disabled','${user.username}')">${user.disabled ? "Enable" : "Disable"}</button>
+            <button class="danger" onclick="adminAction('delete','${user.username}')">Delete</button>
+            <button class="view" onclick="viewLog('${user.token}')">View Log</button>
           </td>
         `;
-          tbody.appendChild(row);
-        });
+        table.appendChild(tr);
+      });
+    }
+
+    async function adminAction(action, username) {
+      const ok = confirm(`Are you sure you want to '${action}' for '${username}'?`);
+      if (!ok) return;
+
+      const res = await fetch("/admin/actions", {
+        method: "POST",
+        headers: {
+          Authorization: adminToken,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ action, username })
+      });
+
+      alert(await res.text());
+      location.reload();
+    }
+
+    async function viewLog(token) {
+      const res = await fetch("/logs", {
+        headers: { Authorization: "Bearer " + token }
+      });
+      const logs = await res.json();
+      alert("Logs:\n\n" + JSON.stringify(logs, null, 2));
+    }
+
+    async function loadCorruptedUsers() {
+      const res = await fetch("/admin/fixable-users", {
+        headers: { Authorization: adminToken }
+      });
+      const list = await res.json();
+      const container = document.getElementById("corrupted-users");
+      container.innerHTML = "";
+
+      if (list.length === 0) {
+        container.textContent = "✅ No corrupted users found.";
+        return;
       }
 
-      function filterUsers() {
-        const val = document.getElementById("search-input").value.toLowerCase();
-        const filtered = allUsers.filter((u) =>
-          u.username.toLowerCase().includes(val)
-        );
-        renderUsers(filtered);
-      }
+      list.forEach(user => {
+        const div = document.createElement("div");
+        div.className = "user-block";
+        div.innerHTML = `
+          <div><strong>${user.key}</strong></div>
+          <div>Password: <code>${user.password}</code></div>
+          <div>Token: <code>${user.token || '(new will be generated)'}</code></div>
+          <button class="fix-btn" data-key="${user.key}" data-password="${user.password}" data-token="${user.token}">✅ Fix User</button>
+        `;
+        container.appendChild(div);
+      });
 
-      async function exportCSV() {
-        const headers = [
-          "Username",
-          "Reset Key",
-          "Created At",
-          "Method",
-          "Log Count",
-          "Disabled",
-        ];
-        const rows = allUsers.map((u) => [
-          u.username,
-          u.resetKey,
-          u.createdAt,
-          u.method,
-          u.logCount,
-          u.disabled,
-        ]);
-        const csv = [headers, ...rows].map((r) => r.join(",")).join("\n");
-        const blob = new Blob([csv], { type: "text/csv" });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = "users.csv";
-        link.click();
-        URL.revokeObjectURL(url);
-      }
+      document.querySelectorAll(".fix-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const key = btn.dataset.key;
+          const password = btn.dataset.password;
+          const token = btn.dataset.token || crypto.randomUUID();
+          const resetKey = crypto.randomUUID();
 
-      async function act(username, action) {
-        await fetch("https://logs.gorouteyourself.com/admin/actions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${adminToken}`,
-          },
-          body: JSON.stringify({ username, action }),
-        });
-        await loadUsers();
-      }
-
-      async function deleteUser(username) {
-        if (!confirm(`Delete ${username}?`)) return;
-        await fetch("https://logs.gorouteyourself.com/admin/delete", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${adminToken}`,
-          },
-          body: JSON.stringify({ username }),
-        });
-        await loadUsers();
-      }
-
-      async function viewLogs(username) {
-        const user = allUsers.find((u) => u.username === username);
-        if (!user || !user.token) return alert("User token missing.");
-
-        const res = await fetch("https://logs.gorouteyourself.com/logs", {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-          },
-        });
-
-        const logs = await res.json().catch(() => []);
-        const tbody = document.getElementById("logs-output");
-        tbody.innerHTML = "";
-
-        if (!Array.isArray(logs) || logs.length === 0) {
-          tbody.innerHTML =
-            '<tr><td colspan="7" style="text-align:center;">No logs found</td></tr>';
-        } else {
-          logs.forEach((log) => {
-            const row = document.createElement("tr");
-            row.innerHTML = `
-        <td>${log.date || ""}</td>
-        <td>${(log.destinations || []).join("<br>")}</td>
-        <td>$${Number(log.totalEarnings || 0).toFixed(2)}</td>
-        <td>${log.totalMileage || ""}</td>
-        <td>${log.totalTime || ""}</td>
-        <td>$${log.netProfit || ""}</td>
-        <td>${log.notes || ""}</td>
-      `;
-            tbody.appendChild(row);
+          const resp = await fetch("/admin/fix-user", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: adminToken
+            },
+            body: JSON.stringify({ key, password, token, resetKey })
           });
-        }
 
-        document.getElementById("logs-modal").style.display = "block";
-      }
-    </script>
-  </body>
+          alert(await resp.text());
+          location.reload();
+        });
+      });
+    }
+
+    loadUsers();
+    loadCorruptedUsers();
+  </script>
+</body>
 </html>
