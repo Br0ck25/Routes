@@ -5,92 +5,204 @@
   <title>Admin Panel</title>
   <style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f5f7fa;
-      padding: 20px;
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background-color: #f4f7fa;
       margin: 0;
+      padding: 0;
     }
+
+    #admin-section {
+      max-width: 1200px;
+      margin: 50px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
     h2 {
       text-align: center;
       color: #333;
       margin-bottom: 30px;
     }
-    #login-section, #admin-section {
-      max-width: 800px;
-      margin: 0 auto;
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+
+    .admin-login {
+      text-align: center;
+      margin-bottom: 20px;
     }
-    input[type="password"] {
+
+    .admin-login input {
       padding: 10px;
-      width: 80%;
+      width: 250px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
       font-size: 16px;
       margin-right: 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
     }
-    button {
-      padding: 10px 16px;
+
+    .admin-login button {
+      padding: 10px 20px;
       font-size: 16px;
-      border: none;
       border-radius: 6px;
-      cursor: pointer;
+      border: none;
       background-color: #11A6DE;
       color: white;
+      cursor: pointer;
     }
-    button:hover {
+
+    .admin-login button:hover {
       background-color: #0d8cc5;
     }
-    ul {
-      list-style: none;
-      padding: 0;
-    }
-    li {
-      background: #f0f4f8;
-      margin-bottom: 10px;
-      padding: 15px;
-      border-radius: 8px;
+
+    #search-container {
+      margin-bottom: 15px;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-    .user-info {
+
+    #search-input {
+      padding: 8px;
       font-size: 16px;
+      width: 300px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
     }
-    .btns button {
-      margin-left: 8px;
-      background-color: #F67031;
-    }
-    .btns button:last-child {
+
+    #export-btn {
+      padding: 8px 14px;
       background-color: #8DC42B;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
     }
-    .btns button:hover {
-      opacity: 0.9;
+
+    #export-btn:hover {
+      background-color: #77ad23;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th, td {
+      padding: 12px 15px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+    }
+
+    th {
+      background-color: #11A6DE;
+      color: white;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    td code {
+      font-family: monospace;
+      font-size: 0.85em;
+      background: #f2f2f2;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+
+    td button {
+      padding: 6px 10px;
+      font-size: 14px;
+      margin: 2px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .danger { background-color: #F35E34; color: white; }
+    .primary { background-color: #11A6DE; color: white; }
+    .success { background-color: #8DC42B; color: white; }
+    .warn { background-color: #F67031; color: white; }
+
+    #error-message {
+      color: red;
+      text-align: center;
+      font-weight: bold;
+      margin-top: 15px;
+    }
+
+    #logs-modal {
+      display: none;
+      position: fixed;
+      top: 10%;
+      left: 10%;
+      width: 80%;
+      height: 70%;
+      background: white;
+      border: 1px solid #ccc;
+      overflow: auto;
+      padding: 20px;
+      z-index: 10;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    }
+
+    #logs-modal pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    #close-modal {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      font-size: 18px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <h2>Admin Panel</h2>
-  <div id="login-section">
-    <p>Enter admin token:</p>
-    <input type="password" id="admin-token" placeholder="Admin token" />
-    <button onclick="submitToken()">Submit</button>
-    <p id="error-message" style="color: red;"></p>
+  <div id="admin-section">
+    <h2>Admin Panel</h2>
+    <div class="admin-login" id="admin-login">
+      <input type="password" id="admin-token" placeholder="Enter admin token" />
+      <button onclick="submitToken()">Submit</button>
+      <p id="error-message"></p>
+    </div>
+    <div id="search-container" style="display:none;">
+      <input id="search-input" oninput="filterUsers()" placeholder="Search by username..." />
+      <button id="export-btn" onclick="exportCSV()">📥 Export Users</button>
+    </div>
+    <table id="user-table" style="display:none;">
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Reset Key</th>
+          <th>Created At</th>
+          <th>Method</th>
+          <th>Logs</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="user-rows"></tbody>
+    </table>
   </div>
 
-  <div id="admin-section" style="display: none;">
-    <ul id="user-list"></ul>
+  <div id="logs-modal">
+    <span id="close-modal" onclick="document.getElementById('logs-modal').style.display='none'">✖</span>
+    <h3>Logs</h3>
+    <pre id="logs-output">Loading...</pre>
   </div>
 
   <script>
     let adminToken = "";
+    let allUsers = [];
 
     function submitToken() {
-      const token = document.getElementById("admin-token").value.trim();
-      if (!token) return;
-      adminToken = token;
+      adminToken = document.getElementById("admin-token").value;
+      if (!adminToken) return;
+      document.getElementById("admin-login").style.display = "none";
+      document.getElementById("search-container").style.display = "flex";
       loadUsers();
     }
 
@@ -99,33 +211,76 @@
         const res = await fetch("https://logs.gorouteyourself.com/admin/users", {
           headers: { Authorization: `Bearer ${adminToken}` }
         });
-        if (!res.ok) throw new Error("Unauthorized");
         const users = await res.json();
-        document.getElementById("login-section").style.display = "none";
-        document.getElementById("admin-section").style.display = "block";
-        const list = document.getElementById("user-list");
-        list.innerHTML = "";
-        users.forEach(u => {
-          const li = document.createElement("li");
-          li.innerHTML = `
-            <div class="user-info">
-              <strong>${u.username}</strong><br>
-              Reset Key: <code>${u.resetKey}</code>
-            </div>
-            <div class="btns">
-              <button onclick="deleteUser('${u.username}')">🗑 Delete</button>
-              <button onclick="resetPassword('${u.username}')">🔑 Reset</button>
-            </div>
-          `;
-          list.appendChild(li);
-        });
+        allUsers = users;
+        renderUsers(users);
       } catch (err) {
-        document.getElementById("error-message").textContent = "Invalid token or error loading users.";
+        document.getElementById("error-message").textContent = "Failed to load users.";
+        document.getElementById("admin-login").style.display = "block";
       }
     }
 
+    function renderUsers(users) {
+      document.getElementById("user-table").style.display = "";
+      const tbody = document.getElementById("user-rows");
+      tbody.innerHTML = "";
+
+      users.forEach(u => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${u.username}</td>
+          <td><code>${u.resetKey}</code></td>
+          <td>${u.createdAt}</td>
+          <td>${u.method}</td>
+          <td>${u.logCount}</td>
+          <td>${u.disabled ? "🔒 Disabled" : "✅ Active"}</td>
+          <td>
+            <button class="primary" onclick="act('${u.username}', 'reset-key')">Reset Key</button>
+            <button class="success" onclick="act('${u.username}', 'reset-token')">New Token</button>
+            <button class="warn" onclick="act('${u.username}', 'toggle-disabled')">${u.disabled ? "Enable" : "Disable"}</button>
+            <button class="primary" onclick="viewLogs('${u.username}')">View Logs</button>
+            <button class="danger" onclick="deleteUser('${u.username}')">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function filterUsers() {
+      const val = document.getElementById("search-input").value.toLowerCase();
+      const filtered = allUsers.filter(u => u.username.toLowerCase().includes(val));
+      renderUsers(filtered);
+    }
+
+    async function exportCSV() {
+      const headers = ["Username", "Reset Key", "Created At", "Method", "Log Count", "Disabled"];
+      const rows = allUsers.map(u =>
+        [u.username, u.resetKey, u.createdAt, u.method, u.logCount, u.disabled]
+      );
+      const csv = [headers, ...rows].map(r => r.join(",")).join("\n");
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "users.csv";
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    async function act(username, action) {
+      await fetch("https://logs.gorouteyourself.com/admin/actions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${adminToken}`
+        },
+        body: JSON.stringify({ username, action })
+      });
+      await loadUsers();
+    }
+
     async function deleteUser(username) {
-      if (!confirm(`Delete user ${username}?`)) return;
+      if (!confirm(`Delete ${username}?`)) return;
       await fetch("https://logs.gorouteyourself.com/admin/delete", {
         method: "POST",
         headers: {
@@ -134,21 +289,20 @@
         },
         body: JSON.stringify({ username })
       });
-      loadUsers();
+      await loadUsers();
     }
 
-    async function resetPassword(username) {
-      const newHash = prompt("Enter new hashed password for " + username);
-      if (!newHash) return;
-      await fetch("https://logs.gorouteyourself.com/admin/reset-password", {
-        method: "POST",
+    async function viewLogs(username) {
+      const user = allUsers.find(u => u.username === username);
+      if (!user || !user.token) return alert("User token missing.");
+      const res = await fetch("https://logs.gorouteyourself.com/logs", {
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${adminToken}`
-        },
-        body: JSON.stringify({ username, newHash })
+          Authorization: user.token
+        }
       });
-      alert("Password reset.");
+      const data = await res.text();
+      document.getElementById("logs-output").textContent = data || "No logs found.";
+      document.getElementById("logs-modal").style.display = "block";
     }
   </script>
 </body>
