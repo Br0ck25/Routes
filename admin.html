@@ -1,110 +1,114 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="UTF-8" />
-  <title>Admin Panel - Go Route Yourself</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      background: #f4f6f9;
-    }
-    h1 {
-      color: #333;
-    }
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      background: white;
-      margin-bottom: 30px;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 10px;
-      text-align: left;
-      font-size: 14px;
-    }
-    th {
-      background: #007bff;
-      color: white;
-    }
-    button {
-      padding: 6px 10px;
-      font-size: 13px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .danger {
-      background-color: #dc3545;
-      color: white;
-    }
-    .reset {
-      background-color: #17a2b8;
-      color: white;
-    }
-    .token {
-      background-color: #ffc107;
-      color: black;
-    }
-    .disable {
-      background-color: #6c757d;
-      color: white;
-    }
-    .view {
-      background-color: #28a745;
-      color: white;
-    }
-    .fix-btn {
-      background-color: #28a745;
-      color: white;
-      margin-top: 10px;
-    }
-    code {
-      background: #f0f0f0;
-      padding: 2px 5px;
-      border-radius: 4px;
-    }
-    .user-block {
-      background: white;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      padding: 12px;
-      margin-bottom: 12px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-    }
-  </style>
-</head>
-<body>
-  <h1>🔐 Admin Panel — Registered Users</h1>
-  <table id="user-table">
-    <tr>
-      <th>Username</th>
-      <th>Reset Key</th>
-      <th>Created At</th>
-      <th>Method</th>
-      <th>Logs</th>
-      <th>Status</th>
-      <th>Actions</th>
-    </tr>
-  </table>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Admin Panel - Go Route Yourself</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        background: #f4f6f9;
+      }
+      h1 {
+        color: #333;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        background: white;
+        margin-bottom: 30px;
+      }
+      th,
+      td {
+        border: 1px solid #ccc;
+        padding: 10px;
+        text-align: left;
+        font-size: 14px;
+      }
+      th {
+        background: #007bff;
+        color: white;
+      }
+      button {
+        padding: 6px 10px;
+        font-size: 13px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .danger {
+        background-color: #dc3545;
+        color: white;
+      }
+      .reset {
+        background-color: #17a2b8;
+        color: white;
+      }
+      .token {
+        background-color: #ffc107;
+        color: black;
+      }
+      .disable {
+        background-color: #6c757d;
+        color: white;
+      }
+      .view {
+        background-color: #28a745;
+        color: white;
+      }
+      .fix-btn {
+        background-color: #28a745;
+        color: white;
+        margin-top: 10px;
+      }
+      code {
+        background: #f0f0f0;
+        padding: 2px 5px;
+        border-radius: 4px;
+      }
+      .user-block {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        padding: 12px;
+        margin-bottom: 12px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🔐 Admin Panel — Registered Users</h1>
+    <table id="user-table">
+      <tr>
+        <th>Username</th>
+        <th>Reset Key</th>
+        <th>Created At</th>
+        <th>Method</th>
+        <th>Logs</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </table>
 
-  <h2>🧩 Fix Corrupted Users</h2>
-  <div id="corrupted-users">Loading corrupted users...</div>
+    <h2>🧩 Fix Corrupted Users</h2>
+    <div id="corrupted-users">Loading corrupted users...</div>
 
-  <script>
-  const adminToken = "Bearer Jbrock25!";
+    <script>
+      const adminToken = "Bearer Jbrock25!";
 
-  async function loadUsers() {
-    const res = await fetch("https://logs.gorouteyourself.com/admin/users", {
-      headers: { Authorization: adminToken }
-    });
-    const users = await res.json();
-    const table = document.getElementById("user-table");
+      async function loadUsers() {
+        const res = await fetch(
+          "https://logs.gorouteyourself.com/admin/users",
+          {
+            headers: { Authorization: adminToken },
+          }
+        );
+        const users = await res.json();
+        const table = document.getElementById("user-table");
 
-    users.forEach(user => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
+        users.forEach((user) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
         <td>${user.username}</td>
         <td><code>${user.resetKey}</code></td>
         <td>${user.createdAt || ""}</td>
@@ -112,89 +116,170 @@
         <td>${user.logCount}</td>
         <td>${user.disabled ? "❌ Disabled" : "✅ Active"}</td>
         <td>
-          <button class="reset" onclick="adminAction('reset-key','${user.username}')">New Reset Key</button>
-          <button class="token" onclick="adminAction('reset-token','${user.username}')">New Token</button>
-          <button class="disable" onclick="adminAction('toggle-disabled','${user.username}')">${user.disabled ? "Enable" : "Disable"}</button>
-          <button class="danger" onclick="adminAction('delete','${user.username}')">Delete</button>
-          <button class="view" onclick="viewLog('${user.token}')">View Log</button>
+          <button class="reset" onclick="resetUserPassword('${
+            user.username
+          }')">Reset Password</button>
+
+          <button class="reset" onclick="adminAction('reset-key','${
+            user.username
+          }')">New Reset Key</button>
+          <button class="token" onclick="adminAction('reset-token','${
+            user.username
+          }')">New Token</button>
+          <button class="disable" onclick="adminAction('toggle-disabled','${
+            user.username
+          }')">${user.disabled ? "Enable" : "Disable"}</button>
+          <button class="danger" onclick="adminAction('delete','${
+            user.username
+          }')">Delete</button>
+          <button class="view" onclick="viewLog('${
+            user.token
+          }')">View Log</button>
         </td>
       `;
-      table.appendChild(tr);
-    });
-  }
+          table.appendChild(tr);
+        });
+      }
 
-  async function adminAction(action, username) {
-    const ok = confirm(`Are you sure you want to '${action}' for '${username}'?`);
-    if (!ok) return;
+      async function adminAction(action, username) {
+        const ok = confirm(
+          `Are you sure you want to '${action}' for '${username}'?`
+        );
+        if (!ok) return;
 
-    const res = await fetch("https://logs.gorouteyourself.com/admin/actions", {
-      method: "POST",
-      headers: {
-        Authorization: adminToken,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ action, username })
-    });
+        const payload = { action, username };
 
-    alert(await res.text());
-    location.reload();
-  }
+        if (action === "reset-password") {
+          const newPassword = prompt(`Enter a new password for ${username}`);
+          if (!newPassword) return;
+          payload.newPassword = newPassword;
+        }
 
-  async function viewLog(token) {
-    const res = await fetch("https://logs.gorouteyourself.com/logs", {
-      headers: { Authorization: "Bearer " + token }
-    });
-    const logs = await res.json();
-    alert("Logs:\n\n" + JSON.stringify(logs, null, 2));
-  }
+        const res = await fetch(
+          "https://logs.gorouteyourself.com/admin/actions",
+          {
+            method: "POST",
+            headers: {
+              Authorization: adminToken,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          }
+        );
 
-  async function loadCorruptedUsers() {
-    const res = await fetch("https://logs.gorouteyourself.com/admin/fixable-users", {
-      headers: { Authorization: adminToken }
-    });
-    const list = await res.json();
-    const container = document.getElementById("corrupted-users");
-    container.innerHTML = "";
+        const contentType = res.headers.get("content-type") || "";
+        let message = "";
 
-    if (list.length === 0) {
-      container.textContent = "✅ No corrupted users found.";
-      return;
-    }
+        if (contentType.includes("application/json")) {
+          const result = await res.json();
+          if (result.status === "updated") {
+            const user = result.user;
+            message = `✅ Action completed for ${user.username}\n\nNew Token:\n${user.token}\nReset Key:\n${user.resetKey}`;
+          } else {
+            message = "Something went wrong: " + JSON.stringify(result);
+          }
+        } else {
+          message = await res.text();
+        }
 
-    list.forEach(user => {
-      const div = document.createElement("div");
-      div.className = "user-block";
-      div.innerHTML = `
+        alert(message);
+        location.reload();
+      }
+
+      async function viewLog(token) {
+        const res = await fetch("https://logs.gorouteyourself.com/logs", {
+          headers: { Authorization: "Bearer " + token },
+        });
+        const logs = await res.json();
+        alert("Logs:\n\n" + JSON.stringify(logs, null, 2));
+      }
+
+      async function loadCorruptedUsers() {
+        const res = await fetch(
+          "https://logs.gorouteyourself.com/admin/fixable-users",
+          {
+            headers: { Authorization: adminToken },
+          }
+        );
+        const list = await res.json();
+        const container = document.getElementById("corrupted-users");
+        container.innerHTML = "";
+
+        if (list.length === 0) {
+          container.textContent = "✅ No corrupted users found.";
+          return;
+        }
+
+        list.forEach((user) => {
+          const div = document.createElement("div");
+          div.className = "user-block";
+          div.innerHTML = `
         <div><strong>${user.key}</strong></div>
         <div>Password: <code>${user.password}</code></div>
-        <div>Token: <code>${user.token || '(new will be generated)'}</code></div>
-        <button class="fix-btn" data-key="${user.key}" data-password="${user.password}" data-token="${user.token}">✅ Fix User</button>
+        <div>Token: <code>${
+          user.token || "(new will be generated)"
+        }</code></div>
+        <button class="fix-btn" data-key="${user.key}" data-password="${
+            user.password
+          }" data-token="${user.token}">✅ Fix User</button>
       `;
-      container.appendChild(div);
-    });
-
-    document.querySelectorAll(".fix-btn").forEach(btn => {
-      btn.addEventListener("click", async () => {
-        const key = btn.dataset.key;
-        const password = btn.dataset.password;
-        const token = btn.dataset.token || crypto.randomUUID();
-        const resetKey = crypto.randomUUID();
-
-        const resp = await fetch("https://logs.gorouteyourself.com/admin/fix-user", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: adminToken
-          },
-          body: JSON.stringify({ key, password, token, resetKey })
+          container.appendChild(div);
         });
 
-        alert(await resp.text());
-        location.reload();
-      });
-    });
-  }
+        document.querySelectorAll(".fix-btn").forEach((btn) => {
+          btn.addEventListener("click", async () => {
+            const key = btn.dataset.key;
+            const password = btn.dataset.password;
+            const token = btn.dataset.token || crypto.randomUUID();
+            const resetKey = crypto.randomUUID();
 
-  loadUsers();
-  loadCorruptedUsers();
-</script>
+            const resp = await fetch(
+              "https://logs.gorouteyourself.com/admin/fix-user",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: adminToken,
+                },
+                body: JSON.stringify({ key, password, token, resetKey }),
+              }
+            );
+
+            alert(await resp.text());
+            location.reload();
+          });
+        });
+      }
+      async function resetUserPassword(username) {
+        const newPassword = prompt(`Enter a new password for ${username}`);
+        if (!newPassword) return;
+
+        const res = await fetch(
+          "https://logs.gorouteyourself.com/admin/actions",
+          {
+            method: "POST",
+            headers: {
+              Authorization: adminToken,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              action: "reset-password",
+              username,
+              newPassword,
+            }),
+          }
+        );
+
+        const result = await res.json().catch(() => null);
+        if (result?.status === "updated") {
+          alert(`✅ Password reset for ${username}`);
+        } else {
+          alert("❌ Failed to reset password.");
+        }
+      }
+
+      loadUsers();
+      loadCorruptedUsers();
+    </script>
+  </body>
+</html>
