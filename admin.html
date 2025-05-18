@@ -187,8 +187,36 @@
         const res = await fetch("https://logs.gorouteyourself.com/logs", {
           headers: { Authorization: "Bearer " + token },
         });
+
+        if (!res.ok) {
+          alert("❌ Failed to fetch logs.");
+          return;
+        }
+
         const logs = await res.json();
-        alert("Logs:\n\n" + JSON.stringify(logs, null, 2));
+
+        if (!Array.isArray(logs) || logs.length === 0) {
+          alert("ℹ️ No logs found for this user.");
+          return;
+        }
+
+        const formatted = logs
+          .map((entry, index) => {
+            return `📌 Log #${index + 1}
+Date: ${entry.date || "—"}
+Start: ${entry.startTime || "—"}
+End: ${entry.endTime || "—"}
+Stops: ${entry.destinations?.join(", ") || "—"}
+Earnings: $${entry.totalEarnings || "0.00"}
+Net Profit: $${entry.netProfit || "0.00"}
+Mileage: ${entry.totalMileage || "—"} mi
+Time: ${entry.totalTime || "—"}
+Notes: ${entry.notes || "—"}
+─────────────────────────────`;
+          })
+          .join("\n\n");
+
+        alert("📝 User Logs\n\n" + formatted);
       }
 
       async function loadCorruptedUsers() {
