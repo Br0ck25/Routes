@@ -149,12 +149,6 @@
 
         const payload = { action, username };
 
-        if (action === "reset-password") {
-          const newPassword = prompt(`Enter a new password for ${username}`);
-          if (!newPassword) return;
-          payload.newPassword = newPassword;
-        }
-
         const res = await fetch(
           "https://logs.gorouteyourself.com/admin/actions",
           {
