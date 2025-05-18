@@ -162,21 +162,24 @@
         );
 
         const contentType = res.headers.get("content-type") || "";
-        let message = "";
 
         if (contentType.includes("application/json")) {
           const result = await res.json();
           if (result.status === "updated") {
             const user = result.user;
-            message = `✅ Action completed for ${user.username}\n\nNew Token:\n${user.token}\nReset Key:\n${user.resetKey}`;
+            alert(
+              `✅ Action completed for ${user.username}\n\nNew Token:\n${user.token}\nReset Key:\n${user.resetKey}`
+            );
+          } else if (result.status === "deleted") {
+            alert(`🗑️ User '${username}' deleted.`);
           } else {
-            message = "Something went wrong: " + JSON.stringify(result);
+            alert("Something went wrong: " + JSON.stringify(result));
           }
         } else {
-          message = await res.text();
+          const message = await res.text();
+          alert("Unexpected response:\n" + message);
         }
 
-        alert(message);
         location.reload();
       }
 
