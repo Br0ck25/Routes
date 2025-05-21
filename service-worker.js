@@ -41,8 +41,14 @@ self.addEventListener("activate", (event) => {
 
 // ✅ Fetch: Cache-first, then network, then fallback — but don't cache .html pages
 self.addEventListener("fetch", (event) => {
-  if (event.request.mode === "navigate") {
-    // Always try to fetch fresh index.html for navigation
+  const url = new URL(event.request.url);
+
+  if (
+    event.request.mode === "navigate" ||
+    url.pathname === "/" ||
+    url.pathname === "/index.html"
+  ) {
+    // Handle all navigations and root/index.html as offline-capable
     event.respondWith(
       fetch(event.request).catch(() => caches.match("/offline.html"))
     );
@@ -58,8 +64,6 @@ self.addEventListener("fetch", (event) => {
       return fetch(event.request)
         .then((networkResponse) => {
           const cloned = networkResponse.clone();
-
-          const url = new URL(event.request.url);
           const isSameOrigin = url.origin === self.location.origin;
           const isHTML = url.pathname.endsWith(".html");
 
@@ -67,7 +71,9 @@ self.addEventListener("fetch", (event) => {
             !isHTML &&
             (url.href.startsWith("https://cdnjs.cloudflare.com") || isSameOrigin)
           ) {
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, cloned));
+            caches.open(CACHE_NAME).then((cache) =>
+              cache.put(event.request, cloned)
+            );
           }
 
           return networkResponse;
