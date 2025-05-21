@@ -1,4 +1,4 @@
-const CACHE_NAME = "route-calculator-cache-v2.1.7"; // bump version to invalidate old cache
+const CACHE_NAME = "route-calculator-cache-v2.1.6"; // bump version to invalidate old cache
 const urlsToCache = [
   "/index.html", 
   "/offline.html",
@@ -48,21 +48,25 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
 
   // ✅ Handle navigation requests (e.g., /, /index.html)
-  if (
-    event.request.mode === "navigate" ||
-    url.pathname === "/" ||
-    url.pathname === "/index.html"
-  ) {
-    event.respondWith(
-      caches.match(event.request).then((cached) => {
-        return (
-          cached ||
-          fetch(event.request).catch(() => caches.match("/offline.html"))
-        );
+if (
+  event.request.mode === "navigate" ||
+  url.pathname === "/" ||
+  url.pathname === "/index.html"
+) {
+  event.respondWith(
+    fetch(event.request)
+      .then((response) => {
+        return response;
       })
-    );
-    return;
-  }
+      .catch(async () => {
+        // Try to serve either / or /index.html from cache
+        const cached = await caches.match("/") || await caches.match("/index.html");
+        return cached || await caches.match("/offline.html");
+      })
+  );
+  return;
+}
+
 
   // ✅ Ignore non-GET requests
   if (event.request.method !== "GET") return;
