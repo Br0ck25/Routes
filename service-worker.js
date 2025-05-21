@@ -1,5 +1,6 @@
 const CACHE_NAME = "route-calculator-cache-v2.1.7"; // bump version to invalidate old cache
 const urlsToCache = [
+  "/index.html", 
   "/offline.html",
   "/logo.png",
   "/logo-512.png",
@@ -22,20 +23,23 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   self.clients.claim();
   event.waitUntil(
-    caches.keys().then((cacheNames) =>
-      Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            console.log("🗑️ Deleting old cache:", cache);
-            return caches.delete(cache);
-          }
+    caches
+      .keys()
+      .then((cacheNames) =>
+        Promise.all(
+          cacheNames.map((cache) => {
+            if (cache !== CACHE_NAME) {
+              console.log("🗑️ Deleting old cache:", cache);
+              return caches.delete(cache);
+            }
+          })
+        )
+      )
+      .then(() =>
+        self.clients.matchAll().then((clients) => {
+          clients.forEach((client) => client.navigate(client.url));
         })
       )
-    ).then(() =>
-      self.clients.matchAll().then((clients) => {
-        clients.forEach((client) => client.navigate(client.url));
-      })
-    )
   );
 });
 
@@ -43,20 +47,27 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
 
+  // ✅ Handle navigation requests (e.g., /, /index.html)
   if (
     event.request.mode === "navigate" ||
     url.pathname === "/" ||
     url.pathname === "/index.html"
   ) {
-    // Handle all navigations and root/index.html as offline-capable
     event.respondWith(
-      fetch(event.request).catch(() => caches.match("/offline.html"))
+      caches.match(event.request).then((cached) => {
+        return (
+          cached ||
+          fetch(event.request).catch(() => caches.match("/offline.html"))
+        );
+      })
     );
     return;
   }
 
+  // ✅ Ignore non-GET requests
   if (event.request.method !== "GET") return;
 
+  // ✅ Cache-first strategy for other assets
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) return cachedResponse;
