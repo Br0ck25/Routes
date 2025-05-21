@@ -46,19 +46,9 @@
     defer
   ></script>
 
-<!-- <link rel="icon" href="favicon.ico" /> -->
-
-
-  
-
     <style>
-
-        html, body {
-    overflow-x: hidden;
-  }
-
-      button {
-  all: unset; /* Reset all native button styles */
+button {
+  all: unset;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -66,11 +56,16 @@
   flex: 1;
   cursor: pointer;
   user-select: none;
-  -webkit-tap-highlight-color: transparent; /* Removes gray tap on Android */
+  -webkit-tap-highlight-color: transparent;
   text-align: center;
   font-size: 12px;
   color: #333;
+  outline: none;
 }
+
+        html, body {
+    overflow-x: hidden;
+  }
 
 button:focus,
 button:active,
@@ -78,14 +73,6 @@ button:focus-visible {
   outline: none !important;
   background: none !important;
   box-shadow: none !important;
-}
-
-
-      button {
-  -webkit-tap-highlight-color: transparent; /* ⛔ Removes gray iOS tap highlight */
-  outline: none;
-  border: none;
-  background: none;
 }
 
 button:focus,
@@ -112,11 +99,6 @@ button:active {
 button:focus-visible {
   outline: none;
 }
-
-button {
-  -webkit-tap-highlight-color: transparent;
-}
-
 
 
       body {
@@ -880,20 +862,10 @@ transform: translate(-50%, -48%);
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     
-    <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        if (typeof updateAuthUI === "function") {
-          updateAuthUI();
-        }
-      });
-    </script>
     
 
   </head>
   <body>
-
-    
-<div id="g_id_signin"></div>
 
 
 <!-- Fixed Top Bar -->
@@ -2197,12 +2169,6 @@ const totalWorkedMinutes = workedMinutes + driveMinutes;
 
 
 });
-
-  // 🆕 After selecting start time, auto-focus end time after slight delay
-  document.getElementById("start-time").addEventListener("change", () => {
-    setTimeout(() => document.getElementById("end-time")?.focus(), 200);
-  });
-
 
 
       function updateOfflineBanner() {
