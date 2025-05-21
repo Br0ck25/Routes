@@ -1,4 +1,4 @@
-const CACHE_NAME = "route-calculator-cache-v2.1.6"; // bump version to invalidate old cache
+const CACHE_NAME = "route-calculator-cache-v2.1.7"; // bump version to invalidate old cache
 const urlsToCache = [
   "/offline.html",
   "/logo.png",
