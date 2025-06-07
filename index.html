@@ -3954,8 +3954,13 @@ function filterLogs() {
   // ✅ Define the shared filter logic
   currentFilterFn = (entryDate, entry) => {
     let matchesDate = true;
-    if (startDate && entryDate < startDate) matchesDate = false;
-    if (endDate && entryDate > endDate) matchesDate = false;
+const entryDateObj = new Date(entryDate);
+const startDateObj = startDate ? new Date(startDate) : null;
+const endDateObj = endDate ? new Date(endDate) : null;
+
+if (startDateObj && entryDateObj < startDateObj) matchesDate = false;
+if (endDateObj && entryDateObj > endDateObj) matchesDate = false;
+
 
     const fieldsToSearch = [
       entry.startTime,
