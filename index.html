@@ -72,34 +72,20 @@
   color: #333;
 }
 
-/* ✅ FIXED: Button styles - prevents styling loss on tap */
 button:focus,
 button:active,
 button:focus-visible {
   outline: none !important;
   box-shadow: none !important;
 }
-
-button::-moz-focus-inner { 
-  border: 0; 
-}
-
-button:active { 
-  transform: scale(0.98);
-  transition: transform 0.1s;
-}
-
+button::-moz-focus-inner { border: 0; }
+button:active { transform: scale(0.98); }
 #bottom-bar button:focus,
-#bottom-bar button:active,
-#bottom-bar button:focus-visible {
+#bottom-bar button:active {
   background-color: transparent !important;
-  outline: none !important;
 }
 
-button {
-  -webkit-tap-highlight-color: transparent;
-  cursor: pointer;
-}
+
 
 
 
@@ -2233,15 +2219,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       function showConfirmationMessage(message) {
         const confirmation = document.getElementById("confirmation-message");
-        if (!confirmation) {
-          console.warn('⚠️ Confirmation message element not found');
-          return;
-        }
+        if (!confirmation) return;
         
         confirmation.textContent = message;
         confirmation.style.display = "block";
-        
-        // Auto-dismiss after 3 seconds
         setTimeout(() => {
           confirmation.style.display = "none";
         }, 3000);
@@ -3326,14 +3307,13 @@ if (earningsInput) {
 
 
       function openEditForm(index) {
-        console.log('✅ Edit button clicked for index:', index);
-        
+        console.log('✅ Opening edit for index:', index);
         editingIndex = index;
         const entry = logEntries[index];
-        
+
         if (!entry) {
-          console.error("❌ No entry found for editing at index:", index);
-          alert("Error: Could not find entry to edit. Please refresh and try again.");
+          console.error("❌ No entry found for editing");
+          alert("Error: Entry not found");
           return;
         }
 
