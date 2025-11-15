@@ -1,0 +1,111 @@
+# .htaccess - Apache Security Configuration
+# Note: This file is for Apache servers. Cloudflare Pages uses _headers instead.
+
+# Enable rewrite engine
+<IfModule mod_rewrite.c>
+RewriteEngine On
+
+# Force HTTPS
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Prevent access to sensitive files
+RewriteRule ^config\.js$ - [F,L]
+RewriteRule ^\.env$ - [F,L]
+RewriteRule ^\.git - [F,L]
+</IfModule>
+
+# Security Headers (if not using Cloudflare)
+<IfModule mod_headers.c>
+  # Prevent clickjacking
+  Header always set X-Frame-Options "DENY"
+
+  # Prevent MIME sniffing
+  Header always set X-Content-Type-Options "nosniff"
+
+  # XSS Protection
+  Header always set X-XSS-Protection "1; mode=block"
+
+  # Referrer Policy
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+  # Permissions Policy
+  Header always set Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=()"
+
+  # Content Security Policy
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com https://cdnjs.cloudflare.com https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https://maps.googleapis.com https://maps.gstatic.com *.google.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://maps.googleapis.com https://logs.gorouteyourself.com; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self';"
+
+  # HSTS - Enforce HTTPS (uncomment for production)
+  # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+</IfModule>
+
+# Disable directory browsing
+Options -Indexes
+
+# Prevent access to hidden files
+<FilesMatch "^\.">
+  Order allow,deny
+  Deny from all
+</FilesMatch>
+
+# Protect config and sensitive files
+<FilesMatch "(config\.js|\.env|\.git)">
+  Order allow,deny
+  Deny from all
+</FilesMatch>
+
+# Set proper MIME types
+<IfModule mod_mime.c>
+  AddType application/javascript .js
+  AddType application/json .json
+  AddType image/png .png
+  AddType image/jpeg .jpg .jpeg
+  AddType text/html .html
+  AddType text/css .css
+</IfModule>
+
+# Compression
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css
+  AddOutputFilterByType DEFLATE application/javascript application/json
+  AddOutputFilterByType DEFLATE image/svg+xml
+</IfModule>
+
+# Cache Control
+<IfModule mod_expires.c>
+  ExpiresActive On
+
+  # HTML - no cache
+  ExpiresByType text/html "access plus 0 seconds"
+
+  # CSS and JavaScript - 1 day
+  ExpiresByType text/css "access plus 1 day"
+  ExpiresByType application/javascript "access plus 1 day"
+
+  # Images - 1 year
+  ExpiresByType image/png "access plus 1 year"
+  ExpiresByType image/jpeg "access plus 1 year"
+
+  # Fonts - 1 year
+  ExpiresByType font/woff2 "access plus 1 year"
+
+  # Manifest - 1 hour
+  ExpiresByType application/manifest+json "access plus 1 hour"
+</IfModule>
+
+# PHP Security (if PHP is used)
+<IfModule mod_php7.c>
+  php_flag display_errors Off
+  php_flag log_errors On
+  php_flag expose_php Off
+  php_value session.cookie_httponly 1
+  php_value session.cookie_secure 1
+</IfModule>
+
+# Disable server signature
+ServerSignature Off
+
+# Custom error pages
+ErrorDocument 404 /404.html
+ErrorDocument 403 /403.html
+ErrorDocument 500 /500.html

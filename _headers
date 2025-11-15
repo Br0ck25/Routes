@@ -1,14 +1,82 @@
-/manifest.json
-  Content-Type: application/json
-  Access-Control-Allow-Origin: *
+# Global security headers for all pages
+/*
+  # Security Headers
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  X-XSS-Protection: 1; mode=block
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=()
 
+  # HSTS - Enforce HTTPS (uncomment when ready for production)
+  # Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+
+  # Content Security Policy
+  # Note: This is permissive to allow Google Maps and CDN resources
+  # Tighten this policy for production
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com https://cdnjs.cloudflare.com https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https://maps.googleapis.com https://maps.gstatic.com *.google.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://maps.googleapis.com https://logs.gorouteyourself.com; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self';
+
+# HTML pages - no caching, additional security
+/index.html
+  Cache-Control: no-store, no-cache, must-revalidate
+  Pragma: no-cache
+  # Cross-Origin policies needed for Google Maps
+  Cross-Origin-Opener-Policy: same-origin-allow-popups
+  Cross-Origin-Embedder-Policy:
+
+/admin.html
+  Cache-Control: no-store, no-cache, must-revalidate
+  Pragma: no-cache
+  # Stricter security for admin panel
+  X-Frame-Options: DENY
+  # Admin should require authentication (TODO: implement on backend)
+
+/offline.html
+  Cache-Control: public, max-age=86400
+
+/faq.html
+  Cache-Control: public, max-age=3600
+
+/privacy-policy.html
+  Cache-Control: public, max-age=3600
+
+# Static assets - cache for longer
 /logo.png
   Content-Type: image/png
+  Cache-Control: public, max-age=31536000, immutable
 
 /logo-512.png
   Content-Type: image/png
+  Cache-Control: public, max-age=31536000, immutable
 
-/index.html
-  Cache-Control: no-store
-  Cross-Origin-Opener-Policy: unsafe-none
-  Cross-Origin-Embedder-Policy:
+# Manifest and service worker
+/manifest.json
+  Content-Type: application/json
+  # Restrict CORS to your domain only (update with your actual domain)
+  Access-Control-Allow-Origin: https://gorouteyourself.com
+  Cache-Control: public, max-age=3600
+
+/service-worker.js
+  Content-Type: application/javascript
+  Cache-Control: no-cache, no-store, must-revalidate
+  Pragma: no-cache
+
+# JavaScript and utilities
+/config.js
+  Content-Type: application/javascript
+  Cache-Control: no-store, no-cache, must-revalidate
+  Pragma: no-cache
+  # CRITICAL: This file should NEVER be cached as it contains sensitive config
+
+/utils.js
+  Content-Type: application/javascript
+  Cache-Control: public, max-age=86400
+
+# Deny access to sensitive files
+/.git/*
+  X-Robots-Tag: noindex, nofollow
+
+/.env
+  X-Robots-Tag: noindex, nofollow
+
+/config.js
+  X-Robots-Tag: noindex, nofollow

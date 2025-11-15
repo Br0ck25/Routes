@@ -1,11 +1,13 @@
-const CACHE_NAME = "route-calculator-cache-v2.1.6"; // bump version to invalidate old cache
+const CACHE_NAME = "route-calculator-cache-v3.0.0"; // bump version to invalidate old cache
 const urlsToCache = [
-  "/index.html", 
+  "/index.html",
   "/offline.html",
   "/logo.png",
   "/logo-512.png",
-  "/main.js",
-  "/styles.css",
+  "/utils.js",  // Security utilities
+  "/faq.html",
+  "/privacy-policy.html",
+  // Note: config.js is intentionally NOT cached as it contains sensitive data
 ];
 
 // ✅ Install: Cache app shell (but not index.html)
@@ -47,25 +49,32 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
 
+  // ❌ NEVER cache sensitive files
+  const sensitiveFiles = ['/config.js', '/admin.html', '/.env'];
+  if (sensitiveFiles.some(file => url.pathname.includes(file))) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
   // ✅ Handle navigation requests (e.g., /, /index.html)
-if (
-  event.request.mode === "navigate" ||
-  url.pathname === "/" ||
-  url.pathname === "/index.html"
-) {
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        return response;
-      })
-      .catch(async () => {
-        // Try to serve either / or /index.html from cache
-        const cached = await caches.match("/") || await caches.match("/index.html");
-        return cached || await caches.match("/offline.html");
-      })
-  );
-  return;
-}
+  if (
+    event.request.mode === "navigate" ||
+    url.pathname === "/" ||
+    url.pathname === "/index.html"
+  ) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          return response;
+        })
+        .catch(async () => {
+          // Try to serve either / or /index.html from cache
+          const cached = await caches.match("/") || await caches.match("/index.html");
+          return cached || await caches.match("/offline.html");
+        })
+    );
+    return;
+  }
 
 
   // ✅ Ignore non-GET requests
