@@ -40,11 +40,28 @@
     <meta name="apple-mobile-web-app-title" content="Route Calculator" />
     <meta name="theme-color" content="#ffffff" />
     <link rel="manifest" href="/manifest.json" />
-    
-<script
-  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCOdfe7j11yw9ENkX8c7hYsIjwqcQeqJGQ&libraries=places&callback=initMap"
-  defer
-></script>
+
+<!-- Load configuration (API keys are stored separately and gitignored) -->
+<script src="/config.js"></script>
+
+<!-- Load security utilities -->
+<script src="/utils.js"></script>
+
+<!-- Google Maps API - key loaded from config.js -->
+<!-- SECURITY NOTE: API key should be moved to backend proxy in production -->
+<script>
+  // Dynamically load Google Maps API with key from config
+  (function() {
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${CONFIG.GOOGLE_MAPS_API_KEY}&libraries=places&callback=initMap`;
+    script.defer = true;
+    script.onerror = function() {
+      console.error('Failed to load Google Maps API. Please check your API key in config.js');
+      alert('Failed to load Google Maps. Please check your configuration.');
+    };
+    document.head.appendChild(script);
+  })();
+</script>
 
 <!-- <link rel="icon" href="favicon.ico" /> -->
 

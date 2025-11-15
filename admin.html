@@ -3,6 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <title>Admin Panel - Go Route Yourself</title>
+
+    <!-- Load configuration file -->
+    <script src="/config.js"></script>
+
+    <!-- Load security utilities -->
+    <script src="/utils.js"></script>
+
     <style>
       #log-modal {
         position: fixed;
@@ -133,7 +140,12 @@
     <div id="corrupted-users">Loading corrupted users...</div>
 
     <script>
-      const adminToken = "Bearer Jbrock25!";
+      // Load admin token from config
+      // SECURITY WARNING: This is still not secure! Implement proper authentication!
+      const adminToken = CONFIG.ADMIN_TOKEN;
+
+      // Use security utilities from utils.js
+      const { escapeHtml, sanitizeString } = window.SecurityUtils;
 
       async function loadUsers() {
         const res = await fetch(
@@ -147,33 +159,27 @@
 
         users.forEach((user) => {
           const tr = document.createElement("tr");
+          // Escape user data to prevent XSS attacks
+          const safeUsername = escapeHtml(user.username);
+          const safeResetKey = escapeHtml(user.resetKey);
+          const safeCreatedAt = escapeHtml(user.createdAt || "");
+          const safeMethod = escapeHtml(user.method);
+          const safeToken = escapeHtml(user.token);
+
           tr.innerHTML = `
-        <td>${user.username}</td>
-        <td><code>${user.resetKey}</code></td>
-        <td>${user.createdAt || ""}</td>
-        <td>${user.method}</td>
+        <td>${safeUsername}</td>
+        <td><code>${safeResetKey}</code></td>
+        <td>${safeCreatedAt}</td>
+        <td>${safeMethod}</td>
         <td>${user.logCount}</td>
         <td>${user.disabled ? "❌ Disabled" : "✅ Active"}</td>
         <td>
-          <button class="reset" onclick="resetUserPassword('${
-            user.username
-          }')">Reset Password</button>
-
-          <button class="reset" onclick="adminAction('reset-key','${
-            user.username
-          }')">New Reset Key</button>
-          <button class="token" onclick="adminAction('reset-token','${
-            user.username
-          }')">New Token</button>
-          <button class="disable" onclick="adminAction('toggle-disabled','${
-            user.username
-          }')">${user.disabled ? "Enable" : "Disable"}</button>
-          <button class="danger" onclick="adminAction('delete','${
-            user.username
-          }')">Delete</button>
-          <button class="view" onclick="viewLog('${
-            user.token
-          }')">View Log</button>
+          <button class="reset" onclick="resetUserPassword('${safeUsername}')">Reset Password</button>
+          <button class="reset" onclick="adminAction('reset-key','${safeUsername}')">New Reset Key</button>
+          <button class="token" onclick="adminAction('reset-token','${safeUsername}')">New Token</button>
+          <button class="disable" onclick="adminAction('toggle-disabled','${safeUsername}')">${user.disabled ? "Enable" : "Disable"}</button>
+          <button class="danger" onclick="adminAction('delete','${safeUsername}')">Delete</button>
+          <button class="view" onclick="viewLog('${safeToken}')">View Log</button>
         </td>
       `;
           table.appendChild(tr);
@@ -248,17 +254,28 @@
         logs.forEach((entry, i) => {
           const div = document.createElement("div");
           div.className = "log-entry";
+          // Escape all user-provided data to prevent XSS
+          const safeDate = escapeHtml(entry.date || "—");
+          const safeStartTime = escapeHtml(entry.startTime || "—");
+          const safeEndTime = escapeHtml(entry.endTime || "—");
+          const safeDestinations = escapeHtml(entry.destinations?.join(", ") || "—");
+          const safeEarnings = escapeHtml(entry.totalEarnings || "0.00");
+          const safeNetProfit = escapeHtml(entry.netProfit || "0.00");
+          const safeMileage = escapeHtml(entry.totalMileage || "—");
+          const safeTime = escapeHtml(entry.totalTime || "—");
+          const safeNotes = escapeHtml(entry.notes || "—");
+
           div.innerHTML = `
       <strong>📌 Log #${i + 1}</strong>
-      <p><strong>Date:</strong> ${entry.date || "—"}</p>
-      <p><strong>Start:</strong> ${entry.startTime || "—"}</p>
-      <p><strong>End:</strong> ${entry.endTime || "—"}</p>
-      <p><strong>Stops:</strong> ${entry.destinations?.join(", ") || "—"}</p>
-      <p><strong>Earnings:</strong> $${entry.totalEarnings || "0.00"}</p>
-      <p><strong>Net Profit:</strong> $${entry.netProfit || "0.00"}</p>
-      <p><strong>Mileage:</strong> ${entry.totalMileage || "—"} mi</p>
-      <p><strong>Time:</strong> ${entry.totalTime || "—"}</p>
-      <p><strong>Notes:</strong> ${entry.notes || "—"}</p>
+      <p><strong>Date:</strong> ${safeDate}</p>
+      <p><strong>Start:</strong> ${safeStartTime}</p>
+      <p><strong>End:</strong> ${safeEndTime}</p>
+      <p><strong>Stops:</strong> ${safeDestinations}</p>
+      <p><strong>Earnings:</strong> $${safeEarnings}</p>
+      <p><strong>Net Profit:</strong> $${safeNetProfit}</p>
+      <p><strong>Mileage:</strong> ${safeMileage} mi</p>
+      <p><strong>Time:</strong> ${safeTime}</p>
+      <p><strong>Notes:</strong> ${safeNotes}</p>
     `;
           content.appendChild(div);
         });
@@ -285,15 +302,16 @@
         list.forEach((user) => {
           const div = document.createElement("div");
           div.className = "user-block";
+          // Escape user data to prevent XSS
+          const safeKey = escapeHtml(user.key);
+          const safePassword = escapeHtml(user.password);
+          const safeToken = escapeHtml(user.token || "(new will be generated)");
+
           div.innerHTML = `
-        <div><strong>${user.key}</strong></div>
-        <div>Password: <code>${user.password}</code></div>
-        <div>Token: <code>${
-          user.token || "(new will be generated)"
-        }</code></div>
-        <button class="fix-btn" data-key="${user.key}" data-password="${
-            user.password
-          }" data-token="${user.token}">✅ Fix User</button>
+        <div><strong>${safeKey}</strong></div>
+        <div>Password: <code>${safePassword}</code></div>
+        <div>Token: <code>${safeToken}</code></div>
+        <button class="fix-btn" data-key="${safeKey}" data-password="${safePassword}" data-token="${safeToken}">✅ Fix User</button>
       `;
           container.appendChild(div);
         });
