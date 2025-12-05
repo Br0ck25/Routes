@@ -1,0 +1,21 @@
+{
+  "name": "gorouteyourselfworker",
+  "main": "src/index.js",
+  "compatibility_date": "2024-05-14",
+  "kv_namespaces": [
+    {
+      "binding": "ASSETS",
+      "id": "0fa26dfee4c44f7084a7668dcb16baae"
+    },
+    {
+      "binding": "LOGS_KV",
+      "id": "8ad68eb9ccdc4d1da430ee0a43587648"
+    }
+  ],
+  "r2_buckets": [
+    { "binding": "GOROUTEYOURSELF_BUCKET", "bucket_name": "gorouteyourself" }
+  ],
+  "routes": [
+    "logs.gorouteyourself.com/*"
+  ]
+}

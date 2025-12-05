@@ -1,0 +1,4131 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Offline - 
+    Go Route Yourself - Route and Cost Calculator with Log - Plan, Optimize, and Track Your Trips
+    </title>
+
+    <meta
+      name="description"
+      content="Easily calculate driving routes, optimize stops, track trip costs, and log your earnings. Save your routes securely and export your trip logs."
+    />
+
+    <!-- Open Graph (for social sharing) -->
+    <meta property="og:title" content="Route and Cost Calculator with Log" />
+    <meta
+      property="og:description"
+      content="Plan routes, calculate costs, optimize trips, and track your earnings with our smart route logging tool."
+    />
+    <meta property="og:url" content="https://gorouteyourself.com/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://gorouteyourself.com/logo.png" />
+    <!-- optional: if you have a logo or image -->
+    <meta property="og:site_name" content="Route and Cost Calculator" />
+
+    <link rel="icon" href="/logo-512.png" sizes="512x512" type="image/png" />
+    <link rel="apple-touch-icon" href="/logo-512.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Route Calculator" />
+    <meta name="theme-color" content="#ffffff" />
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Google Maps API removed for offline mode -->
+  
+
+    <style>
+
+#install-button {
+  display: none;
+  padding: 10px 16px;
+  margin: 20px auto;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  max-width: 300px;
+  width: auto;
+  display: block;
+}
+
+
+@media (max-width: 600px) {
+  #top-bar {
+    position: sticky;              /* ✅ preserve sticky on mobile */
+    top: 0;
+    z-index: 999;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    background: white;
+    padding: 10px;
+    gap: 8px;
+    margin: 0 auto;
+    border-radius: 0;              /* ✅ matches desktop now */
+    max-width: 100%;
+  }
+
+  #hamburger-button {
+    font-size: 24px;
+    padding: 4px 8px;
+  }
+
+  #username-display {
+    font-size: 14px;
+    padding: 4px 8px;
+  }
+
+  #logo-image {
+    height: 40px;
+  }
+}
+
+#top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 999;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 25px 0;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  border-radius: 0;
+  transition: box-shadow 0.3s;
+}
+
+
+
+@media (max-width: 600px) {
+  #hamburger-button {
+    font-size: 24px;         /* smaller hamburger icon */
+    padding: 4px 8px;        /* less vertical padding */
+  }
+
+  #username-display {
+    font-size: 14px;         /* slightly smaller username text */
+    padding: 4px 8px;        /* less vertical padding */
+  }
+
+  #logo-image {
+    height: 40px;            /* smaller logo height on mobile */
+  }
+}
+
+
+#account-menu button.close-button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  font-weight: bold;
+  color: black;
+  cursor: pointer;
+  margin: 10px;
+  line-height: 1;
+  transition: transform 0.2s ease;
+}
+
+#account-menu button.close-button:hover {
+  transform: scale(1.2);
+}
+
+
+#hamburger-button:hover {
+  background-color: #f0f0f0;
+}
+
+#username-display:hover {
+  background-color: #f0f0f0;
+}
+
+#hamburger-button:hover, #username-display:hover {
+  background-color: #f0f0f0;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+
+
+
+#hamburger-button {
+  display: none; /* hidden by default */
+}
+
+
+img {
+  display: block;
+  margin: 0 auto;
+}
+
+#account-menu {
+  position: fixed;
+  top: 0;
+  left: -275px;
+  width: 260px;
+  height: 100%;
+  background: linear-gradient(to bottom, #ffffff, #f9f9f9);
+  box-shadow: 2px 0 8px rgba(0,0,0,0.2);
+  z-index: 10000;
+  padding-top: 10px;
+  transition: left 0.3s ease;
+  overflow-y: auto;
+  font-size: 16px;
+}
+
+#account-menu button {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  font-size: 15px;
+  border-radius: 6px;
+  margin: 8px 0;
+  cursor: pointer;
+  width: 100%;
+  max-width: 220px;
+  display: block;
+  text-align: center;
+  transition: background-color 0.2s;
+}
+
+#account-menu button:hover {
+  background-color: #45a049;
+}
+
+#account-menu button:last-child {
+  background-color: #dc3545;
+}
+
+#account-menu button:last-child:hover {
+  background-color: #c82333;
+}
+
+
+
+
+#account-menu.show {
+  left: 0;
+}
+
+#log-list {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+
+
+
+      body,
+      html,
+      #log-container {
+        overflow: visible !important;
+      }
+      .modal-box {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        width: 300px;
+        box-sizing: border-box;
+      }
+
+
+
+      #logout-message button {
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+#logout-message button:hover {
+  opacity: 0.7;
+}
+#logout-message img {
+  height: 50px;
+  object-fit: contain;
+}
+
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f4f4f9;
+        margin: 0;
+        padding: 40px 0;
+        display: flex;
+        justify-content: center; /* center horizontally */
+        flex-direction: column; /* stack sections vertically */
+        align-items: center; /* center horizontally */
+      }
+
+      .container,
+      #log-container,
+      #import-container,
+      #export-options,
+      .edit-form-container {
+        background-color: white;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        border-radius: 8px;
+        width: 100%;
+        max-width: 900px;
+        margin: 20px auto; /* center and space */
+        box-sizing: border-box;
+        overflow: auto;
+      }
+
+      #export-options,
+      #import-container {
+        text-align: center;
+      }
+
+      h1 {
+        text-align: center;
+        font-size: 24px;
+        margin-bottom: 20px;
+        color: #333;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #555;
+      }
+
+      input[type="text"],
+      input[type="number"],
+      input[type="date"],
+      input[type="time"],
+      button,
+      select {
+        width: 100%;
+        padding: 10px;
+        margin: 8px 0;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        box-sizing: border-box;
+      }
+
+      button {
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-size: 18px;
+      }
+
+      button:hover {
+        background-color: #45a049;
+      }
+
+      #results {
+        display: none;
+        margin-top: 20px;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+      }
+
+      #map {
+        width: 100%;
+        height: 300px;
+        margin-top: 20px;
+        flex-shrink: 0;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+
+      .destination {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        margin-bottom: 15px;
+        padding: 10px;
+        border: 1px solid #eee;
+        border-radius: 5px;
+        background-color: #fefefe;
+      }
+
+      .destination label {
+        margin-top: 0;
+      }
+
+      .destination input {
+        margin-bottom: 8px;
+      }
+
+      .delete-btn,
+      .move-btn {
+        background-color: red;
+        color: white;
+        padding: 8px 12px;
+        font-size: 14px;
+        border: none;
+        cursor: pointer;
+        border-radius: 5px;
+        margin-right: 5px;
+        margin-top: 5px;
+      }
+
+      .delete-btn:hover,
+      .move-btn:hover {
+        background-color: darkred;
+      }
+
+      .move-btn {
+        background-color: #ffa500;
+      }
+
+      .move-btn:hover {
+        background-color: #ff7f00;
+      }
+
+      .destination-actions {
+        display: flex;
+        gap: 5px;
+        margin-top: 10px;
+      }
+
+      #log-list {
+        list-style-type: none;
+        padding: 0;
+      }
+
+      #log-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center; /* 🛠 Center vertically with expanded details */
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+  width: 100%;
+}
+
+
+.log-item-details {
+  flex: 1 1 auto;
+  margin-right: 10px;
+}
+
+.log-actions {
+        display: flex;
+        flex-direction: column; /* 🆕 Stack buttons vertically */
+        gap: 5px; /* 🆕 Space between buttons */
+        min-width: 100px; /* 🆕 Keep actions a reasonable size */
+        align-items: stretch; /* 🆕 Stretch buttons to same width */
+      }
+
+
+
+#log-container {
+  padding-left: 10;
+  padding-right: 100;
+}
+
+
+      #log-list li:last-child {
+        border-bottom: none;
+      }
+
+      .log-item-details {
+  flex: 1 1 auto; /* 🆕 */
+  margin-right: 10px;
+  width: auto;    /* 🆕 Remove 100% width */
+}
+
+
+      .log-actions button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 8px 0; /* 🆕 Vertically thicker buttons */
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        text-align: center; /* Center button text */
+        width: 100%; /* 🆕 Make each button full width of container */
+      }
+
+      button {
+        white-space: nowrap;
+      }
+
+      .log-actions button:hover {
+        background-color: #0056b3;
+      }
+
+      #log-header {
+        display: flex;
+        flex-direction: column; /* 🆕 STACK vertically */
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+
+      #organize-by-day {
+        padding: 8px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        font-size: 16px;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .optional-costs {
+        margin-top: 20px;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+      }
+
+      .optional-costs label {
+        font-weight: normal;
+      }
+
+      #export-options button {
+        margin: 5px 10px;
+        padding: 10px 15px;
+        font-size: 16px;
+      }
+
+      .edit-btn {
+        background-color: #ffc107;
+        color: #333;
+      }
+
+      .edit-btn:hover {
+        background-color: #e0a800;
+      }
+
+      .save-btn,
+      .cancel-btn {
+        background-color: #28a745;
+        color: white;
+        margin-left: 5px;
+      }
+
+      .cancel-btn {
+        background-color: #dc3545;
+      }
+
+      .edit-form-container {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1000;
+        max-height: 80vh;
+        overflow-y: auto;
+      }
+
+      .edit-form-container label {
+        font-weight: normal;
+      }
+
+      #overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+      }
+
+      .custom-view-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      }
+
+      .custom-view-modal {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        max-width: 700px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
+        font-size: 16px;
+        color: #333;
+      }
+
+      .custom-view-modal h3 {
+        margin-top: 0;
+        font-size: 22px;
+        text-align: center;
+      }
+
+      .custom-view-modal p {
+        margin: 10px 0;
+      }
+
+      .custom-view-modal button {
+        background-color: #dc3545;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        display: block;
+        margin: 20px auto 0;
+      }
+
+      .custom-view-modal button:hover {
+        background-color: #c82333;
+      }
+
+      #log-list .hidden {
+  display: none;
+}
+
+#log-list div[id^="details-"] {
+  margin-left: 20px; /* ✅ Small indent for expanded text */
+  padding-top: 10px;
+  transition: all 0.3s ease;
+}
+
+
+  #account-menu button {
+    all: unset; /* ✅ Reset all inherited styles */
+    display: block;
+    width: 100%;
+    max-width: 220px;
+    padding: 10px 14px;
+    margin: 10px auto;
+    background-color: #4caf50;
+    color: white !important;
+    font-size: 15px;
+    text-align: center;
+    border-radius: 6px;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: background-color 0.2s ease;
+  }
+
+  #account-menu button:hover {
+    background-color: #45a049;
+  }
+
+  #account-menu button.danger {
+    background-color: #dc3545;
+  }
+
+  #account-menu button.danger:hover {
+    background-color: #c82333;
+  }
+
+
+
+
+
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+  </head>
+  <body>
+
+
+<!-- Fixed Top Bar -->
+<div id="top-bar" style="
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: white;
+  padding: 25px 0;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  border-radius: 0;
+  box-shadow: none;
+  transition: none;
+">
+
+  <!-- Left Spacer (Hamburger) -->
+  <div style="position: absolute; left: 12px; display: flex; align-items: center; height: 100%;">
+    <button id="hamburger-button" onclick="toggleMenu()" style="
+      background: none;
+      border: none;
+      font-size: 28px;
+      cursor: pointer;
+      color: black;
+      padding: 6px 10px;
+      border-radius: 8px;
+      transition: background-color 0.3s;
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    ">☰</button>
+  </div>
+
+  <!-- Centered Logo -->
+  <img id="logo-image" src="/logo.png" alt="Logo" style="height: 50px; max-height: 70px; cursor: pointer;" onclick="scrollToTop()">
+
+  <!-- Right Spacer (Username) -->
+  <div style="position: absolute; right: 22px; display: flex; align-items: center; height: 100%;">
+    <span id="username-display" style="
+      font-size: 16px;
+      font-weight: bold;
+      background: none;
+      padding: 6px 10px;
+      border-radius: 8px;
+      color: black;
+      transition: background-color 0.3s;
+    "></span>
+  </div>
+</div>
+
+<!-- Scrollable Auth Message (Sign In Banner) -->
+<div id="auth-message" style="
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+  border-radius: 6px;
+  padding: 15px 20px;
+  text-align: center;
+  font-size: 16px;
+  max-width: 600px;
+  margin: 80px auto 20px auto;
+  position: relative;
+  z-index: 500;
+">
+  🚧 To log your route, you need to
+  <a href="#" onclick="showLogin()" style="color: #0d6efd; font-weight: bold; text-decoration: none;">Sign in</a>
+  or
+  <a href="#" onclick="showSignup()" style="color: #0d6efd; font-weight: bold; text-decoration: none;">Create an account</a>.
+</div>
+
+<!-- Offline Mode Banner (same style as sign-in banner) -->
+<div id="offline-banner" style="display: block; 
+  display: none;
+  background-color: #fffae6;
+  color: #856404;
+  border: 1px solid #ffd700;
+  border-radius: 6px;
+  padding: 15px 20px;
+  text-align: center;
+  font-size: 16px;
+  max-width: 600px;
+  margin: 80 auto 20px auto;
+  position: relative;
+  z-index: 500;
+">
+  🛜 Offline Mode: Showing cached routes.
+</div>
+
+
+
+
+
+
+<!-- ✅ FIX: Wrap in #logout-message -->
+<div id="logout-message" style="display: none; margin: 20px auto; max-width: 100%;">
+  <div id="account-menu">
+    <!-- 🧭 Close Button -->
+    <div style="position: relative; width: 100%; height: 50px;">
+      <button onclick="closeMenu()" style="
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: none;
+        border: none;
+        font-size: 24px;
+        font-weight: bold;
+        color: black;
+        cursor: pointer;
+        line-height: 1;
+        transition: transform 0.2s;
+      " onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">
+        ✕
+      </button>
+    </div>
+
+    <!-- 🖼 Logo -->
+    <div style="text-align: center; margin: 20px 0;">
+      <img src="/logo.png" alt="Logo" style="height: 40px;">
+    </div>
+
+    <!-- 📋 Menu Items -->
+    <div style="padding: 0 10px;">
+      <button onclick="closeMenu(); logout()">Log Out</button>
+      <button onclick="closeMenu(); showPasswordModal()">Change Password</button>
+      <button onclick="closeMenu(); showDeleteModal()">Delete Account</button>
+      
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+    <div class="container" style="margin-top: 15px;">
+
+
+      <label for="log-date">Date</label>
+      <input type="date" id="log-date" required />
+
+      <label for="start-address">Start Address</label>
+      <input
+        type="text"
+        id="start-address"
+        placeholder="Enter start address"
+        required
+      />
+
+      <div id="destinations-container">
+        <div class="destination">
+          <label for="destination-1">Destination 1</label>
+          <input
+          type="text"
+          id="destination-1"
+          list="recent-destinations"
+          placeholder="Enter destination address"
+          required
+        />
+        <datalist id="recent-destinations"></datalist>
+        
+          <label for="earnings-1">Earnings for Destination 1</label>
+          <input
+            type="number"
+            id="earnings-1"
+            placeholder="Enter earnings for destination"
+            required
+          />
+          <div class="destination-actions">
+            <button class="delete-btn" onclick="deleteDestination(this)">
+              Delete
+            </button>
+            <button class="move-btn" onclick="moveDestinationUp(this)">
+              Move Up
+            </button>
+            <button class="move-btn" onclick="moveDestinationDown(this)">
+              Move Down
+            </button>
+          </div>
+        </div>
+      </div>
+
+              <button onclick="addDestination()">Add Destination</button>
+      <label for="end-address">End Address</label>
+      <input
+        type="text"
+        id="end-address"
+        placeholder="Enter end address"
+        required
+      />
+
+      <label for="mpg">Miles per Gallon (MPG)</label>
+      <input
+        type="number"
+        id="mpg"
+        placeholder="Enter miles per gallon"
+        required
+      />
+
+      <label for="gas-price">Fuel Price per Gallon</label>
+      <input
+        type="number"
+        id="gas-price"
+        placeholder="Enter fuel price per gallon"
+        required
+      />
+
+      <label for="start-time">Start Time (Optional)</label>
+      <input type="time" id="start-time" placeholder="Enter start time" />
+
+      <label for="end-time">End Time (Optional)</label>
+      <input type="time" id="end-time" placeholder="Enter end time" />
+
+      <label for="hours-worked">Hours Worked (Optional)</label>
+      <input
+        type="number"
+        id="hours-worked"
+        placeholder="Auto-filled if times are entered"
+      />
+
+      <div class="optional-costs">
+        <h3>Optional Daily Costs</h3>
+        <label for="maintenance-cost"
+          >Vehicle Maintenance Cost (Optional)</label
+        >
+        <input
+          type="number"
+          id="maintenance-cost"
+          placeholder="Enter maintenance cost for the day"
+        />
+
+        <label for="supplies-cost">Supplies Cost (Optional)</label>
+        <input
+          type="number"
+          id="supplies-cost"
+          placeholder="Enter supplies cost for the day"
+        />
+      </div>
+      <button onclick="optimizeRoute()">Optimize Route</button>
+      <button onclick="calculateRoute()">Calculate Route</button>
+      <button onclick="logResults()">Log Route</button>
+      <button onclick="openInGoogleMaps()">Open Route in Google Maps</button>
+      <div
+        id="confirmation-message"
+        style="display: none; color: green; font-weight: bold; margin-top: 10px"
+      ></div>
+
+      <div id="results" class="hidden">
+        <p>Mileage: <span id="total-mileage"></span> miles</p>
+        <p>Drive Time: <span id="total-time"></span></p>
+        <p>Total Earnings: $<span id="total-earnings"></span></p>
+        <p>Fuel Cost: $<span id="fuel-cost"></span></p>
+        <p>Maintenance Cost: $<span id="maintenance-cost-result"></span></p>
+        <p>Supplies Cost: $<span id="supplies-cost-result"></span></p>
+        <p>Total Hours: <span id="total-hours"></span></p> 
+
+        <p>Net Profit: $<span id="net-profit"></span></p>
+        <p>
+          Net Profit per Hour (including drive time): $<span
+            id="profit-per-hour"
+          ></span>
+        </p>
+      </div>
+
+      <div id="map" class="hidden"></div>
+      <div id="detailed-results" style="margin-top: 20px"></div>
+      <div
+        id="mileage-display"
+        style="text-align: center; font-weight: bold; margin-top: 10px"
+      ></div>
+      <div
+        id="optimized-mileage-display"
+        style="text-align: center; font-weight: bold; margin-top: 10px"
+      ></div>
+    </div>
+
+    <div id="log-container">
+
+      <!-- 🆕 Step 1: Centered Title and Summary -->
+      <div id="log-header" style="
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 10px;
+      ">
+    
+        <!-- Log Title Centered -->
+        <h2 style="margin: 0 0 20px 0; text-align: center;">Log</h2>
+    
+        <!-- Net Profit and Profit Per Hour Centered -->
+        <div id="log-summary" style="
+          text-align: center;
+          font-weight: bold;
+          font-size: 18px;
+          margin-top: 10px;
+          margin-bottom: 20px;
+        ">
+          <!-- Net profit and profit per hour will dynamically go here -->
+        </div>
+    
+      </div>
+    
+      <!-- 🆕 Step 2: Centered Filters Row -->
+      <div id="log-title-bar" style="
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 20px;
+        margin-bottom: 20px;
+      ">
+        <div style="display: flex; flex-direction: column; align-items: center;">
+          <label for="filter-start-date">Start Date:</label>
+          <input type="date" id="filter-start-date" onchange="onStartDateChange()" />
+
+        </div>
+    
+        <div style="display: flex; flex-direction: column; align-items: center;">
+          <label for="filter-end-date">End Date:</label>
+          <input type="date" id="filter-end-date" onchange="filterLogs()" style="min-width: 120px;">
+        </div>
+    
+        <div style="display: flex; flex-direction: column; align-items: center;">
+          <label for="filter-search">Search:</label>
+          <input type="text" id="filter-search" placeholder="Search anything..." oninput="filterLogs()" style="min-width: 200px;">
+        </div>
+    
+        <div style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+          <button onclick="clearFilters()" style="
+            padding: 8px 14px;
+            font-size: 16px;
+            height: 40px;
+            line-height: 1;
+            vertical-align: middle;
+            margin-top: 34px; /* 🛠 Lifts it up slightly to match input perfectly */
+          ">
+            Clear
+          </button>
+        </div>
+        
+        
+      </div>
+    
+      <!-- Step 3: Log Entries (list stays exactly as it was) -->
+      <ul id="log-list">
+        <!-- Log entries are dynamically added here -->
+      </ul>
+    
+    </div> <!-- end of #log-container -->
+
+<!-- 🆗 Android/Chrome will show this button; iOS won't -->
+<button id="install-button">Install App</button>
+
+
+    
+      
+
+
+
+
+      <ul id="log-list"></ul>
+    </div>
+    
+
+    <!-- Then AFTER log-container ends, manage-log-container starts -->
+    <div
+      id="manage-log-container"
+      style="text-align: center; margin-top: 20px; position: relative"
+    >
+      <button
+        onclick="toggleManageLogMenu()"
+        style="padding: 10px 15px; font-size: 16px"
+      >
+        Manage Log ▼
+      </button>
+      <div
+        id="manage-log-menu"
+        style="
+          display: none;
+          position: absolute;
+          top: 100%;
+          left: 50%;
+          transform: translateX(-50%);
+          background: white;
+          border: 1px solid #ccc;
+          border-radius: 6px;
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+          z-index: 9999;
+          min-width: 160px;
+          margin-top: 5px;
+          text-align: center; /* 🆕 Add this line */
+        "
+      >
+        <button
+          onclick="triggerImportFile()"
+          style="
+            width: auto; /* 🆕 Change */
+            min-width: 120px; /* 🆕 New */
+            padding: 10px;
+            background: none;
+            border: none;
+            text-align: center; /* 🆕 Change */
+            color: black;
+            display: inline-block; /* 🆕 New */
+            margin: 5px 0; /* 🆕 Add some vertical margin */
+          "
+        >
+          Import CSV
+        </button>
+        <button
+          onclick="exportToCSV()"
+          style="
+            width: auto; /* 🆕 Change */
+            min-width: 120px; /* 🆕 New */
+            padding: 10px;
+            background: none;
+            border: none;
+            text-align: center; /* 🆕 Change */
+            color: black;
+            display: inline-block; /* 🆕 New */
+            margin: 5px 0; /* 🆕 Add some vertical margin */
+          "
+        >
+          Export CSV
+        </button>
+      </div>
+      </div>
+    </div>
+
+    <input
+      type="file"
+      id="import-file"
+      accept=".csv"
+      style="display: none"
+      onchange="importLog()"
+    />
+
+    <div id="overlay" class="hidden"></div>
+
+    <script>
+
+function clearTripForm() {
+  // Reset date to today
+  const today = new Date().toLocaleDateString("en-CA"); // format: YYYY-MM-DD in local time
+
+  document.getElementById("log-date").value = today;
+
+  // ❌ Clear only optional fields
+  document.getElementById("start-time").value = "";
+  document.getElementById("end-time").value = "";
+  document.getElementById("hours-worked").value = "";
+  document.getElementById("maintenance-cost").value = "";
+  document.getElementById("supplies-cost").value = "";
+
+  // ✅ Keep start, end, mpg, and gas-price
+
+  // Reset destinations
+  const container = document.getElementById("destinations-container");
+  container.innerHTML = "";
+
+  // Add one fresh destination block
+  const div = document.createElement("div");
+  div.classList.add("destination");
+  div.innerHTML = `
+    <label for="destination-1">Destination 1</label>
+    <input type="text" id="destination-1" list="recent-destinations" placeholder="Enter destination address" required>
+    <label for="earnings-1">Earnings for Destination 1</label>
+    <input type="number" id="earnings-1" placeholder="Enter earnings for destination" required>
+    <div class="destination-actions">
+      <button class="delete-btn" onclick="deleteDestination(this)">Delete</button>
+      <button class="move-btn" onclick="moveDestinationUp(this)">Move Up</button>
+      <button class="move-btn" onclick="moveDestinationDown(this)">Move Down</button>
+    </div>
+  `;
+  container.appendChild(div);
+  initAutocompleteDestination(div.querySelector('input[type="text"]'));
+
+  // Hide results and reset UI
+  document.getElementById("results").classList.add("hidden");
+  document.getElementById("map").classList.add("hidden");
+  document.getElementById("detailed-results").innerHTML = "";
+  document.getElementById("mileage-display").textContent = "";
+  document.getElementById("optimized-mileage-display").textContent = "";
+}
+
+
+
+let disableAutoSave = false;
+
+
+
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+
+
+let map;
+let directionsService;
+let directionsRenderer;
+let autocompleteStart, autocompleteEnd;
+let editingIndex = -1;
+let originalMileage = null;
+let logEntries = [];
+let currentPage = 1;
+const logsPerPage = 10;
+
+function getRecentDestinations() {
+  return JSON.parse(localStorage.getItem("recentDestinations") || "[]");
+}
+
+function saveRecentDestinations(newDestinations) {
+  const current = getRecentDestinations();
+  const combined = [...new Set([...newDestinations, ...current])].slice(0, 10);
+  localStorage.setItem("recentDestinations", JSON.stringify(combined));
+}
+
+function updateDatalistSuggestions() {
+  const datalist = document.getElementById("recent-destinations");
+  if (!datalist) return;
+  const recent = getRecentDestinations();
+  datalist.innerHTML = recent.map(dest => `<option value="${dest}">`).join("");
+}
+
+
+      function toggleManageLogMenu() {
+        const menu = document.getElementById("manage-log-menu");
+        const body = document.body;
+
+        if (!menu) return;
+
+        if (menu.style.display === "none" || menu.style.display === "") {
+          menu.style.display = "block";
+          body.style.paddingBottom = "200px"; // 🆕 Add extra bottom space
+        } else {
+          menu.style.display = "none";
+          body.style.paddingBottom = "0"; // 🆕 Remove extra space
+        }
+      }
+
+      function onStartDateChange() {
+  filterLogs(); // existing filter logic
+
+  // Automatically open the end date calendar
+  const endDateInput = document.getElementById("filter-end-date");
+  if (endDateInput) {
+    endDateInput.focus();
+    endDateInput.showPicker?.(); // works in most modern browsers
+  }
+}
+
+function isIos() {
+  return /iphone|ipad|ipod/i.test(navigator.userAgent);
+}
+
+function isInStandaloneMode() {
+  return ('standalone' in window.navigator) && window.navigator.standalone;
+}
+
+
+document.addEventListener('DOMContentLoaded', () => {
+  const installBtn = document.getElementById('install-button');
+
+  if (isIos()) {
+    // ❌ Hide the install button on iOS
+    if (installBtn) installBtn.style.display = 'none';
+
+    // ✅ Only show iOS prompt if not installed
+    if (!isInStandaloneMode()) {
+      const prompt = document.createElement('div');
+      prompt.id = 'ios-install-prompt'; // ✅ Needed for auto-hide
+      prompt.innerHTML = `
+        <div style="
+          background-color: #fffae6;
+          color: #333;
+          padding: 15px;
+          text-align: center;
+          font-size: 16px;
+          border: 1px solid #ffd700;
+          border-radius: 6px;
+          margin: 20px auto 0 auto;
+          max-width: 600px;
+        ">
+          📱 To install this app on your iPhone, tap the
+          <strong>Share</strong> button
+          <br>then choose <strong>Add to Home Screen</strong>.
+        </div>
+      `;
+
+      // ⬇️ Insert below the log container
+      const manageLog = document.getElementById('manage-log-container');
+      if (manageLog) {
+        manageLog.insertAdjacentElement('afterend', prompt);
+      } else {
+        document.body.appendChild(prompt);
+      }
+
+      // ⏱️ Auto-hide if user installs manually while the app is open
+      const checkInterval = setInterval(() => {
+        if (isInStandaloneMode()) {
+          const iosPrompt = document.getElementById('ios-install-prompt');
+          if (iosPrompt) iosPrompt.remove();
+          clearInterval(checkInterval);
+        }
+      }, 2000); // every 2 seconds
+    }
+  }
+});
+
+
+
+
+    </script>
+
+    <div id="edit-form-container" class="edit-form-container hidden">
+      <h3>Edit Log Entry</h3>
+      <label for="edit-date">Date</label>
+      <input type="date" id="edit-date" />
+      
+
+      <div class="edit-form-group">
+        <label for="edit-start-time">Start Time</label>
+        <input type="time" id="edit-start-time" />
+      </div>
+
+      <div class="edit-form-group">
+        <label for="edit-end-time">End Time</label>
+        <input type="time" id="edit-end-time" />
+      </div>
+
+      <label for="edit-start-address">Start Address</label>
+      <input type="text" id="edit-start-address" />
+
+      <div id="edit-destinations-container"></div>
+      <button type="button" onclick="addEditDestination()">
+        Add Destination
+      </button>
+
+      <label for="edit-end-address">End Address</label>
+      <input type="text" id="edit-end-address" />
+      <button type="button" onclick="recalculateEditMileageAndCosts()">
+        Recalculate Mileage
+      </button>
+
+      <label for="edit-mpg">Miles Per Gallon (MPG)</label>
+      <input type="number" id="edit-mpg" placeholder="Enter MPG" />
+
+      <label for="edit-gas-price">Fuel Price Per Gallon</label>
+      <input type="number" id="edit-gas-price" placeholder="Enter Gas Price" />
+
+      <label for="edit-total-earnings">Total Earnings</label>
+      <input type="number" id="edit-total-earnings" />
+
+      <label for="edit-fuel-cost">Fuel Cost</label>
+      <input type="number" id="edit-fuel-cost" />
+
+      <label for="edit-maintenance-cost">Maintenance Cost</label>
+      <input type="number" id="edit-maintenance-cost" />
+
+      <label for="edit-supplies-cost">Supplies Cost</label>
+      <input type="number" id="edit-supplies-cost" />
+
+      <label for="edit-total-mileage">Mileage</label>
+      <input type="number" id="edit-total-mileage" />
+
+      <label for="edit-total-time">Drive Time</label>
+      <input
+        type="text"
+        id="edit-total-time"
+        placeholder="e.g., 1 hour 30 minutes"
+      />
+
+      <label for="edit-hours-worked">Hours Worked (Optional)</label>
+      <input type="number" id="edit-hours-worked" />
+
+      <button type="button" class="save-btn" onclick="saveEditedLogEntry()">
+        Save
+      </button>
+      <button type="button" class="cancel-btn" onclick="closeEditForm()">
+        Cancel
+      </button>
+      <input type="hidden" id="edit-index" />
+    </div>
+
+    <script>
+      function saveUserInputsToLocalStorage({
+        mpg,
+        gasPrice,
+        startAddress,
+        endAddress,
+      }) {
+        localStorage.setItem("mpg", mpg);
+        localStorage.setItem("gasPrice", gasPrice);
+        localStorage.setItem("startAddress", startAddress);
+        localStorage.setItem("endAddress", endAddress);
+      }
+
+      document.addEventListener("click", function (event) {
+        const menu = document.getElementById("account-menu");
+        const button = event.target.closest("button");
+
+        const isToggleButton =
+          button && (button.innerText === "☰" || button.onclick === toggleMenu);
+
+        if (menu && !menu.contains(event.target) && !isToggleButton) {
+          closeMenu();
+        }
+      });
+
+      function closeMenu() {
+  const menu = document.getElementById("account-menu");
+  if (menu) {
+    menu.classList.remove("show");
+  }
+}
+
+
+
+      function closeAuthModal() {
+        document.getElementById("auth-modal").style.display = "none";
+      }
+
+
+      async function saveLog() {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    console.error("❌ No token found. User must be signed in to save.");
+    alert("You must be signed in to save your route logs.");
+    showLogin();
+    return;
+  }
+
+  console.log("⏳ Saving route...");
+
+  // 🛜 Detect if offline
+  if (!navigator.onLine) {
+    console.warn("🛜 Offline: Saving log locally.");
+    localStorage.setItem("pendingLogs", JSON.stringify(logEntries));
+    localStorage.setItem("cachedLogs", JSON.stringify(logEntries)); // ✅ Update visible logs too
+    alert("⚠️ Offline: Route saved locally. Will sync when back online.");
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      "https://logs.gorouteyourself.com/logs",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token,
+        },
+        body: JSON.stringify(logEntries),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+
+    console.log("✅ Saved to KV");
+    localStorage.setItem("cachedLogs", JSON.stringify(logEntries)); // ✅ Save fresh logs locally
+    localStorage.removeItem("pendingLogs"); // ✅ Clear pending if successful
+  } catch (err) {
+    console.error("❌ Save failed. Saving offline:", err);
+    localStorage.setItem("pendingLogs", JSON.stringify(logEntries)); // ✅ Save pending
+    localStorage.setItem("cachedLogs", JSON.stringify(logEntries)); // ✅ Update visible logs too
+    alert("⚠️ Offline mode: Your changes are saved locally. We'll sync them next time you're online.");
+  }
+}
+
+
+async function syncPendingLogs() {
+  const pending = localStorage.getItem("pendingLogs");
+  if (!pending) return;
+
+  const token = localStorage.getItem("token");
+  if (!token) return;
+
+  try {
+    const response = await fetch(
+      "https://logs.gorouteyourself.com/logs",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token,
+        },
+        body: pending,
+      }
+    );
+
+    if (response.ok) {
+      console.log("✅ Pending logs synced successfully!");
+      localStorage.removeItem("pendingLogs");
+
+      // 🆕 Important: Update cachedLogs after successful sync
+      const freshLogs = await loadLog();
+      localStorage.setItem("cachedLogs", JSON.stringify(freshLogs));
+      displayLog();
+    } else {
+      console.error("❌ Failed to sync pending logs:", await response.text());
+    }
+  } catch (err) {
+    console.error("❌ Error syncing pending logs:", err);
+  }
+}
+
+async function loadLog() {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    console.error("❌ No token found. Cannot load logs.");
+    return [];
+  }
+
+  try {
+    const response = await fetch("https://logs.gorouteyourself.com/logs", {
+      headers: { Authorization: token }
+    });
+
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+
+    const logs = await response.json();
+    const localLogs = JSON.parse(localStorage.getItem("cachedLogs") || "[]");
+
+const merged = logs.map(serverLog => {
+  const localMatch = localLogs.find(l =>
+    l.date === serverLog.date &&
+    JSON.stringify(l.destinations) === JSON.stringify(serverLog.destinations)
+  );
+
+  if (!localMatch) return serverLog;
+
+  const localTime = new Date(localMatch.lastModified || 0).getTime();
+  const serverTime = new Date(serverLog.lastModified || 0).getTime();
+
+  console.log("⛓ Conflict on", serverLog.date, "— using", serverTime >= localTime ? "server" : "local");
+
+  return serverTime >= localTime ? serverLog : localMatch;
+});
+
+localStorage.setItem("cachedLogs", JSON.stringify(merged));
+return merged;
+
+  } catch (err) {
+    console.warn("⚠️ Offline or failed to load logs. Loading from local cache.", err);
+    const cached = localStorage.getItem("cachedLogs");
+    return cached ? JSON.parse(cached) : [];
+  }
+}
+
+function updateOfflineBanner() {
+  const banner = document.getElementById("offline-banner");
+
+  if (navigator.onLine) {
+    banner.style.display = "none"; // 🟢 Online
+    syncAndReloadLogs();            // 🆕 Force refresh logs!
+  } else {
+    banner.style.display = "block"; // 🔴 Offline
+  }
+}
+
+async function syncAndReloadLogs() {
+  try {
+    console.log("🔄 Online detected: syncing and reloading logs...");
+
+    await syncPendingLogs();
+logEntries = await loadLog();
+displayLog();
+
+
+
+    console.log("✅ Logs refreshed after reconnecting!");
+    showConfirmationMessage("✅ Logs refreshed after reconnecting!");
+  } catch (error) {
+    console.error("❌ Error refreshing logs:", error);
+  }
+}
+
+function saveDraftTrip() {
+  if (disableAutoSave) return;
+
+  const startTime = document.getElementById("start-time")?.value.trim();
+  const endTime = document.getElementById("end-time")?.value.trim();
+  const hoursWorked = document.getElementById("hours-worked")?.value.trim();
+  const maintenance = document.getElementById("maintenance-cost")?.value.trim();
+  const supplies = document.getElementById("supplies-cost")?.value.trim();
+
+  const destinations = Array.from(document.querySelectorAll('#destinations-container .destination'))
+    .map(div => ({
+      address: div.querySelector('input[id^="destination-"]')?.value.trim() || '',
+      earnings: div.querySelector('input[id^="earnings-"]')?.value.trim() || ''
+    }))
+    .filter(d => d.address || d.earnings);
+
+  const hasMeaningfulData =
+    destinations.length > 0 ||
+    startTime ||
+    endTime ||
+    hoursWorked ||
+    maintenance ||
+    supplies;
+
+  if (!hasMeaningfulData) {
+    localStorage.removeItem("draftTrip"); // 🚫 don't store empty form
+    return;
+  }
+
+  // Still include these in case the user wants them remembered
+  const draft = {
+    date: document.getElementById("log-date")?.value,
+    start: document.getElementById("start-address")?.value,
+    end: document.getElementById("end-address")?.value,
+    mpg: document.getElementById("mpg")?.value,
+    gas: document.getElementById("gas-price")?.value,
+    startTime,
+    endTime,
+    hoursWorked,
+    maintenance,
+    supplies,
+    destinations
+  };
+
+  localStorage.setItem("draftTrip", JSON.stringify(draft));
+}
+
+
+
+
+setInterval(saveDraftTrip, 5000); // Auto-save every 5 seconds
+
+
+
+document.addEventListener("DOMContentLoaded", async () => {
+  const draft = localStorage.getItem("draftTrip");
+  updateAuthUI();
+
+  if (draft) {
+  try {
+    const data = JSON.parse(draft);
+
+    const destinations = Array.isArray(data.destinations)
+      ? data.destinations.filter(d => d.address || d.earnings)
+      : [];
+
+    const hasMeaningfulData =
+      destinations.length > 0 ||
+      (data.startTime && data.startTime.trim()) ||
+      (data.endTime && data.endTime.trim()) ||
+      (data.hoursWorked && parseFloat(data.hoursWorked) > 0) ||
+      (data.maintenance && parseFloat(data.maintenance) > 0) ||
+      (data.supplies && parseFloat(data.supplies) > 0);
+
+    if (!hasMeaningfulData) {
+      localStorage.removeItem("draftTrip");
+      return; // ✅ Don't touch the DOM, silently skip
+    }
+
+    const proceed = confirm("📝 Resume your last unsaved trip?");
+    if (!proceed) {
+  localStorage.removeItem("draftTrip");
+
+  // ✅ Reset date to today's local date
+  const today = new Date().toLocaleDateString("en-CA");
+  const dateInput = document.getElementById("log-date");
+  if (dateInput) {
+    dateInput.value = today;
+  }
+
+  return;
+}
+
+
+
+    // ✅ Now and only now, start restoring the form:
+    document.getElementById("log-date").value = data.date || "";
+    document.getElementById("start-address").value = data.start || "";
+    document.getElementById("end-address").value = data.end || "";
+    document.getElementById("mpg").value = data.mpg || "";
+    document.getElementById("gas-price").value = data.gas || "";
+    document.getElementById("start-time").value = data.startTime || "";
+    document.getElementById("end-time").value = data.endTime || "";
+    document.getElementById("hours-worked").value = data.hoursWorked || "";
+    document.getElementById("maintenance-cost").value = data.maintenance || "";
+    document.getElementById("supplies-cost").value = data.supplies || "";
+
+    const container = document.getElementById("destinations-container");
+    container.innerHTML = "";
+
+    destinations.forEach((d, i) => {
+      const div = document.createElement("div");
+      div.classList.add("destination");
+      div.innerHTML = `
+        <label for="destination-${i + 1}">Destination ${i + 1}</label>
+        <input type="text" id="destination-${i + 1}" list="recent-destinations" value="${d.address || ""}">
+        <label for="earnings-${i + 1}">Earnings for Destination ${i + 1}</label>
+        <input type="number" id="earnings-${i + 1}" value="${d.earnings || ""}">
+        <div class="destination-actions">
+          <button class="delete-btn" onclick="deleteDestination(this)">Delete</button>
+          <button class="move-btn" onclick="moveDestinationUp(this)">Move Up</button>
+          <button class="move-btn" onclick="moveDestinationDown(this)">Move Down</button>
+        </div>
+      `;
+      container.appendChild(div);
+      initAutocompleteDestination(div.querySelector('input[type="text"]'));
+    });
+  } catch (err) {
+    console.error("❌ Failed to parse draftTrip:", err);
+    localStorage.removeItem("draftTrip");
+  }
+}
+
+
+
+
+
+  // Set today's date
+  const dateInput = document.getElementById("log-date");
+if (dateInput) {
+  const today = new Date().toLocaleDateString("en-CA"); // format: yyyy-mm-dd
+  dateInput.value = today; // ✅ set only the date
+}
+
+
+  await syncPendingLogs();
+
+  updateAuthUI();
+
+  logEntries = await loadLog();
+  displayLog();
+  initOfflineListeners();
+
+
+  document.getElementById("hours-worked").addEventListener("input", () => {
+  const hoursWorked = parseFloat(document.getElementById("hours-worked").value) || 0;
+  const driveTimeInHours = convertTimeToHours(document.getElementById("total-time").textContent);
+  const totalHours = (hoursWorked + driveTimeInHours).toFixed(2);
+  document.getElementById("total-hours").textContent = totalHours;
+});
+
+  // 🆕 After selecting start time, auto-focus end time after slight delay
+  document.getElementById("start-time").addEventListener("change", () => {
+    setTimeout(() => document.getElementById("end-time")?.focus(), 200);
+  });
+
+  updateDatalistSuggestions();
+
+
+});
+
+  // 🆕 After selecting start time, auto-focus end time after slight delay
+  document.getElementById("start-time").addEventListener("change", () => {
+    setTimeout(() => document.getElementById("end-time")?.focus(), 200);
+  });
+
+
+
+      function updateOfflineBanner() {
+  const banner = document.getElementById("offline-banner");
+
+  if (navigator.onLine) {
+    banner.style.display = "none"; // 🟢 Online
+    syncAndReloadLogs();            // 🆕 Force refresh logs!
+  } else {
+    banner.style.display = "block"; // 🔴 Offline
+  }
+}
+
+async function syncAndReloadLogs() {
+  try {
+    console.log("🔄 Online detected: syncing and reloading logs...");
+
+    // First, sync any pending logs if needed
+    await syncPendingLogs();
+
+    logEntries = await loadLog();
+
+// 🆕 Ensure all logs have lastModified timestamp
+logEntries = logEntries.map(entry => ({
+  ...entry,
+  lastModified: entry.lastModified || new Date().toISOString()
+}));
+
+displayLog();
+
+
+
+    console.log("✅ Logs refreshed after reconnecting!");
+  } catch (error) {
+    console.error("❌ Error refreshing logs:", error);
+  }
+}
+
+
+
+// Call once on page load too
+document.addEventListener("DOMContentLoaded", () => {
+});
+
+      function showConfirmationMessage(message) {
+        const confirmation = document.getElementById("confirmation-message");
+        confirmation.textContent = message;
+        confirmation.style.display = "block";
+        setTimeout(() => {
+          confirmation.style.display = "none";
+        }, 3000);
+      }
+
+      function initMap() {
+        window.googleMapsReady = true;
+        map = new google.maps.Map(document.getElementById("map"), {
+          zoom: 10,
+          center: { lat: 37.7749, lng: -122.4194 },
+          mapTypeControl: false,
+          streetViewControl: false,
+        });
+
+        directionsService = new google.maps.DirectionsService();
+        directionsRenderer = new google.maps.DirectionsRenderer({
+          map: map,
+          suppressMarkers: false,
+        });
+
+        autocompleteStart = new google.maps.places.Autocomplete(
+          document.getElementById("start-address"),
+          { types: ["geocode"] }
+        );
+        autocompleteEnd = new google.maps.places.Autocomplete(
+          document.getElementById("end-address"),
+          { types: ["geocode"] }
+        );
+        document
+          .getElementById("start-address")
+          .addEventListener("change", resetOriginalMileageDisplay);
+        document
+          .getElementById("end-address")
+          .addEventListener("change", resetOriginalMileageDisplay);
+        document
+          .getElementById("start-time")
+          .addEventListener("change", handleTimeChange);
+        document
+          .getElementById("end-time")
+          .addEventListener("change", handleTimeChange);
+
+        autocompleteStart.addListener("place_changed", function () {
+          const place = autocompleteStart.getPlace();
+          if (place.geometry) {
+            document.getElementById("end-address").value =
+              document.getElementById("start-address").value;
+          } else {
+            document.getElementById("start-address").value = "";
+          }
+        });
+
+        const savedMpg = parseFloat(localStorage.getItem("mpg"));
+        const savedGasPrice = parseFloat(localStorage.getItem("gasPrice"));
+        const savedStartAddress = localStorage.getItem("startAddress");
+        const savedEndAddress = localStorage.getItem("endAddress");
+
+        if (!isNaN(savedMpg)) {
+          document.getElementById("mpg").value = savedMpg;
+        }
+
+        if (!isNaN(savedGasPrice)) {
+          document.getElementById("gas-price").value = savedGasPrice;
+        }
+
+        if (savedStartAddress && typeof savedStartAddress === "string") {
+          document.getElementById("start-address").value = savedStartAddress;
+        }
+
+        if (savedEndAddress && typeof savedEndAddress === "string") {
+          document.getElementById("end-address").value = savedEndAddress;
+        }
+
+        // Initialize autocomplete for the initial destination
+        document
+          .querySelectorAll(
+            '#destinations-container .destination input[type="text"]'
+          )
+          .forEach(initAutocompleteDestination);
+
+        displayLog();
+      }
+
+      window.initMap = initMap;
+
+      function initAutocompleteDestination(inputElement) {
+        const autocomplete = new google.maps.places.Autocomplete(inputElement, {
+          types: ["geocode"],
+        });
+      }
+
+      async function calculateRoute() {
+        const calculationResult = await calculateRouteData(); // Call the data calculation function
+        if (calculationResult) {
+          updateUI(calculationResult);
+          showConfirmationMessage("✅ Route calculated successfully!");
+        }
+      }
+
+      async function calculateRouteData() {
+        const startAddress = document.getElementById("start-address").value;
+        const endAddress = document.getElementById("end-address").value;
+        const mpg = parseFloat(document.getElementById("mpg").value);
+        const gasPrice = parseFloat(document.getElementById("gas-price").value);
+        const startTimeInput = document.getElementById("start-time").value;
+        const endTimeInput = document.getElementById("end-time").value;
+        let hoursWorked =
+          parseFloat(document.getElementById("hours-worked").value) || 0;
+
+        if (startTimeInput && endTimeInput) {
+          const [startHours, startMinutes] = startTimeInput
+            .split(":")
+            .map(Number);
+          const [endHours, endMinutes] = endTimeInput.split(":").map(Number);
+
+          let startTotalMinutes = startHours * 60 + startMinutes;
+          let endTotalMinutes = endHours * 60 + endMinutes;
+
+          if (endTotalMinutes < startTotalMinutes) {
+            // Handle overnight shift (e.g., 10PM to 2AM next day)
+            endTotalMinutes += 24 * 60;
+          }
+
+          let totalWorkedMinutes = endTotalMinutes - startTotalMinutes;
+          let driveMinutes = 0;
+
+          if (typeof totalDuration === "number") {
+            driveMinutes = totalDuration / 60;
+          }
+
+          const actualWorkedMinutes = Math.max(
+            totalWorkedMinutes - driveMinutes,
+            0
+          );
+          hoursWorked = actualWorkedMinutes / 60;
+
+          hoursWorked = parseFloat(hoursWorked.toFixed(2));
+          const workedHours = Math.floor(hoursWorked);
+const workedMinutes = Math.round((hoursWorked - workedHours) * 60);
+document.getElementById("hours-worked").value = `${workedHours} hours ${workedMinutes} minutes`;
+
+        }
+
+        const maintenanceCost =
+          parseFloat(document.getElementById("maintenance-cost").value) || 0;
+        const suppliesCost =
+          parseFloat(document.getElementById("supplies-cost").value) || 0;
+
+        saveUserInputsToLocalStorage({
+          mpg,
+          gasPrice,
+          startAddress,
+          endAddress,
+        });
+
+        const destInputs = document.querySelectorAll(
+          'input[id^="destination-"]'
+        );
+        const earningsInputs = document.querySelectorAll(
+          'input[id^="earnings-"]'
+        );
+        const destinations = Array.from(destInputs).map((input) => ({
+          location: input.value,
+          stopover: true,
+        }));
+
+        saveRecentDestinations(destinations.map(d => d.location));
+updateDatalistSuggestions();
+
+        const earnings = Array.from(earningsInputs).map(
+          (input) => parseFloat(input.value) || 0
+        );
+        const totalEarnings = earnings.reduce((sum, val) => sum + val, 0);
+
+        const waypoints = destinations;
+        const request = {
+          origin: startAddress,
+          destination:
+            endAddress ||
+            destinations[destinations.length - 1]?.location ||
+            startAddress,
+          waypoints: waypoints,
+          travelMode: "DRIVING",
+        };
+
+        const logDateInput = document.getElementById("log-date").value;
+const selectedDate = logDateInput || new Date().toISOString().split("T")[0];
+
+
+        return new Promise((resolve, reject) => {
+          directionsService.route(request, (response, status) => {
+            if (status === "OK") {
+              directionsRenderer.setDirections(response);
+              document.getElementById("map").classList.remove("hidden");
+
+              let totalMileage = 0;
+              let totalDuration = 0;
+
+              response.routes[0].legs.forEach((leg) => {
+                totalMileage += leg.distance.value / 1609.34;
+                totalDuration += leg.duration.value;
+              });
+
+              const startTimeInput =
+                document.getElementById("start-time").value;
+              const endTimeInput = document.getElementById("end-time").value;
+              let hoursWorked =
+                parseFloat(document.getElementById("hours-worked").value) || 0;
+
+              if (startTimeInput && endTimeInput) {
+                const [startHours, startMinutes] = startTimeInput
+                  .split(":")
+                  .map(Number);
+                const [endHours, endMinutes] = endTimeInput
+                  .split(":")
+                  .map(Number);
+
+                let startTotalMinutes = startHours * 60 + startMinutes;
+                let endTotalMinutes = endHours * 60 + endMinutes;
+
+                if (endTotalMinutes < startTotalMinutes) {
+                  // Overnight shift
+                  endTotalMinutes += 24 * 60;
+                }
+
+                let totalWorkedMinutes = endTotalMinutes - startTotalMinutes;
+                let driveMinutes = totalDuration / 60; // NOW we have drive time from Google
+
+                const actualWorkedMinutes = Math.max(
+                  totalWorkedMinutes - driveMinutes,
+                  0
+                );
+                hoursWorked = parseFloat((actualWorkedMinutes / 60).toFixed(2));
+
+                // ✅ Also auto-update the Hours Worked input
+                document.getElementById("hours-worked").value =
+                  hoursWorked.toFixed(2);
+              }
+
+              const fuelCost =
+                mpg && gasPrice ? (totalMileage / mpg) * gasPrice : 0;
+              const netProfitBeforeOptional = totalEarnings - fuelCost;
+              const netProfit =
+                netProfitBeforeOptional - maintenanceCost - suppliesCost;
+              const totalHoursSpent = hoursWorked + totalDuration / 3600;
+              const profitPerHour =
+                totalHoursSpent > 0 ? netProfit / totalHoursSpent : 0;
+
+              resolve({
+              
+                 date: selectedDate,
+
+                startTime: startAddress,
+                endTime: endAddress,
+                destinations: destinations.map((d) => d.location),
+                earnings: earnings,
+                totalMileage: totalMileage.toFixed(2),
+                totalTime: formatDuration(totalDuration),
+                totalEarnings: totalEarnings.toFixed(2),
+                fuelCost: fuelCost.toFixed(2),
+                maintenanceCost: maintenanceCost.toFixed(2),
+                suppliesCost: suppliesCost.toFixed(2),
+                netProfit: netProfit.toFixed(2),
+                profitPerHour: profitPerHour.toFixed(2),
+                hoursWorked: hoursWorked,
+              });
+            } else {
+              alert("Directions request failed due to " + status);
+              document.getElementById("map").classList.add("hidden");
+              document.getElementById("results").classList.add("hidden");
+              resolve(null);
+            }
+          });
+        });
+      }
+
+      function updateUI(data) {
+        if (data) {
+          document.getElementById("total-mileage").textContent =
+            data.totalMileage;
+          document.getElementById("total-time").textContent = data.totalTime;
+          document.getElementById("total-earnings").textContent =
+            data.totalEarnings;
+          document.getElementById("fuel-cost").textContent = data.fuelCost;
+          document.getElementById("maintenance-cost-result").textContent =
+            data.maintenanceCost;
+          document.getElementById("supplies-cost-result").textContent =
+            data.suppliesCost;
+          document.getElementById("net-profit").textContent = data.netProfit;
+          document.getElementById("profit-per-hour").textContent =
+            data.profitPerHour;
+          document.getElementById("results").classList.remove("hidden");
+          const driveTimeInHours = convertTimeToHours(data.totalTime);
+          const totalHoursFloat = parseFloat(data.hoursWorked || 0) + driveTimeInHours;
+const totalH = Math.floor(totalHoursFloat);
+const totalM = Math.round((totalHoursFloat - totalH) * 60);
+document.getElementById("total-hours").textContent = `${totalH} hours ${totalM} minutes`;
+
+
+          if (originalMileage === null) {
+            originalMileage = data.totalMileage;
+          }
+          document.getElementById("mileage-display").textContent =
+            "Original Route: " + originalMileage + " miles";
+
+          // ✅ Add the new detailed display below the map
+          const detailedResultsHTML = `
+            <h3>Route Details</h3>
+            <p><strong>Date:</strong> ${data.date}</p>
+            <p><strong>Start Address:</strong> ${data.startTime}</p>
+            <p><strong>Destinations:</strong><br>${data.destinations
+              .map((d) => `- ${d}`)
+              .join("<br>")}</p>
+            <p><strong>End Address:</strong> ${data.endTime}</p>
+            <p><strong>Earnings per Stop:</strong> ${data.earnings
+              .map((e) => `$${parseFloat(e).toFixed(2)}`)
+              .join(", ")}</p>
+            <p><strong>Mileage:</strong> ${data.totalMileage} miles</p>
+            <p><strong>Drive Time:</strong> ${data.totalTime}</p>
+            <p><strong>Total Earnings:</strong> $${data.totalEarnings}</p>
+            <p><strong>Fuel Cost:</strong> $${data.fuelCost}</p>
+            <p><strong>Maintenance:</strong> $${data.maintenanceCost}</p>
+            <p><strong>Supplies:</strong> $${data.suppliesCost}</p>
+              <p><strong>Hours Worked:</strong> ${formatHoursAndMinutes(data.hoursWorked ?? 0)}</p>
+  <p><strong>Total Hours:</strong> ${formatHoursAndMinutes((data.hoursWorked ?? 0) + convertTimeToHours(data.totalTime))}</p>
+  <p><strong>Net Profit:</strong> $${data.netProfit}</p>
+
+            <p><strong>Profit per Hour:</strong> $${data.profitPerHour}</p>
+        `;
+          document.getElementById("detailed-results").innerHTML =
+            detailedResultsHTML;
+        }
+      }
+
+      function openInGoogleMaps() {
+        const start = encodeURIComponent(
+          document.getElementById("start-address").value.trim()
+        );
+        const endAddressInput = document
+          .getElementById("end-address")
+          .value.trim();
+
+        const allDestinations = Array.from(
+          document.querySelectorAll('input[id^="destination-"]')
+        )
+          .map((input) => input.value.trim())
+          .filter((dest) => dest.length > 0);
+
+        const end = encodeURIComponent(
+          endAddressInput ||
+            allDestinations[allDestinations.length - 1] ||
+            start
+        );
+
+        // 🛑 Don't duplicate end address inside destinations
+        const destinations = allDestinations.filter(
+          (dest) => dest !== endAddressInput
+        );
+
+        // ✅ Now build the URL
+        let url = `https://www.google.com/maps/dir/?api=1&origin=${start}&destination=${end}`;
+
+        if (destinations.length > 0) {
+          url += `&waypoints=${destinations.map(encodeURIComponent).join("|")}`;
+        }
+
+        window.open(url, "_blank");
+      }
+
+      function resetOriginalMileageDisplay() {
+        if (originalMileage === null) return; // Already reset — no need to do anything
+
+        originalMileage = null;
+        document.getElementById("mileage-display").textContent = "";
+        document.getElementById("optimized-mileage-display").textContent = "";
+      }
+      async function logResults() {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    alert("❌ You must sign in to log your route.");
+    showLogin();
+    return;
+  }
+
+  // 🚨 Check for at least one destination
+  const destinationInputs = document.querySelectorAll('input[id^="destination-"]');
+  const filledDestinations = Array.from(destinationInputs).filter(input => input.value.trim() !== "");
+  if (filledDestinations.length === 0) {
+    alert("🚧 Please enter at least one destination before logging your route.");
+    return;
+  }
+
+  // ✅ Get calculation result
+  const calculationResult = await calculateRouteData();
+  if (calculationResult) {
+    currentPage = 1;
+    logEntry(calculationResult);
+    displayLog();
+    updateUI(calculationResult);
+    clearTripForm(); // ✅ Reset the form
+    showConfirmationMessage("✅ Route logged successfully!");
+  }
+}
+
+
+
+      async function optimizeRoute() {
+        if (originalMileage === null) {
+          await calculateRoute(); // This ensures we log original mileage before optimizing
+        }
+
+        const startAddress = document.getElementById("start-address").value;
+        const endAddress = document.getElementById("end-address").value;
+        const destInputs = document.querySelectorAll(
+          '#destinations-container .destination input[type="text"]'
+        );
+        const currentDestinations = Array.from(destInputs).map(
+          (input) => input.value
+        );
+
+        if (currentDestinations.length < 2) {
+          alert("Please add at least two destinations to optimize the route.");
+          return;
+        }
+
+        const waypoints = currentDestinations.map((location) => ({
+          location: location,
+          stopover: true,
+        }));
+        const request = {
+          origin: startAddress,
+          destination: endAddress,
+          waypoints: waypoints,
+          travelMode: "DRIVING",
+          optimizeWaypoints: true,
+        };
+
+        directionsService.route(request, (response, status) => {
+          if (status === "OK" && response.routes[0].waypoint_order) {
+            const optimizedOrder = response.routes[0].waypoint_order;
+            const newDestinationsContainer = document.createElement("div");
+            newDestinationsContainer.id = "destinations-container";
+
+            optimizedOrder.forEach((index, i) => {
+              const originalDestinationDiv =
+                destInputs[index].closest(".destination");
+              const clonedDestinationDiv =
+                originalDestinationDiv.cloneNode(true);
+
+              const destLabel = clonedDestinationDiv.querySelector(
+                'label[for^="destination-"]'
+              );
+              const destInput = clonedDestinationDiv.querySelector(
+                'input[id^="destination-"]'
+              );
+              const earningsLabel = clonedDestinationDiv.querySelector(
+                'label[for^="earnings-"]'
+              );
+              const earningsInput = clonedDestinationDiv.querySelector(
+                'input[id^="earnings-"]'
+              );
+              const newIndex = i + 1;
+
+              if (destLabel)
+                destLabel.setAttribute("for", `destination-${newIndex}`);
+              if (destInput) destInput.id = `destination-${newIndex}`;
+              if (earningsLabel)
+                earningsLabel.setAttribute("for", `earnings-${newIndex}`);
+              if (earningsInput) earningsInput.id = `earnings-${newIndex}`;
+
+              newDestinationsContainer.appendChild(clonedDestinationDiv);
+            });
+
+            const oldDestinationsContainer = document.getElementById(
+              "destinations-container"
+            );
+            oldDestinationsContainer.parentNode.replaceChild(
+              newDestinationsContainer,
+              oldDestinationsContainer
+            );
+
+            document
+              .querySelectorAll(
+                '#destinations-container .destination input[type="text"]'
+              )
+              .forEach(initAutocompleteDestination);
+
+            // ✅ Update map and show optimized results (WITHOUT overwriting original)
+            directionsRenderer.setDirections(response);
+
+            let optimizedMileage = 0;
+            let totalDuration = 0;
+            response.routes[0].legs.forEach((leg) => {
+              optimizedMileage += leg.distance.value / 1609.34;
+              totalDuration += leg.duration.value;
+            });
+
+            document.getElementById("optimized-mileage-display").textContent =
+              "Optimized Route: " + optimizedMileage.toFixed(2) + " miles";
+            document.getElementById("total-time").textContent =
+              formatDuration(totalDuration);
+
+            const optimizedData = {
+              date:
+                document.getElementById("log-date").value ||
+                new Date().toLocaleDateString(),
+              startTime: startAddress,
+              endTime: endAddress,
+              destinations: Array.from(
+                document.querySelectorAll('input[id^="destination-"]')
+              ).map((input) => input.value),
+              earnings: Array.from(
+                document.querySelectorAll('input[id^="earnings-"]')
+              ).map((input) => parseFloat(input.value) || 0),
+              totalMileage: optimizedMileage.toFixed(2),
+              totalTime: formatDuration(totalDuration),
+              totalEarnings: Array.from(
+                document.querySelectorAll('input[id^="earnings-"]')
+              )
+                .reduce((sum, i) => sum + (parseFloat(i.value) || 0), 0)
+                .toFixed(2),
+              fuelCost: (
+                (optimizedMileage /
+                  parseFloat(document.getElementById("mpg").value || 1)) *
+                parseFloat(document.getElementById("gas-price").value || 0)
+              ).toFixed(2),
+              maintenanceCost: parseFloat(
+                document.getElementById("maintenance-cost").value || 0
+              ).toFixed(2),
+              suppliesCost: parseFloat(
+                document.getElementById("supplies-cost").value || 0
+              ).toFixed(2),
+              hoursWorked: parseFloat(
+                document.getElementById("hours-worked").value || 0
+              ),
+              netProfit: "0", // to be calculated next
+              profitPerHour: "0.00",
+            };
+
+            // Recalculate net profit and profit per hour
+            const netProfitBeforeOptional =
+              optimizedData.totalEarnings - optimizedData.fuelCost;
+            optimizedData.netProfit = (
+              netProfitBeforeOptional -
+              optimizedData.maintenanceCost -
+              optimizedData.suppliesCost
+            ).toFixed(2);
+            const totalHoursSpent =
+              optimizedData.hoursWorked + totalDuration / 3600;
+            optimizedData.profitPerHour =
+              totalHoursSpent > 0
+                ? (optimizedData.netProfit / totalHoursSpent).toFixed(2)
+                : "0.00";
+
+            // ✅ Update UI below the map
+            updateUI(optimizedData);
+            showConfirmationMessage("✅ Route optimized successfully!");
+          } else if (status === "OK") {
+            // fallback if optimization fails
+            directionsRenderer.setDirections(response);
+          } else {
+            alert("Could not optimize route due to: " + status);
+          }
+        });
+      }
+
+      function formatDuration(seconds) {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const remainingSeconds = seconds % 60;
+        let formattedString = "";
+        if (hours > 0) {
+          formattedString += `${hours} hour${hours > 1 ? "s" : ""} `;
+        }
+        if (minutes > 0) {
+          formattedString += `${minutes} minute${minutes > 1 ? "s" : ""} `;
+        }
+        if (hours === 0 && minutes === 0) {
+          formattedString += `${remainingSeconds} second${
+            remainingSeconds !== 1 ? "s" : ""
+          }`;
+        }
+        return formattedString.trim();
+      }
+
+      function addDestination() {
+        const newDestinationIndex =
+          document.querySelectorAll("#destinations-container .destination")
+            .length + 1;
+        const container = document.getElementById("destinations-container");
+        const newDestinationDiv = document.createElement("div");
+        newDestinationDiv.classList.add("destination");
+        newDestinationDiv.innerHTML = `
+    <label for="destination-${newDestinationIndex}">Destination ${newDestinationIndex}</label>
+   <input type="text" id="destination-${newDestinationIndex}" list="recent-destinations" placeholder="Enter destination address" required>
+
+    <label for="earnings-${newDestinationIndex}">Earnings for Destination ${newDestinationIndex}</label>
+    <input type="number" id="earnings-${newDestinationIndex}" placeholder="Enter earnings for destination" required>
+    <div class="destination-actions">
+        <button class="delete-btn" onclick="deleteDestination(this)">Delete</button>
+        <button class="move-btn" onclick="moveDestinationUp(this)">Move Up</button>
+        <button class="move-btn" onclick="moveDestinationDown(this)">Move Down</button>
+    </div>
+`;
+        container.appendChild(newDestinationDiv);
+        initAutocompleteDestination(
+          newDestinationDiv.querySelector('input[type="text"]')
+        );
+        resetOriginalMileageDisplay();
+      }
+
+      function deleteDestination(button) {
+        button.closest(".destination").remove();
+        resetOriginalMileageDisplay(); // <- Add this line
+      }
+
+      function moveDestinationUp(button) {
+        const destinationDiv = button.closest(".destination");
+        const prevDiv = destinationDiv.previousElementSibling;
+        if (prevDiv) {
+          destinationDiv.parentNode.insertBefore(destinationDiv, prevDiv);
+          resetOriginalMileageDisplay();
+        }
+      }
+
+      function moveDestinationDown(button) {
+        const destinationDiv = button.closest(".destination");
+        const nextDiv = destinationDiv.nextElementSibling;
+        if (nextDiv) {
+          destinationDiv.parentNode.insertBefore(nextDiv, destinationDiv);
+          resetOriginalMileageDisplay();
+        }
+      }
+
+      function logEntry(data) {
+  disableAutoSave = true; // ✅ stop the timer temporarily
+
+  data.startClock = document.getElementById("start-time").value || "";
+  data.endClock = document.getElementById("end-time").value || "";
+  data.mpg = parseFloat(document.getElementById("mpg").value) || 0;
+  data.gasPrice = parseFloat(document.getElementById("gas-price").value) || 0;
+  data.lastModified = new Date().toISOString();
+
+  localStorage.removeItem("draftTrip"); // ✅ clear before save
+  logEntries.unshift(data);
+  saveLog();
+
+  setTimeout(() => {
+    disableAutoSave = false; // ✅ re-enable after logging finishes
+  }, 1000); // short delay to prevent race
+}
+
+
+
+
+
+
+      function displayLog(filterFn = () => true) {
+  const logList = document.getElementById("log-list");
+  const organizedLog = organizeLogByDay();
+  logList.innerHTML = "";
+
+  const allEntries = [];
+  for (const day in organizedLog) {
+    allEntries.push(...organizedLog[day]);
+  }
+
+  const sortedEntries = allEntries.sort((a, b) => {
+    return new Date(b.date) - new Date(a.date);
+  });
+
+  const filteredEntries = sortedEntries.filter((entry) => 
+  entry?.date && filterFn(entry.date, entry)
+);
+
+
+  const totalPages = Math.ceil(filteredEntries.length / logsPerPage);
+
+  const start = (currentPage - 1) * logsPerPage;
+  const end = start + logsPerPage;
+  const pageEntries = filteredEntries.slice(start, end);
+
+  if (pageEntries.length === 0) {
+    const emptyMessage = document.createElement("li");
+    emptyMessage.textContent = "No log entries found for selected filter.";
+    logList.appendChild(emptyMessage);
+  } else {
+    pageEntries.forEach((entry, index) => {
+      if (entry) {
+        const realIndex = logEntries.findIndex(
+          (e) => JSON.stringify(e) === JSON.stringify(entry)
+        );
+        const listItem = document.createElement("li");
+        const destinations = Array.isArray(entry.destinations)
+  ? entry.destinations.map((d) => `- ${d}`).join("<br>")
+  : "";
+
+
+  listItem.innerHTML = `
+  <div class="log-item-details" id="log-entry-${realIndex}">
+    <div id="summary-${realIndex}">
+      <strong>Date:</strong> ${entry.date}<br>
+<div><strong>Destinations:</strong><br>
+  <div style="margin-left: 20px;">
+    ${(entry.destinations || []).map(dest => `- ${dest}`).join('<br>')}
+  </div>
+</div>
+
+
+      <strong>Net Profit:</strong> $${parseFloat(entry.netProfit || 0).toFixed(2)}
+    </div>
+    <div id="details-${realIndex}" class="hidden" style="margin-top:10px;"></div>
+  </div>
+  <div class="log-actions">
+    <button onclick="toggleLogEntryDetails(${realIndex})" id="toggle-button-${realIndex}">More Details</button>
+    <button class="edit-btn" onclick="openEditForm(${realIndex})">Edit</button>
+    <button onclick="openLogEntryInGoogleMaps(${realIndex})">Map</button>
+
+    <button onclick="deleteLogEntry(${realIndex})">Delete</button>
+    
+  </div>
+`;
+
+        logList.appendChild(listItem);
+      }
+    });
+  }
+
+  renderPaginationButtons(totalPages);
+  updateLogSummary(filterFn);
+}
+
+
+      function renderPaginationButtons(totalPages) {
+        let paginationContainer = document.getElementById(
+          "pagination-controls"
+        );
+        if (!paginationContainer) {
+          paginationContainer = document.createElement("div");
+          paginationContainer.id = "pagination-controls";
+          paginationContainer.style.textAlign = "center";
+          paginationContainer.style.marginTop = "20px";
+          document
+            .getElementById("log-container")
+            .appendChild(paginationContainer);
+        }
+
+        paginationContainer.innerHTML = `
+    <div style="margin-bottom: 10px; font-size: 18px;">
+      Page ${currentPage} of ${totalPages}
+    </div>
+    <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 10px;">
+      <button onclick="prevPage()" ${
+        currentPage === 1 ? "disabled" : ""
+      }>Previous</button>
+      <button onclick="nextPage()" ${
+        currentPage === totalPages ? "disabled" : ""
+      }>Next</button>
+    </div>
+    <div style="margin-top: 10px;">
+      Go to Page: 
+      <input type="number" id="page-input" min="1" max="${totalPages}" value="${currentPage}" style="width: 60px; text-align: center;">
+      <button onclick="goToPage(${totalPages})">Go</button>
+    </div>
+  `;
+      }
+
+      function prevPage() {
+        if (currentPage > 1) {
+          currentPage--;
+          displayLog();
+          document
+            .getElementById("log-container")
+            .scrollIntoView({ behavior: "smooth" });
+        }
+      }
+
+      function nextPage() {
+        const totalPages = Math.ceil(logEntries.length / logsPerPage);
+        if (currentPage < totalPages) {
+          currentPage++;
+          displayLog();
+          document
+            .getElementById("log-container")
+            .scrollIntoView({ behavior: "smooth" });
+        }
+      }
+
+      function goToPage(totalPages) {
+        const input = document.getElementById("page-input");
+        const page = parseInt(input.value);
+
+        if (!isNaN(page) && page >= 1 && page <= totalPages) {
+          currentPage = page;
+          displayLog();
+          document
+            .getElementById("log-container")
+            .scrollIntoView({ behavior: "smooth" });
+        } else {
+          alert("Invalid page number.");
+        }
+      }
+
+      function deleteLogEntry(index) {
+        if (confirm("Are you sure you want to delete this log entry?")) {
+          logEntries.splice(index, 1);
+          saveLog();
+          filterLogs();
+        }
+      }
+
+      function organizeLogByDay() {
+        return logEntries.reduce((acc, entry) => {
+          if (!acc[entry.date]) {
+            acc[entry.date] = [];
+          }
+          acc[entry.date].push(entry);
+          return acc;
+        }, {});
+      }
+
+
+
+
+      function closeEditForm() {
+        console.log("closeEditForm function called");
+        document.getElementById("edit-form-container").style.display = "none";
+        document.getElementById("overlay").style.display = "none";
+        editingIndex = -1;
+      }
+
+      function updateEditTotalEarnings() {
+        let total = 0;
+        const editEarningsInputs = document.querySelectorAll(
+          '#edit-destinations-container input[id^="edit-earnings-"]'
+        );
+        editEarningsInputs.forEach((input) => {
+          total += parseFloat(input.value) || 0;
+        });
+        document.getElementById("edit-total-earnings").value = total.toFixed(2);
+      }
+
+      function updateEditFuelCost() {
+        const mileage =
+          parseFloat(document.getElementById("edit-total-mileage").value) || 0;
+        const mpg = parseFloat(document.getElementById("edit-mpg").value) || 1; // Prevent division by zero
+        const gasPrice =
+          parseFloat(document.getElementById("edit-gas-price").value) || 0;
+        const fuelCost = (mileage / mpg) * gasPrice;
+        document.getElementById("edit-fuel-cost").value = fuelCost.toFixed(2);
+      }
+
+      function recalculateEditMileageAndCosts() {
+        const start = document
+          .getElementById("edit-start-address")
+          .value.trim();
+        const end = document.getElementById("edit-end-address").value.trim();
+        const destInputs = document.querySelectorAll(
+          '#edit-destinations-container input[id^="edit-destination-"]'
+        );
+
+        const destinations = Array.from(destInputs)
+          .filter((input) => input.value.trim())
+          .map((input) => ({
+            location: input.value.trim(),
+            stopover: true,
+          }));
+
+        if (!start || !end || destinations.length !== destInputs.length) {
+          console.warn("Missing start/end or destination, skipping route calc");
+          return;
+        }
+
+        const request = {
+          origin: start,
+          destination: end,
+          waypoints: destinations,
+          travelMode: "DRIVING",
+        };
+
+        directionsService.route(request, (response, status) => {
+          if (status === "OK") {
+            let totalMileage = 0;
+            let totalDuration = 0;
+            response.routes[0].legs.forEach((leg) => {
+              totalMileage += leg.distance.value / 1609.34;
+              totalDuration += leg.duration.value;
+            });
+
+            const mileageInput = document.getElementById("edit-total-mileage");
+            const timeInput = document.getElementById("edit-total-time");
+
+            console.log("Updating:", {
+              mileageInput,
+              timeInput,
+              totalMileage: totalMileage.toFixed(2),
+              formattedTime: formatDuration(totalDuration),
+            });
+
+            if (mileageInput) mileageInput.value = totalMileage.toFixed(2);
+            if (timeInput) timeInput.value = formatDuration(totalDuration);
+
+            updateEditFuelCost();
+          } else {
+            console.error("Mileage error:", status);
+          }
+        });
+      }
+
+      function moveEditDestinationUp(button) {
+        const destinationDiv = button.closest(".destination");
+        const prevDiv = destinationDiv.previousElementSibling;
+        if (prevDiv) {
+          destinationDiv.parentNode.insertBefore(destinationDiv, prevDiv);
+          resetOriginalMileageDisplay();
+          // Delay mileage recalculation until the user selects or finishes editing the address
+          addressInput.addEventListener("blur", recalculateEditMileageAndCosts);
+
+          // If using Google Autocomplete, also respond to a place selection
+          const autocomplete = new google.maps.places.Autocomplete(
+            addressInput,
+            { types: ["geocode"] }
+          );
+          autocomplete.addListener(
+            "place_changed",
+            recalculateEditMileageAndCosts
+          );
+        }
+      }
+
+      function moveEditDestinationDown(button) {
+        const destinationDiv = button.closest(".destination");
+        const nextDiv = destinationDiv.nextElementSibling;
+        if (nextDiv) {
+          destinationDiv.parentNode.insertBefore(nextDiv, destinationDiv);
+          resetOriginalMileageDisplay();
+          recalculateEditMileageAndCosts();
+        }
+      }
+
+      function addEditDestination() {
+        const container = document.getElementById(
+          "edit-destinations-container"
+        );
+        const newIndex = container.querySelectorAll(".destination").length + 1;
+
+        const destDiv = document.createElement("div");
+        destDiv.classList.add("destination");
+        destDiv.innerHTML = `
+        <label for="edit-destination-${newIndex}">Destination ${newIndex}</label>
+       <input type="text" id="edit-destination-${newIndex}" list="recent-destinations" placeholder="Enter destination address">
+        <label for="edit-earnings-${newIndex}">Earnings ${newIndex}</label>
+        <input type="number" id="edit-earnings-${newIndex}" placeholder="Enter earnings">
+        <div class="destination-actions">
+            <button type="button" class="delete-btn" onclick="deleteEditDestination(this)">Delete</button>
+            <button type="button" class="move-btn" onclick="moveEditDestinationUp(this)">Move Up</button>
+            <button type="button" class="move-btn" onclick="moveEditDestinationDown(this)">Move Down</button>
+        </div>
+    `;
+
+        container.appendChild(destDiv);
+
+        const addressInput = destDiv.querySelector(
+          `#edit-destination-${newIndex}`
+        );
+        const autocomplete = new google.maps.places.Autocomplete(addressInput, {
+          types: ["geocode"],
+        });
+
+        // ✅ Only trigger recalculation when a valid place is selected
+        autocomplete.addListener("place_changed", () => {
+          const place = autocomplete.getPlace();
+          if (place && place.geometry) {
+            recalculateEditMileageAndCosts();
+          } else {
+          }
+        });
+
+        initAutocompleteDestination(addressInput); // optional, if used elsewhere
+        const earningsInput = destDiv.querySelector(
+          `#edit-earnings-${newIndex}`
+        );
+        earningsInput.addEventListener("change", updateEditTotalEarnings);
+
+        resetOriginalMileageDisplay();
+      }
+
+      function deleteEditDestination(button) {
+        const destinationDiv = button.closest(".destination");
+        destinationDiv.remove();
+
+        // Reindex the remaining destinations
+        const container = document.getElementById(
+          "edit-destinations-container"
+        );
+        const destinationDivs = container.querySelectorAll(".destination");
+        destinationDivs.forEach((div, index) => {
+          const newIndex = index + 1;
+
+          // Update labels and IDs for destination
+          const destLabel = div.querySelector(
+            'label[for^="edit-destination-"]'
+          );
+          const destInput = div.querySelector('input[id^="edit-destination-"]');
+          const earningsLabel = div.querySelector(
+            'label[for^="edit-earnings-"]'
+          );
+          const earningsInput = div.querySelector(
+            'input[id^="edit-earnings-"]'
+          );
+
+          if (destLabel)
+            destLabel.setAttribute("for", `edit-destination-${newIndex}`);
+          if (destInput) {
+            destInput.id = `edit-destination-${newIndex}`;
+            destInput.placeholder = `Enter destination address`;
+          }
+
+          if (earningsLabel)
+            earningsLabel.setAttribute("for", `edit-earnings-${newIndex}`);
+          if (earningsInput) {
+            earningsInput.id = `edit-earnings-${newIndex}`;
+            earningsInput.placeholder = `Enter earnings`;
+          }
+        });
+
+        updateEditTotalEarnings(); // Recalculate earnings after deletion
+        resetOriginalMileageDisplay();
+        recalculateEditMileageAndCosts(); // Recalculate mileage and costs
+      }
+
+      function openEditForm(index) {
+        editingIndex = index;
+        const entry = logEntries[index];
+
+        if (!entry) {
+          console.error("No entry found for editing");
+          return;
+        }
+
+        const editFormContainer = document.getElementById(
+          "edit-form-container"
+        );
+        const overlay = document.getElementById("overlay");
+
+        // ✅ Helper to safely set input values
+        function setInputValue(id, value) {
+          const input = document.getElementById(id);
+          if (input) input.value = value ?? "";
+        }
+
+        // ✅ Populate all form fields safely
+        setInputValue("edit-date", entry.date);
+        setInputValue("edit-start-address", entry.startTime);
+        setInputValue("edit-end-address", entry.endTime);
+        setInputValue("edit-start-time", entry.startClock ?? "");
+        setInputValue("edit-end-time", entry.endClock ?? "");
+        setInputValue("edit-total-earnings", entry.totalEarnings);
+        setInputValue("edit-fuel-cost", entry.fuelCost);
+        setInputValue("edit-maintenance-cost", entry.maintenanceCost);
+        setInputValue("edit-supplies-cost", entry.suppliesCost);
+        setInputValue("edit-total-mileage", entry.totalMileage);
+        setInputValue("edit-total-time", entry.totalTime);
+        setInputValue("edit-hours-worked", entry.hoursWorked ?? 0);
+
+
+
+
+        setInputValue("edit-mpg", entry.mpg);
+        setInputValue("edit-gas-price", entry.gasPrice);
+
+        const destinationsContainer = document.getElementById(
+          "edit-destinations-container"
+        );
+        if (destinationsContainer) {
+          destinationsContainer.innerHTML = "";
+
+          entry.destinations.forEach((destination, i) => {
+            const destDiv = document.createElement("div");
+            destDiv.className = "destination";
+            destDiv.innerHTML = `
+        <label for="edit-destination-${i + 1}">Destination ${i + 1}</label>
+        <input type="text" id="edit-destination-${i + 1}" list="recent-destinations" value="${destination}">
+
+        <label for="edit-earnings-${i + 1}">Earnings for Destination ${
+              i + 1
+            }</label>
+        <input type="number" id="edit-earnings-${i + 1}" value="${
+              entry.earnings[i] || 0
+            }">
+        <div class="destination-actions">
+          <button type="button" class="delete-btn" onclick="deleteEditDestination(this)">Delete</button>
+          <button type="button" class="move-btn" onclick="moveEditDestinationUp(this)">Move Up</button>
+          <button type="button" class="move-btn" onclick="moveEditDestinationDown(this)">Move Down</button>
+        </div>
+      `;
+            destinationsContainer.appendChild(destDiv);
+          });
+        }
+
+        // ✅ Show Edit form
+        if (editFormContainer && overlay) {
+          editFormContainer.style.display = "block";
+          overlay.style.display = "block";
+          const startTimeInput = document.getElementById("edit-start-time");
+          const endTimeInput = document.getElementById("edit-end-time");
+
+          if (startTimeInput && endTimeInput) {
+            startTimeInput.addEventListener(
+              "change",
+              recalculateEditHoursWorked
+            );
+            endTimeInput.addEventListener("change", recalculateEditHoursWorked);
+          }
+        }
+
+        // ✅ Setup Autocomplete after a tiny delay
+        setTimeout(() => {
+          try {
+            document
+              .querySelectorAll(
+                '#edit-destinations-container input[id^="edit-destination-"]'
+              )
+              .forEach((input) => {
+                const autocomplete = new google.maps.places.Autocomplete(
+                  input,
+                  { types: ["geocode"] }
+                );
+
+                initAutocompleteDestination(input);
+
+                autocomplete.addListener("place_changed", () => {
+                  const place = autocomplete.getPlace();
+                  if (place && place.geometry) {
+                    recalculateEditMileageAndCosts();
+                  } else {
+                    console.warn("Invalid place selected for destination.");
+                  }
+                });
+              });
+          } catch (error) {
+            console.error("Error setting up autocomplete:", error);
+          }
+        }, 0);
+      }
+
+      function getNumberValue(id) {
+  const el = document.getElementById(id);
+  return el ? parseFloat(el.value) || 0 : 0;
+}
+
+
+      async function saveEditedLogEntry() {
+  if (editingIndex === -1) {
+    console.warn("No entry selected for editing.");
+    return;
+  }
+
+  const entry = logEntries[editingIndex];
+
+  entry.date = document.getElementById("edit-date").value;
+  entry.startClock = document.getElementById("edit-start-time")?.value || "";
+  entry.endClock = document.getElementById("edit-end-time")?.value || "";
+  entry.startTime = document.getElementById("edit-start-address").value;
+  entry.endTime = document.getElementById("edit-end-address").value;
+  entry.totalTime = document.getElementById("edit-total-time")?.value || "";
+
+
+  entry.destinations = [];
+  entry.earnings = [];
+
+  
+
+  const destInputs = document.querySelectorAll(
+    '#edit-destinations-container input[id^="edit-destination-"]'
+  );
+  const earningsInputs = document.querySelectorAll(
+    '#edit-destinations-container input[id^="edit-earnings-"]'
+  );
+
+  destInputs.forEach((input) => {
+    entry.destinations.push(input.value.trim());
+  });
+
+  saveRecentDestinations(entry.destinations);
+updateDatalistSuggestions();
+
+  earningsInputs.forEach((input) => {
+    const value = parseFloat(input.value.trim()) || 0;
+    entry.earnings.push(value);
+  });
+
+  entry.totalEarnings = entry.earnings
+    .reduce((sum, val) => sum + val, 0)
+    .toFixed(2);
+
+entry.fuelCost = getNumberValue("edit-fuel-cost");
+entry.maintenanceCost = getNumberValue("edit-maintenance-cost");
+entry.suppliesCost = getNumberValue("edit-supplies-cost");
+entry.totalMileage = getNumberValue("edit-total-mileage");
+entry.mpg = getNumberValue("edit-mpg");
+entry.gasPrice = getNumberValue("edit-gas-price");
+entry.hoursWorked = getNumberValue("edit-hours-worked");
+
+
+  const netProfitBeforeOptional = entry.totalEarnings - entry.fuelCost;
+  entry.netProfit = (
+    netProfitBeforeOptional -
+    entry.maintenanceCost -
+    entry.suppliesCost
+  ).toFixed(2);
+
+  let driveTimeInHours = 0;
+  const timeMatch = entry.totalTime.match(
+    /(\d+)\s*hour(s)?\s*(\d+)?\s*minute(s)?/i
+  );
+  if (timeMatch) {
+    const hours = parseInt(timeMatch[1]) || 0;
+    const minutes = parseInt(timeMatch[3]) || 0;
+    driveTimeInHours = hours + minutes / 60;
+  } else {
+    const minuteMatch = entry.totalTime.match(/(\d+)\s*minute(s)?/i);
+    if (minuteMatch) {
+      driveTimeInHours = parseInt(minuteMatch[1]) / 60;
+    }
+  }
+
+  const totalHoursSpent = entry.hoursWorked + driveTimeInHours;
+  entry.profitPerHour =
+    totalHoursSpent > 0
+      ? (entry.netProfit / totalHoursSpent).toFixed(2)
+      : "0.00";
+
+      entry.lastModified = new Date().toISOString();
+  await saveLog(); // ✅ Wait for save
+  filterLogs();
+
+  closeEditForm(); // ✅ THEN close the edit screen
+  showConfirmationMessage("✅ Log entry updated!");
+      }
+
+      function exportToCSV() {
+        const header =
+          "Date,Start Address,Destinations,End Address,Total Earnings,Fuel Cost,Maintenance Cost,Supplies Cost,Net Profit,Mileage,Drive Time,Earnings per Stop,Profit per Hour\n";
+        const csvRows = logEntries.map((entry) => {
+          const formattedDate = entry.date; // Keep the original date format for CSV
+
+          const destinationsString = `"${entry.destinations
+            .map((d) => d.replace(/"/g, '""'))
+            .join(";")}"`;
+          const earningsString = `"${entry.earnings.join(";")}"`;
+          const totalTimeString = `"${entry.totalTime.replace(/"/g, '""')}"`;
+          const startAddressString = `"${entry.startTime.replace(/"/g, '""')}"`;
+          const endAddressString = `"${entry.endTime.replace(/"/g, '""')}"`;
+          const profitPerHourString = entry.profitPerHour
+            ? `"${entry.profitPerHour}"`
+            : "";
+
+          return [
+            formattedDate,
+            startAddressString,
+            destinationsString,
+            endAddressString,
+            entry.totalEarnings,
+            entry.fuelCost,
+            entry.maintenanceCost,
+            entry.suppliesCost,
+            entry.netProfit,
+            entry.totalMileage,
+            totalTimeString,
+            earningsString,
+            profitPerHourString,
+          ].join(",");
+        });
+        const csvString = header + csvRows.join("\n");
+
+        const filename = "profit_log.csv";
+        const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+        const link = document.createElement("a");
+        if (link.download !== undefined) {
+          const url = URL.createObjectURL(blob);
+          link.setAttribute("href", url);
+          link.setAttribute("download", filename);
+          link.style.visibility = "hidden";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } else {
+          window.open(
+            "data:text/csv;charset=utf-8," + encodeURIComponent(csvString)
+          );
+        }
+      }
+
+      function exportToPDF() {
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF();
+
+        const columns = [
+          "Date",
+          "Start",
+          "Destinations",
+          "End",
+          "Earnings",
+          "Fuel",
+          "Maintenance",
+          "Supplies",
+          "Net Profit",
+          "Mileage",
+          "Drive Time",
+        ];
+        const data = logEntries.map((entry) => [
+          entry.date,
+          entry.startTime,
+          entry.destinations.join("\n"),
+          entry.endTime,
+          `$${entry.totalEarnings}`,
+          `$${entry.fuelCost}`,
+          `$${entry.maintenanceCost}`,
+          `$${entry.suppliesCost}`,
+          `$${entry.netProfit}`,
+          `${entry.totalMileage} mi`,
+          entry.totalTime,
+        ]);
+
+        pdf.autoTable({
+          head: [columns],
+          body: data,
+          margin: { top: 20, left: 10, right: 10, bottom: 20 },
+          headStyles: { fillColor: [44, 62, 80], textColor: [255, 255, 255] },
+          columnStyles: { 2: { columnWidth: 30 } }, // Adjust column width for destinations
+          didDrawPage: function (data) {
+            pdf.setFontSize(12);
+            pdf.setTextColor(40);
+            pdf.text(
+              `Profit Log - Page ${data.pageNumber}`,
+              data.settings.margin.left,
+              pdf.internal.pageSize.height - 10
+            );
+          },
+        });
+
+        pdf.save("profit_log.pdf");
+      }
+
+      async function importLog() {
+
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+          alert("❌ You must be signed in to import a CSV file.");
+          showLogin(); // Optional: show login modal
+          return;
+        }
+
+        const fileInput = document.getElementById("import-file");
+        const file = fileInput.files[0];
+
+        if (file) {
+          const reader = new FileReader();
+
+          reader.onload = async function (e) {
+
+            const csvData = e.target.result;
+            const lines = csvData.split("\n").slice(1); // Skip the header row
+            const newLogEntries = [];
+
+            lines.forEach((line) => {
+              if (line) {
+                const values = line.match(/("([^"]*)"|[^,]+)/g);
+                console.log("CSV Line Values (Regex Split):", values);
+
+                if (values && values.length === 13) {
+                  // Expecting 13 columns now
+                  try {
+                    const startTime = values[1]
+                      .replace(/^"|"$/g, "")
+                      .replace(/""/g, '"');
+                    const endTime = values[3]
+                      .replace(/^"|"$/g, "")
+                      .replace(/""/g, '"');
+                    const destinationsString = values[2];
+                    const earningsString = values[11];
+                    const totalTimeString = values[10]
+                      .replace(/^"|"$/g, "")
+                      .replace(/""/g, '"');
+                    const profitPerHourString = values[12].replace(
+                      /^"|"$/g,
+                      ""
+                    );
+                    const profitPerHour = parseFloat(profitPerHourString) || 0; // Parse or default to 0
+
+                    const destinations =
+                      destinationsString.startsWith('"') &&
+                      destinationsString.endsWith('"')
+                        ? destinationsString
+                            .slice(1, -1)
+                            .split(";")
+                            .map((d) => d.replace(/""/g, '"'))
+                        : [destinationsString.replace(/^"|"$/g, "")]; // Clean up single destination
+
+                    const earnings =
+                      earningsString.startsWith('"') &&
+                      earningsString.endsWith('"')
+                        ? earningsString.slice(1, -1).split(";").map(parseFloat)
+                        : [parseFloat(earningsString.replace(/^"|"$/g, ""))]; // Clean up single earning
+
+                    newLogEntries.push({
+                      date: values[0],
+                      startTime: startTime,
+                      destinations: destinations,
+                      endTime: endTime,
+                      totalEarnings: parseFloat(values[4]),
+                      fuelCost: parseFloat(values[5]),
+                      maintenanceCost: parseFloat(values[6]),
+                      suppliesCost: parseFloat(values[7]),
+                      netProfit: parseFloat(values[8]),
+                      totalMileage: parseFloat(values[9]),
+                      totalTime: totalTimeString
+                        .replace(/:/g, " hours ")
+                        .replace(/:/g, " minutes ")
+                        .replace(/ seconds$/, "")
+                        .trim(),
+                      earnings: earnings,
+                      profitPerHour: profitPerHour,
+                      lastModified: new Date().toISOString(),
+
+                    });
+                  } catch (error) {
+                    console.error("Error parsing CSV line:", line, error);
+                  }
+                } else {
+                  console.warn(
+                    "Skipping invalid CSV line (wrong number of columns):",
+                    line,
+                    values ? values.length : 0
+                  );
+                }
+              }
+            });
+
+            logEntries = [...logEntries, ...newLogEntries];
+await saveLog();        // ✅ Ensure logs are persisted
+filterLogs();           // ✅ Refresh the UI
+alert("Log imported successfully!");
+          };
+          reader.readAsText(file); // trigger reading
+
+          reader.onerror = function () {
+            alert("Error reading the file.");
+          };
+
+          reader.readAsText(file);
+        } else {
+          alert("Please select a CSV file to import.");
+        }
+      }
+
+      let isSignup = false;
+
+      function showLogin() {
+        isSignup = false;
+        document.getElementById("auth-title").textContent = "Sign In";
+        document.getElementById("auth-switch-label").textContent = "Sign Up";
+        document.getElementById("auth-modal").style.display = "flex";
+      }
+
+      function showSignup() {
+        isSignup = true;
+        document.getElementById("auth-title").textContent = "Create Account";
+        document.getElementById("auth-switch-label").textContent = "Sign In";
+        document.getElementById("auth-modal").style.display = "flex";
+      }
+
+      function toggleAuthMode() {
+        isSignup = !isSignup;
+        if (isSignup) {
+          showSignup();
+        } else {
+          showLogin();
+        }
+      }
+
+      async function submitAuth() {
+        const username = document.getElementById("auth-username").value.trim();
+        const password = document.getElementById("auth-password").value.trim();
+
+        if (!username || !password) {
+          alert("Username and password required.");
+          return;
+        }
+
+        const endpoint = isSignup
+          ? "https://logs.gorouteyourself.com/api/signup"
+          : "https://logs.gorouteyourself.com/api/login";
+
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          localStorage.setItem("username", username);
+          localStorage.setItem("token", data.token);
+          document.getElementById("auth-modal").style.display = "none";
+          showConfirmationMessage(
+            `✅ ${isSignup ? "Account created" : "Signed in"} successfully!`
+          );
+          updateAuthUI();
+
+          // ✅ Show reset key if this was a signup
+          if (isSignup && data.resetKey) {
+            alert(
+              `🔐 Your reset key is:\n\n${data.resetKey}\n\nSave this key somewhere safe. You'll need it to reset your password.`
+            );
+          }
+
+          // ✅ THEN reload the page after user has seen the key
+          location.reload();
+
+          loadLog();
+        } else {
+          alert("❌ " + (await res.text()));
+        }
+      }
+
+      function updateAuthUI() {
+  const token = localStorage.getItem("token");
+  const username = localStorage.getItem("username");
+  const hamburgerButton = document.getElementById("hamburger-button");
+
+  if (token && username) {
+    document.getElementById("auth-message").style.display = "none";
+    document.getElementById("logout-message").style.display = "block";
+    document.getElementById("username-display").textContent = username;
+    if (hamburgerButton) hamburgerButton.style.display = "inline-block"; // ✅ Show ☰
+  } else {
+    document.getElementById("auth-message").style.display = "block";
+    document.getElementById("logout-message").style.display = "none";
+    if (hamburgerButton) hamburgerButton.style.display = "none"; // ✅ Hide ☰
+  }
+}
+
+
+      function logout() {
+        localStorage.removeItem("token");
+        localStorage.removeItem("username");
+        showConfirmationMessage("👋 Logged out successfully.");
+        location.reload(); // ✅ this clears state and reinitializes
+      }
+
+      function showPasswordModal() {
+        document.getElementById("change-password-modal").style.display = "flex";
+      }
+
+      function closePasswordModal() {
+        document.getElementById("change-password-modal").style.display = "none";
+      }
+
+      async function submitPasswordChange() {
+        const current = document
+          .getElementById("current-password")
+          .value.trim();
+        const next = document.getElementById("new-password").value.trim();
+        const confirm = document
+          .getElementById("confirm-password")
+          .value.trim();
+
+        if (!current || !next || !confirm)
+          return alert("Please fill out all fields.");
+        if (next !== confirm) return alert("New passwords do not match.");
+
+        const token = localStorage.getItem("token");
+        const username = localStorage.getItem("username");
+
+        if (!token || !username) return alert("You must be signed in.");
+
+        const res = await fetch(
+          "https://logs.gorouteyourself.com/api/change-password",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: token,
+            },
+            body: JSON.stringify({
+              username,
+              currentPassword: current,
+              newPassword: next,
+            }),
+          }
+        );
+
+        if (res.ok) {
+          alert("✅ Password changed successfully.");
+          closePasswordModal();
+        } else {
+          const msg = await res.text();
+          alert("❌ " + msg);
+        }
+      }
+
+      function showResetModal() {
+        document.getElementById("reset-password-modal").style.display = "flex";
+      }
+
+      function closeResetModal() {
+        document.getElementById("reset-password-modal").style.display = "none";
+      }
+
+      async function submitResetPassword() {
+        const username = document.getElementById("reset-username").value.trim();
+        const resetKey = document.getElementById("reset-key").value.trim();
+        const newPassword = document
+          .getElementById("reset-new-password")
+          .value.trim();
+
+        if (!username || !resetKey || !newPassword) {
+          alert("Please fill out all fields.");
+          return;
+        }
+
+        const res = await fetch(
+          "https://logs.gorouteyourself.com/api/reset-password",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, resetKey, newPassword }),
+          }
+        );
+
+        if (res.ok) {
+          alert("✅ Password reset successfully. You can now sign in.");
+          closeResetModal();
+        } else {
+          const msg = await res.text();
+          alert("❌ " + msg);
+        }
+      }
+
+      function showDeleteModal() {
+        document.getElementById("delete-account-modal").style.display = "flex";
+      }
+
+      function closeDeleteModal() {
+        document.getElementById("delete-account-modal").style.display = "none";
+      }
+
+      async function submitDeleteAccount() {
+        const password = document
+          .getElementById("delete-password")
+          .value.trim();
+        const username = localStorage.getItem("username");
+        const token = localStorage.getItem("token");
+
+        if (!username || !token || !password) {
+          alert("Missing credentials.");
+          return;
+        }
+
+        const res = await fetch(
+          "https://logs.gorouteyourself.com/api/delete-account",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: token,
+            },
+            body: JSON.stringify({ username, password }),
+          }
+        );
+
+        if (res.ok) {
+          alert("✅ Your account has been deleted.");
+          localStorage.removeItem("username");
+          localStorage.removeItem("token");
+          location.reload();
+        } else {
+          const msg = await res.text();
+          alert("❌ " + msg);
+        }
+      }
+
+      window.toggleMenu = function () {
+  console.log("toggleMenu() triggered!");
+
+  const menu = document.getElementById("account-menu");
+  if (!menu) return console.warn("Menu not found");
+
+  if (menu.classList.contains("show")) {
+    menu.classList.remove("show");
+  } else {
+    menu.classList.add("show");
+  }
+};
+
+
+
+function filterLogs() {
+  const startDate = document.getElementById('filter-start-date').value;
+  const endDate = document.getElementById('filter-end-date').value;
+  const searchQuery = document.getElementById('filter-search').value.trim().toLowerCase();
+
+  displayLog((entryDate, entry) => {
+    // Date range filter
+    let matchesDate = true;
+    if (startDate && entryDate < startDate) matchesDate = false;
+    if (endDate && entryDate > endDate) matchesDate = false;
+
+    // Text search across all fields
+    const fieldsToSearch = [
+      entry.startTime,
+      entry.endTime,
+      ...(entry.destinations || []),
+      (entry.totalEarnings || '').toString(),
+      (entry.fuelCost || '').toString(),
+      (entry.maintenanceCost || '').toString(),
+      (entry.suppliesCost || '').toString(),
+      (entry.netProfit || '').toString(),
+      (entry.totalMileage || '').toString(),
+      (entry.totalTime || '').toString(),
+      (entry.profitPerHour || '').toString(),
+      (entry.hoursWorked || '').toString()
+    ].join(' ').toLowerCase();
+
+    const matchesSearch = !searchQuery || fieldsToSearch.includes(searchQuery);
+
+    return matchesDate && matchesSearch;
+  });
+}
+
+
+      // Hide Manage Log menu when clicking outside
+      document.addEventListener("click", function (event) {
+        const manageButton = document.querySelector(
+          "#manage-log-container button"
+        );
+        const manageMenu = document.getElementById("manage-log-menu");
+
+        // If click outside both the menu AND the button
+        if (
+          manageMenu &&
+          !manageMenu.contains(event.target) &&
+          !manageButton.contains(event.target)
+        ) {
+          manageMenu.style.display = "none";
+        }
+      });
+
+      function triggerImportFile() {
+        const fileInput = document.getElementById("import-file");
+        if (fileInput) {
+          fileInput.click(); // Simulate a click to open file picker
+        }
+      }
+
+      function openLogEntryInGoogleMaps(index) {
+        const entry = logEntries[index];
+        if (!entry) {
+          console.error("Invalid log entry index");
+          return;
+        }
+
+        const start = encodeURIComponent(entry.startTime.trim());
+        const end = encodeURIComponent(entry.endTime.trim());
+
+        const destinations = Array.isArray(entry.destinations)
+          ? entry.destinations.map((dest) => encodeURIComponent(dest.trim()))
+          : [];
+
+        let url = `https://www.google.com/maps/dir/?api=1&origin=${start}&destination=${end}`;
+
+        if (destinations.length > 0) {
+          url += `&waypoints=${destinations.join("|")}`;
+        }
+
+        window.open(url, "_blank");
+      }
+
+      function handleTimeChange() {
+  const startTimeInput = document.getElementById("start-time").value;
+  const endTimeInput = document.getElementById("end-time").value;
+  const hoursWorkedInput = document.getElementById("hours-worked");
+
+  // 🆕 Auto-open End Time picker after selecting Start Time
+  if (startTimeInput && !endTimeInput) {
+    document.getElementById("end-time")?.showPicker?.();
+  }
+
+  if (startTimeInput && endTimeInput) {
+    const [startHours, startMinutes] = startTimeInput.split(":").map(Number);
+    const [endHours, endMinutes] = endTimeInput.split(":").map(Number);
+
+    let startTotalMinutes = startHours * 60 + startMinutes;
+    let endTotalMinutes = endHours * 60 + endMinutes;
+
+    if (endTotalMinutes < startTotalMinutes) {
+      endTotalMinutes += 24 * 60; // Overnight shift
+    }
+
+    let totalWorkedMinutes = endTotalMinutes - startTotalMinutes;
+    let driveMinutes =
+      typeof totalDuration === "number" ? totalDuration / 60 : 0;
+    const actualWorkedMinutes = Math.max(
+      totalWorkedMinutes - driveMinutes,
+      0
+    );
+    const hoursWorked = parseFloat((actualWorkedMinutes / 60).toFixed(2));
+    hoursWorkedInput.value = hoursWorked.toFixed(2);
+
+    hoursWorkedInput.readOnly = true;
+    hoursWorkedInput.style.backgroundColor = "#f0f0f0";
+  } else {
+    hoursWorkedInput.value = "";
+    hoursWorkedInput.readOnly = false;
+    hoursWorkedInput.style.backgroundColor = "";
+  }
+}
+
+
+      function formatCurrency(value) {
+        if (isNaN(value)) return "$0.00";
+        return `$${parseFloat(value).toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`;
+      }
+
+      function updateLogSummary(filterFn) {
+        const summaryDiv = document.getElementById("log-summary");
+
+        // Filter the relevant entries
+        const filteredEntries = logEntries.filter((entry) => 
+  entry?.date && filterFn(entry.date, entry)
+);
+
+
+
+        if (filteredEntries.length === 0) {
+          summaryDiv.innerHTML = "No data available for selected filter.";
+          return;
+        }
+
+        // Calculate total Net Profit and Profit Per Hour
+        let totalNetProfit = 0;
+        let totalProfitPerHour = 0;
+        let validProfitPerHourEntries = 0;
+
+        filteredEntries.forEach((entry) => {
+          totalNetProfit += parseFloat(entry.netProfit) || 0;
+
+          if (!isNaN(parseFloat(entry.profitPerHour))) {
+            totalProfitPerHour += parseFloat(entry.profitPerHour);
+            validProfitPerHourEntries++;
+          }
+        });
+
+        const averageProfitPerHour =
+          validProfitPerHourEntries > 0
+            ? totalProfitPerHour / validProfitPerHourEntries
+            : 0;
+
+        // ✅ Set the Net Profit and Profit Per Hour text ABOVE h2 (inside log-summary div)
+        summaryDiv.innerHTML = `
+  <div style="display: flex; flex-direction: column; align-items: center;">
+    <div style="margin-bottom: 8px;">
+      Net Profit: <span style="color: green;">$${totalNetProfit.toFixed(2)}</span>
+    </div>
+    <div style="margin-bottom: 8px;">
+      Profit Per Hour: <span style="color: blue;">$${averageProfitPerHour.toFixed(2)}</span>
+    </div>
+    <div>
+      Total Hours: <span style="color: black;">${formatHoursAndMinutes(
+        filteredEntries.reduce((sum, entry) => {
+          const drive = convertTimeToHours(entry.totalTime || "");
+          const worked = parseFloat(entry.hoursWorked) || 0;
+          return sum + drive + worked;
+        }, 0)
+      )}</span>
+    </div>
+  </div>
+
+`;
+      }
+
+      function recalculateEditHoursWorked() {
+  const startTime = document.getElementById("edit-start-time")?.value;
+  const endTime = document.getElementById("edit-end-time")?.value;
+  const totalTimeStr = document.getElementById("edit-total-time")?.value;
+  const hoursWorkedInput = document.getElementById("edit-hours-worked");
+
+  if (startTime && endTime && hoursWorkedInput) {
+    const [startHours, startMinutes] = startTime.split(":").map(Number);
+    const [endHours, endMinutes] = endTime.split(":").map(Number);
+
+    let start = startHours * 60 + startMinutes;
+    let end = endHours * 60 + endMinutes;
+
+    if (end < start) {
+      end += 24 * 60; // overnight shift
+    }
+
+    const totalWorkedMinutes = end - start; // total minutes logged
+    let driveMinutes = 0;
+
+    // Parse total drive time from edit-total-time input
+    if (totalTimeStr) {
+      const hoursMatch = totalTimeStr.match(/(\d+)\s*hour/);
+      const minutesMatch = totalTimeStr.match(/(\d+)\s*minute/);
+
+      if (hoursMatch) {
+        driveMinutes += parseInt(hoursMatch[1], 10) * 60;
+      }
+      if (minutesMatch) {
+        driveMinutes += parseInt(minutesMatch[1], 10);
+      }
+    }
+
+    const actualWorkedMinutes = Math.max(totalWorkedMinutes - driveMinutes, 0);
+    const actualWorkedHours = actualWorkedMinutes / 60;
+
+    hoursWorkedInput.value = actualWorkedHours.toFixed(2);
+  }
+}
+
+
+      function formatTimeToAmPm(timeStr) {
+        if (!timeStr) return "N/A";
+        const [hours, minutes] = timeStr.split(":").map(Number);
+        const ampm = hours >= 12 ? "PM" : "AM";
+        const displayHours = hours % 12 || 12; // 0 becomes 12
+        return `${displayHours}:${minutes.toString().padStart(2, "0")} ${ampm}`;
+      }
+
+      function toggleLogEntryDetails(index) {
+  const entry = logEntries[index];
+  const detailsDiv = document.getElementById(`details-${index}`);
+  const toggleButton = document.getElementById(`toggle-button-${index}`);
+  const summaryDiv = document.getElementById(`summary-${index}`);
+
+  if (!detailsDiv || !entry || !toggleButton || !summaryDiv) return;
+
+  if (detailsDiv.classList.contains("hidden")) {
+    // Expand
+    const destinations = entry.destinations?.length
+      ? entry.destinations.map((d) => `- ${d}`).join("<br>")
+      : "None";
+
+    const earnings = Array.isArray(entry.earnings)
+      ? entry.earnings.map((e) => `$${parseFloat(e).toFixed(2)}`).join(", ")
+      : "$0.00";
+
+      const formattedHoursWorked = entry.hoursWorked
+  ? formatHoursAndMinutes(parseFloat(entry.hoursWorked))
+  : "0 hours 0 minutes";
+
+
+      detailsDiv.innerHTML = `
+  <div><strong>Date:</strong> ${entry.date}</div>
+  <div><strong>Start Time:</strong> ${formatTimeToAmPm(entry.startClock)}</div>
+  <div><strong>End Time:</strong> ${formatTimeToAmPm(entry.endClock)}</div>
+  <div><strong>Start Address:</strong> ${entry.startTime}</div>
+  
+  <div><strong>Destinations:</strong></div> <!-- first separate div -->
+  <div style="margin-left: 15px;">${destinations}</div> <!-- second div for addresses -->
+
+  <div><strong>End Address:</strong> ${entry.endTime}</div>
+  <div><strong>Earnings per Stop:</strong> ${earnings}</div>
+  <div><strong>Mileage:</strong> ${entry.totalMileage} miles</div>
+  <div><strong>Drive Time:</strong> ${entry.totalTime}</div>
+  <div><strong>Total Earnings:</strong> $${entry.totalEarnings}</div>
+  <div><strong>Fuel Cost:</strong> $${entry.fuelCost}</div>
+  <div><strong>Maintenance:</strong> $${entry.maintenanceCost}</div>
+  <div><strong>Supplies:</strong> $${entry.suppliesCost}</div>
+  <div><strong>Hours Worked:</strong> ${formattedHoursWorked}</div>
+  <div><strong>Total Hours:</strong> ${calculateTotalHours(entry)}</div>
+  <div><strong>Net Profit:</strong> $${entry.netProfit}</div>
+  <div><strong>Profit per Hour:</strong> $${entry.profitPerHour}</div>
+`;
+
+
+    detailsDiv.classList.remove("hidden");
+    summaryDiv.classList.add("hidden"); // 🔥 Hide only the summary
+    toggleButton.textContent = "Less Details";
+  } else {
+    // Collapse
+    detailsDiv.classList.add("hidden");
+    summaryDiv.classList.remove("hidden"); // 🔥 Show the summary
+toggleButton.textContent = "More Details";
+  }
+}
+
+
+function calculateTotalHours(entry) {
+  const driveTime = convertTimeToHours(entry.totalTime || "");
+  const workedTime = parseFloat(entry.hoursWorked) || 0;
+  return formatHoursAndMinutes(driveTime + workedTime);
+
+}
+
+function clearFilters() {
+  document.getElementById('filter-start-date').value = '';
+  document.getElementById('filter-end-date').value = '';
+  document.getElementById('filter-search').value = '';
+  filterLogs(); // ✅ Refresh the display
+}
+
+function initOfflineListeners() {
+  updateOfflineBanner(); // Set initial state
+  window.addEventListener("online", updateOfflineBanner);
+  window.addEventListener("offline", updateOfflineBanner);
+}
+
+
+
+    </script>
+
+    <div
+      id="auth-modal"
+      onclick="closeAuthModal()"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+      "
+    >
+      <div onclick="event.stopPropagation()" class="modal-box">
+        <h3 id="auth-title">Sign In</h3>
+        <input
+          type="text"
+          id="auth-username"
+          placeholder="Username"
+          style="
+            width: 100%;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            padding: 10px;
+            font-size: 16px;
+            line-height: 1.4;
+          "
+        />
+
+        <input
+          type="password"
+          id="auth-password"
+          placeholder="Password"
+          style="
+            width: 100%;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            padding: 10px;
+            font-size: 16px;
+            line-height: 1.4;
+          "
+        />
+
+        <button onclick="submitAuth()" style="width: 100%">Submit</button>
+        <button
+          onclick="closeAuthModal()"
+          style="
+            width: 100%;
+            margin-top: 10px;
+            background-color: #ccc;
+            color: #333;
+          "
+        >
+          Cancel
+        </button>
+        <p style="text-align: center; margin-top: 10px">
+          <a href="#" onclick="toggleAuthMode()"
+            >Switch to <span id="auth-switch-label">Sign Up</span></a
+          ><br />
+          <a
+            href="#"
+            onclick="showResetModal()"
+            style="font-size: 0.9em; color: #0d6efd"
+            >Forgot Password?</a
+          >
+        </p>
+      </div>
+    </div>
+
+    <div
+      id="change-password-modal"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+      "
+    >
+      <div onclick="event.stopPropagation()" class="modal-box">
+        <h3>Change Password</h3>
+
+        <input
+          type="password"
+          id="current-password"
+          placeholder="Current password"
+          style="
+            width: 100%;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            padding: 10px;
+            font-size: 16px;
+            line-height: 1.4;
+          "
+        />
+
+        <input
+          type="password"
+          id="new-password"
+          placeholder="New password"
+          style="
+            width: 100%;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            padding: 10px;
+            font-size: 16px;
+            line-height: 1.4;
+          "
+        />
+
+        <input
+          type="password"
+          id="confirm-password"
+          placeholder="Confirm new password"
+          style="
+            width: 100%;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            padding: 10px;
+            font-size: 16px;
+            line-height: 1.4;
+          "
+        />
+
+        <button
+          onclick="submitPasswordChange()"
+          style="width: 100%; padding: 10px; font-size: 16px"
+        >
+          Submit
+        </button>
+        <button
+          onclick="closePasswordModal()"
+          style="
+            width: 100%;
+            margin-top: 10px;
+            background: #ccc;
+            padding: 10px;
+            font-size: 16px;
+          "
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+
+    <div
+      id="reset-password-modal"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+      "
+    >
+      <div onclick="event.stopPropagation()" class="modal-box">
+        <h3>Reset Password</h3>
+        <input
+          type="text"
+          id="reset-username"
+          placeholder="Username"
+          style="width: 100%; margin-bottom: 10px; padding: 10px"
+        />
+        <input
+          type="text"
+          id="reset-key"
+          placeholder="Reset Key (shown at signup)"
+          style="width: 100%; margin-bottom: 10px; padding: 10px"
+        />
+        <input
+          type="password"
+          id="reset-new-password"
+          placeholder="New Password"
+          style="width: 100%; margin-bottom: 10px; padding: 10px"
+        />
+        <button onclick="submitResetPassword()" style="width: 100%">
+          Submit
+        </button>
+        <button
+          onclick="closeResetModal()"
+          style="width: 100%; margin-top: 10px; background: #ccc"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+
+    <div
+      id="delete-account-modal"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+      "
+    >
+      <div onclick="event.stopPropagation()" class="modal-box">
+        <h3>Delete Account</h3>
+        <p style="font-size: 14px; color: red">⚠️ This action is permanent.</p>
+        <input
+          type="password"
+          id="delete-password"
+          placeholder="Confirm password"
+          style="width: 100%; margin-bottom: 10px; padding: 10px"
+        />
+        <button
+          onclick="submitDeleteAccount()"
+          style="width: 100%; background: red; color: white"
+        >
+          Delete My Account
+        </button>
+        <button
+          onclick="closeDeleteModal()"
+          style="width: 100%; margin-top: 10px; background: #ccc"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+
+    <script>
+
+// 🧮 Time Helpers
+function convertTimeToHours(durationStr = '') {
+  const hours = +(durationStr.match(/(\d+)\s*hour/)?.[1] || 0);
+  const minutes = +(durationStr.match(/(\d+)\s*minute/)?.[1] || 0);
+  return hours + minutes / 60;
+}
+
+
+function formatHoursAndMinutes(decimal = 0) {
+  if (isNaN(decimal) || decimal <= 0) return "0 minutes";
+
+  let hours = Math.floor(decimal);
+  let minutes = Math.round((decimal - hours) * 60);
+
+  if (minutes === 60) {
+    hours += 1;
+    minutes = 0;
+  }
+
+  const hourPart = hours > 0 ? `${hours} hour${hours !== 1 ? "s" : ""}` : "";
+  const minutePart = minutes > 0 ? `${minutes} minute${minutes !== 1 ? "s" : ""}` : "";
+
+  return [hourPart, minutePart].filter(Boolean).join(" ");
+}
+
+
+function parseHoursAndMinutes(str = '') {
+  const hours = +(str.match(/(\d+)\s*hour/)?.[1] || 0);
+  const minutes = +(str.match(/(\d+)\s*minute/)?.[1] || 0);
+  return hours + minutes / 60;
+}
+
+
+
+let deferredPrompt;
+
+// ✅ Register the service worker
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("/service-worker.js").then(
+      function (registration) {
+        console.log(
+          "✅ Service Worker registered with scope:",
+          registration.scope
+        );
+      },
+      function (err) {
+        console.error("❌ Service Worker registration failed:", err);
+      }
+    );
+  });
+}
+
+// ✅ Show install button if eligible and not already installed
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+
+  // Only show if not already installed
+  if (!window.matchMedia("(display-mode: standalone)").matches) {
+    const btn = document.getElementById("install-button");
+    if (btn) btn.style.display = "inline-block";
+  }
+});
+
+// ✅ Handle click on install button
+document.getElementById("install-button")?.addEventListener("click", () => {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then((choiceResult) => {
+      if (choiceResult.outcome === "accepted") {
+        console.log("✅ User accepted the install prompt");
+      } else {
+        console.log("❌ User dismissed the install prompt");
+      }
+      deferredPrompt = null;
+      document.getElementById("install-button").style.display = "none";
+    });
+  }
+});
+
+// ✅ Hide the install button if already installed (user is using PWA)
+window.addEventListener("DOMContentLoaded", () => {
+  const isStandalone =
+    window.matchMedia("(display-mode: standalone)").matches ||
+    window.navigator.standalone === true;
+
+  if (isStandalone) {
+    const btn = document.getElementById("install-button");
+    if (btn) btn.style.display = "none";
+  }
+});
+
+
+
+      let scrollTimeout;
+window.addEventListener('scroll', () => {
+  clearTimeout(scrollTimeout);
+  scrollTimeout = setTimeout(() => {
+    const topBar = document.getElementById('top-bar');
+    if (!topBar) return;
+    topBar.style.boxShadow = window.scrollY > 10
+      ? '0 2px 6px rgba(0,0,0,0.1)'
+      : 'none';
+  }, 50);
+});
+
+    </script>
+  </body>
+</html>

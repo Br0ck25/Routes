@@ -1,0 +1,13 @@
+{
+  "name": "betaroutes",
+  "main": "src/index.js",
+  "compatibility_date": "2024-04-24",
+
+  // ✅ Using existing KV namespace for both logs and user auth
+  "kv_namespaces": [
+    {
+      "binding": "LOGS_KV", // 🔐 Use this binding name in your Worker code
+      "id": "8ad68eb9ccdc4d1da430ee0a43587648"
+    }
+  ]
+}
